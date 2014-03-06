@@ -28,6 +28,13 @@
     background-color: #bde5fa;
     text-indent: 0;
     padding: 20px;
+    *zoom: 1;
+}
+.api .demo:after{
+    display: block;
+    content: "";
+    line-height:0;
+    clear: both;
 }
 .api .butt{
     display: inline-block;

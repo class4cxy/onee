@@ -99,6 +99,9 @@
 		if ( !this.form ) return log("Can't find the form through " + formid);
 		
 		this.action = this.form.action;
+		// 交互标示
+		//TODO 
+		this.onSending = !!0;
 		this.method = (this.form.method || "post").toUpperCase();
 		
 		this.checkCallback = _empty_;
@@ -113,6 +116,8 @@
 
 		this.form.onsubmit = function (e) {
 
+			// if ( this.onSending ) return;
+			// this.onSending = !!1;
 			var evt = e || window.event;
 			evt.preventDefault ? evt.preventDefault() : evt.returnValue = !1;
 			

@@ -1,6 +1,8 @@
 <?php
 
-echo '{status : true}';
+usleep(2000000);
+
+echo '{"status" : true}';
 
 
 ?>

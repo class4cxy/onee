@@ -14,10 +14,16 @@ body, html{
 a {
 	text-decoration:none
 }
-.form{
+.form,
+.debug{
 	width: 400px;
 	border: 1px dashed #757575;
-	padding: 20px
+	padding: 20px;
+	float: left;
+}
+.debug{
+	width: 300px;
+	margin-left:50px;
 }
 .form div{
 	margin-bottom: 10px
@@ -81,6 +87,8 @@ a {
 			<button type="submit" class="butt"> submit </button>
 
 		</form>
+		<div class="debug" id="debug">..debug..</div>
+
     </div>
     <h3>Javascript API</h3>
     <div class="code">
@@ -141,9 +149,12 @@ a {
 <script>
 	onee.use("onee.form").done(function () {
 
+		var $debug = document.getElementById("debug");
+
 		onee.Form("Form").done(function (dat) {
 
-			console.log("done....");
+			// console.log("done....");
+			$debug.innerHTML = $debug.innerHTML+"done...<br>return :<pre>"+JSON.stringify(dat)+"</pre>";
 
 		}).error(function (dat) {
 
@@ -160,11 +171,13 @@ a {
 					}
 				
 				});
+				$debug.innerHTML = $debug.innerHTML+"data format error...<br>";
 
-			}
+			} else $debug.innerHTML = $debug.innerHTML+"communication error...<br>";
 
 		}).process(function (fields) {
 		
+			$debug.innerHTML = "send...<br>";
 			onee.use("jquery").done(function () {
 				$(fields).parents("div").removeClass("err")
 			})
