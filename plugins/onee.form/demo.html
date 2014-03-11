@@ -92,49 +92,51 @@ a {
     </div>
     <h3>Javascript API</h3>
     <div class="code">
-    	<pre><em>// @param formid   {String}</em></pre>
-    	<pre><em>// @method error   [String] 出现错误时回调，返回参数{type:"ajax|format", code|errField : [Array|Number}</em></pre>
-    	<pre><em>// @method check   [Number] 默认启动超时</em></pre>
-    	<pre><em>// @method done    [Boolean] 默认开启</em></pre>
-    	<pre><em>// @method process [Object] 提交的数据</em></pre>
+    	<pre><em>// @param formid   {String} 表单ID</em></pre>
+    	<pre><em>// @method check   [Function] 交互之前的检查，return false, 将不进行交互，return true，进入提交流程</em></pre>
+    	<pre><em>// @method error   [Function] 出现错误时回调，返回参数{type:"ajax|format", code|errField : Array|Number}</em></pre>
+    	<pre>                              <em>ajax表示通讯出错，format表示表单填写格式出错。</em></pre>
+    	<pre><em>// @method done    [Function] 交互成功回调</em></pre>
+    	<pre><em>// @method process [Function] 提交的数据</em></pre>
+    	<pre><em>表单配置 : </em></pre>
+		<pre><em>1.表单须设置action与method属性，若method为空，则默认为post，项目需求目前仅支持get|post|jsonp</em></pre>
+		<pre><em>2.需要提交的字段 需设置 field="字段名" 的属性</em></pre>
+		<pre><em>3.格式匹配 需设置 format="RegExp" RegExp为你自己的正则</em></pre>
     	<pre>onee.use("onee.form").done(function () {</pre>
 
-		<pre>	var each    = _.each;</pre>
-		<pre>	var isArray = _.isArray;</pre>
+		<pre>	var $debug = document.getElementById("debug");</pre>
 
 		<pre>	onee.Form("Form").done(function (dat) {</pre>
 
-		<pre>		console.log("done....");</pre>
+		<pre>		// console.log("done....");</pre>
+		<pre>		$debug.innerHTML = $debug.innerHTML+"done...";</pre>
 
 		<pre>	}).error(function (dat) {</pre>
 
+		<pre>		// console.log(dat)</pre>
 		<pre>		if ( dat.type == "format" ) {</pre>
 
-		<pre>			onee.use("onee.dom").done(function () {</pre>
-					
-		<pre>				!function (fields) {</pre>
-							
-		<pre>					if ( isArray(fields) ) {</pre>
-							
-		<pre>						var len = fields.length;</pre>
-								
-		<pre>						while (len--) arguments.callee(fields[len]);</pre>
+		<pre>			onee.use("jquery").done(function () {</pre>
 
-		<pre>					} else fields.nodeType == "1" && onee.dom.addClass(fields, "err");</pre>
-						
-		<pre>				}(dat.errField)</pre>
-					
+		<pre>				var errField = dat.errField;</pre>
+		<pre>				var len = errField.length;</pre>
+
+		<pre>				while (len--) {</pre>
+		<pre>					$( errField[len] ).parents("div").addClass("err")</pre>
+		<pre>				}</pre>
+
 		<pre>			});</pre>
+		<pre>			$debug.innerHTML = $debug.innerHTML+"data format error...";</pre>
 
-		<pre>		}</pre>
+		<pre>		} else $debug.innerHTML = $debug.innerHTML+"communication error...";</pre>
 
 		<pre>	}).process(function (fields) {</pre>
-			
-		<pre>		console.log("process....");</pre>
-		<pre>		onee.use("onee.dom").done(function () {</pre>
-		<pre>			onee.dom.delClass(fields, "err");</pre>
+
+		<pre>		$debug.innerHTML = "send...";</pre>
+		<pre>		onee.use("jquery").done(function () {</pre>
+		<pre>			$(fields).parents("div").removeClass("err")</pre>
 		<pre>		})</pre>
-			
+
 		<pre>	});</pre>
 
 		<pre>})</pre>

@@ -23,6 +23,8 @@
  * fix : 20120824 - 完善对radio 于 checkbox的兼容
  *       20130212 - 加入自定义正则匹配
  *       20130212 - 处理字段的查找放到 field 函数中处理，可以使用Sizzle遍历
+ *       20140311 - 增加_toggleFormStatus_，控制表单提交状态
+ *       20140311 - 增加对<select type="Multipleselect" .. 控件的取值支持
  */
 ;!function (undefined) {
 
@@ -91,6 +93,10 @@
 	}
 	
 	function _empty_ () {return !!1};
+
+	function _toggleFormStatus_ () {
+		this.onSending = !this.onSending;
+	}
 	
 	function _form ( formid ) {
 	
@@ -116,8 +122,8 @@
 
 		this.form.onsubmit = function (e) {
 
-			// if ( this.onSending ) return;
-			// this.onSending = !!1;
+			if ( _self_.onSending ) return false;
+			_toggleFormStatus_.call(_self_);
 			var evt = e || window.event;
 			evt.preventDefault ? evt.preventDefault() : evt.returnValue = !1;
 			
@@ -167,6 +173,7 @@
 			if ( errField.length ) {
 				
 				_self_.errorCallback.call(_self_, {"type" : "format", "errField" : errField});
+				_toggleFormStatus_.call(_self_);
 				
 			} else {
 				
@@ -177,14 +184,19 @@
 						type   : "json",
 						data   : subField,
 						err    : function (code) {
+							_toggleFormStatus_.call(_self_);
 							_self_.errorCallback.call(_self_, {"type" : "ajax", "code" : code});
 						},
 						done   : function (J) {
+							_toggleFormStatus_.call(_self_);
 							_self_.doneCallback.call( _self_, J );
 						}
 					})
 				:
-					onee.jsonp( _self_.action, function( J ) { _self_.doneCallback.call( _self_, J ) }, subField );
+					onee.jsonp( _self_.action, function( J ) {
+						_toggleFormStatus_.call(_self_);
+						_self_.doneCallback.call( _self_, J )
+					}, subField );
 				
 			}
 		
