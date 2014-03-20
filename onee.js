@@ -240,6 +240,26 @@ var browser = onee.browser = (function () {
 })();
 
 
+// define queue
+var queue = onee.queue = function () {
+	var _queue = [];
+	return {
+		// 插入元素
+		add : function (item) {
+			_queue[_queue.length] = item
+		},
+		// 执行下一元素
+		// options传递参数
+		nex : function (options) {
+			if ( _queue.length ) {
+				var current = _queue.shift();
+				return isFunction(current) ? current.call(null, options) : current;
+			}
+		}
+	}
+}
+// define event
+
 
 /**
  * inc - js/css loader
