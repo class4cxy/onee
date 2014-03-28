@@ -32,5 +32,5 @@ workspace 说明：
 workspace 主要为onee加载内置组件提供路径，当onee是绝对地址加载进来（www.xxx.com/xxx/onee），或者当onee存放在根目录（/onee），workspace属性不需要配置。
 
 
-/*20140328*/
+/-20140328-/
 增加 onee.define, 逐步往CMD靠拢
