@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>quickSort</title>
+    <link rel="stylesheet" href="/onee/Style/api.css">
+</head>
+<style></style>
+<body>
+</body>
+</html>
+<script src="/onee/Base/Underscode/underscodejs.min.js"></script>
+<script src="/onee/Base/onee.js"></script>
+<script src="/onee/Base/onee-plugins.js"></script>
+
+<script>
+	var test = [4,2,5,6,4,4,4];
+
+	var _quickSort = (function(){
+
+    function sort(arr, low, high){
+        var pivoti = (low + high) >>> 1,
+        	pivot = arr[pivoti],
+            i = low,
+            j = high,
+            tmpi,
+            tmpj;
+            // temp;
+
+            // console.log(low,high)
+        if(low < high){
+            while(true){
+                while(arr[i] < pivot) i++;
+                while(arr[j] > pivot) j--;
+
+                // console.log(i,j);
+                if(i < j){
+	            	tmpi = arr[i];
+	            	tmpj = arr[j];
+                    // temp = arr[i];
+                    if (tmpi !== tmpj) {
+	                    arr[i] = tmpj;
+	                    arr[j] = tmpi;
+                    } else {
+                    	i++;
+                    	j--;
+                    }
+
+                    continue;
+                }
+                // console.log(arr)
+                break;
+            }
+            // console.log(i,j, high);
+
+            sort(arr, low, i-1);
+            sort(arr, j+1, high);
+        }
+
+        return arr;
+    }
+
+    return function(arr){
+        return sort(arr, 0, arr.length - 1);
+    }
+
+})();
+
+var t = +new Date();
+var len = 1e6;
+while(len--) {
+	_quickSort(test)
+}
+console.log(+new Date-t);
+</script>

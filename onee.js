@@ -49,7 +49,7 @@ var workspace = onee.workspace = (function(){
 
 onee.log = function ( module ) {
 	return function ( msg ) {
-		!!console && !!console.log && console.log(+new Date + ' : ' + module + ' -> ' + msg);
+		!!console && !!console.log && console.log.call(null, +new Date + ' : ' + module + ' -> ', msg);
 	}
 }
 
@@ -567,6 +567,99 @@ var inc = onee.inc = (function () {
 
 })();
 
+
+/*function GUID () {
+	var d = new Date().getTime(), r;
+
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
+        r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+
+        return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
+    });
+}*/
+var getURI = function () {
+
+	var href = document.location.href;
+	var rCurrPath = /^\.\//;
+	return function (uri) {
+		var ret;
+		if ( uri ) {
+			ret = href.substring(0, href.lastIndexOf("/")+1) + uri.replace(rCurrPath, "");
+		} else {
+			var scripts = document.head.getElementsByTagName("script");
+			var scriptSelf = scripts[scripts.length-1];
+			ret = scriptSelf.src;
+			console.log(scripts)
+		}
+		return ret
+	}
+
+}();
+/**
+ * filepath string 模块路径
+ * factory function 模块定义函数
+ * [deps] array 依赖模块
+ */
+
+var define = onee.define = function ( name, factory, deps ) {
+
+	// if ( !onee.plugins ) return log("Missing onee-plugins.js");
+	if (!onee.plugins) onee.plugins = {};
+
+	if ( isFunction(name) ) {
+		deps = factory;
+		factory = name;
+		// name = GUID();
+	}
+	if ( !isString(name) ) {
+		name = getURI();
+	}
+
+	var module = onee.plugins[name];
+	// log(name)
+
+	// if ( module && (module.deps || module.factory) ) return log("name of `"+ name +"` had been define.");
+	if ( !module ) module = onee.plugins[name] = {};
+
+	// rewrite factory
+	module.factory = function () {
+		// exec self factory
+		(!module.waitting || !--module.waitting) && factory();
+
+		var tops = module.top||[];
+		// exec top's factory
+		while(tops.length) tops.shift()(); 
+		// console.log(module.waitting)
+	}
+
+	// deps = deps || [];
+	// var _module_ = onee.plugins[name] = {};
+	var _thatdeps_ = [], _depsmodule_;
+
+	if (deps && (module.waitting = deps.length)) {
+
+		each(deps, function (dep, k) {
+			// onee.plugins[dep]
+			dep = getURI(dep);
+			_depsmodule_ = onee.plugins[dep];
+
+			if ( !_depsmodule_ ) _depsmodule_ = onee.plugins[dep] = {top : []};
+
+			if ( _depsmodule_.deps && _depsmodule_.deps.length ) _thatdeps_ = _thatdeps_.concat(_depsmodule_.deps);
+			else _thatdeps_.push(dep);
+
+			_depsmodule_.top.push(module.factory)
+		});
+
+		module.deps = _thatdeps_;
+		use(name);
+
+	// exec
+	} else module.factory();
+
+}
+
 // use - 内置模板的引用
 var use = onee.use = function ( index ) {
 
@@ -582,8 +675,8 @@ var use = onee.use = function ( index ) {
 //    });
 
 //    console.log(filewrap);
-
-	if ( files ) return inc.apply(null, files);
+	return files && files.deps && files.deps.length ? inc.apply(null, files.deps) : inc(index);
+	// if ( files && files.deps && files.deps.length ) return inc.apply(null, files.deps);
 
 };
 
