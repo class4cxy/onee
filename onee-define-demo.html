@@ -10,8 +10,10 @@
 </body>
 </html>
 <script src="/git/onee/Underscode/underscodejs.min.js"></script>
-<script src="/git/onee/onee.js"></script>
-<script src="/git/onee/onee-plugins.js"></script>
+<script src="/git/onee/onee-define.js"></script>
+<!-- <script src="/git/onee/onee-plugins.js"></script> -->
 <script>
-	onee.use("./onee.module.js")
+	onee.use("./onee.module.js", function () {
+		console.log("by chen")
+	})
 </script>

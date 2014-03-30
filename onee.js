@@ -62,6 +62,7 @@ if ( !global._ ) return log("Base on underscorejs.js");
 // base tool
 var extend    = _.extend,
 	each      = _.each,
+	map       = _.map,
 	indexOf   = _.indexOf,
 	isEmpty   = _.isEmpty,
 	isArray   = _.isArray;
@@ -77,7 +78,15 @@ var slice     = Array.prototype.slice,
 	// document head
 	dHead     = document.getElementsByTagName("head")[0],
 	// document body
-	dBody     = document.body;
+	dBody     = document.body,
+	// debug model
+	debug = !!0;
+	// href
+	/*HREF = document.location.href,
+	// root path
+	rootpath  = HREF.substring(0, HREF.lastIndexOf("/")+1),
+	// regexp of current path : ./
+	rCurrPath = /^\.\//;*/
 	
 
 /**
@@ -177,6 +186,7 @@ var isObject = onee.isObject = isType("Object");
 var isString  = onee.isString  = isType("String");
 var isFunction = onee.isFunction = isType("Function");
 var isUndefined = onee.isUndefined = isType("Undefined");
+var interface = Util.interface;
 
 
 /**
@@ -304,7 +314,7 @@ var inc = onee.inc = (function () {
 //console.log(index)
 		// initialize arguments
 		interface(this, {
-			index : index,
+			index : isHTTP.test(index) ? index : getURI(index),
 			// initialize file
 			status: 1,
 			// triggle callback list
@@ -367,10 +377,25 @@ var inc = onee.inc = (function () {
             node.onload = node.onerror = node.onreadystatechange = function () {
 
                 if (READY_STATE_RE.test(node.readyState)) {
+
+                    // log(currentModule)
+                    var len, isCache, index;
+                    if ( currentModule && (len=currentModule.deps.length) ) {
+                    	// onee.plugins[currentModule.id].uri = node.src
+                    	// currentModule.uri = node.src;
+                    	while(len--) {
+                    		index = currentModule.deps[len];
+                    		!CACHE[index] && (CACHE[index] = new _file(index)).load()
+                    		// new _file(currentModule.deps[len]);
+                    	}
+                    } else {
+                    	currentModule.factory()
+                    }
+                    currentModule = null;
                     // Ensure only run once and handle memory leak in IE
                     node.onload = node.onerror = node.onreadystatechange = null;
                     // Remove the script to reduce memory leak
-                    !ts.isCSS && baseHead.removeChild(node);
+                    !ts.isCSS && !debug && baseHead.removeChild(node);
                     // Dereference the node
                     node = null;
                     //callback(index);
@@ -566,9 +591,15 @@ var inc = onee.inc = (function () {
 
 
 })();
+/*
+var anonymousModule;
+var moduleCache;
 
+function module () {
 
-/*function GUID () {
+}*/
+
+function GUID () {
 	var d = new Date().getTime(), r;
 
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
@@ -577,7 +608,7 @@ var inc = onee.inc = (function () {
 
         return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
     });
-}*/
+}
 var getURI = function () {
 
 	var href = document.location.href;
@@ -587,10 +618,15 @@ var getURI = function () {
 		if ( uri ) {
 			ret = href.substring(0, href.lastIndexOf("/")+1) + uri.replace(rCurrPath, "");
 		} else {
-			var scripts = document.head.getElementsByTagName("script");
-			var scriptSelf = scripts[scripts.length-1];
+			var scripts = dHead.getElementsByTagName("script");
+			/*var scriptlen = scripts.length;
+			while ( scriptlen-- ) {
+				scripts.src ===
+			}*/
+			var scriptSelf = scripts[0];
+
 			ret = scriptSelf.src;
-			console.log(scripts)
+			// console.log(scripts)
 		}
 		return ret
 	}
@@ -601,11 +637,33 @@ var getURI = function () {
  * factory function 模块定义函数
  * [deps] array 依赖模块
  */
+var moduleCache = {};
+
+function Module (option) {
+	interface(this, option, {
+		// default is GUID code
+		index : GUID(),
+		uri : "",
+		deps : [],
+		tops : [],
+		factory : function () {}
+	});
+}
+/*extend(Module.prototype, {
+	load : function () {
+
+	},
+});*/
+
+var currentModule;
 
 var define = onee.define = function ( name, factory, deps ) {
 
+	// console.log(document.currentScript)
 	// if ( !onee.plugins ) return log("Missing onee-plugins.js");
 	if (!onee.plugins) onee.plugins = {};
+
+	// var module;
 
 	if ( isFunction(name) ) {
 		deps = factory;
@@ -613,29 +671,35 @@ var define = onee.define = function ( name, factory, deps ) {
 		// name = GUID();
 	}
 	if ( !isString(name) ) {
-		name = getURI();
+		// name = getURI();
+		name = GUID();
+		// module = onee.plugins[name] = {};
 	}
+	// console.log(anonymousModule)
 
-	var module = onee.plugins[name];
+	var module = onee.plugins[name] = {};
+	module.id = name;
 	// log(name)
 
 	// if ( module && (module.deps || module.factory) ) return log("name of `"+ name +"` had been define.");
-	if ( !module ) module = onee.plugins[name] = {};
+	// if ( !module ) module = onee.plugins[name] = {};
 
 	// rewrite factory
 	module.factory = function () {
 		// exec self factory
 		(!module.waitting || !--module.waitting) && factory();
 
-		var tops = module.top||[];
+		var tops = module.top||[], m;
 		// exec top's factory
-		while(tops.length) tops.shift()(); 
+		while((m=tops.shift())) m();
 		// console.log(module.waitting)
 	}
-
+	// module.waitting = [];
+	module.deps = deps || [];
+	module.waitting = map(module.deps, function(uri) {return getURI(uri)});
 	// deps = deps || [];
 	// var _module_ = onee.plugins[name] = {};
-	var _thatdeps_ = [], _depsmodule_;
+	/*var _thatdeps_ = [], _depsmodule_;
 
 	if (deps && (module.waitting = deps.length)) {
 
@@ -652,11 +716,10 @@ var define = onee.define = function ( name, factory, deps ) {
 			_depsmodule_.top.push(module.factory)
 		});
 
-		module.deps = _thatdeps_;
-		use(name);
+	}
+	module.deps = _thatdeps_;*/
 
-	// exec
-	} else module.factory();
+	currentModule = module;
 
 }
 
