@@ -6,9 +6,9 @@
  * for more ? http://jdoi.net/
  */
 
-onee.define(function () {
+// onee.define(function () {
 	
 	// onee.mymodule = "chen's module"
-	console.log("doiiii")
+	document.body.innerHTML += "doiiii<br>"
 
-})
+// })

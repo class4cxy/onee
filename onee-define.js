@@ -16,9 +16,19 @@ var onee = global.onee = {
 	version : "1.0"
 }
 
+var workspace = onee.workspace = (function(){
+	
+	var scripts = document.getElementsByTagName("script");
+	var scriptSelf = scripts[scripts.length-1];
+	var scriptSelfSrc = scriptSelf.hasAttribute ? scriptSelf.src : scriptSelf.getAttribute("src", 4);
+
+	return scriptSelfSrc.substring(0, scriptSelfSrc.lastIndexOf("/")+1);
+	
+})();
+
 onee.log = function ( module ) {
 	return function ( msg ) {
-		!!console && !!console.log && console.log.call(null, +new Date + ' : ' + module + ' -> ', msg);
+		!!console && !!console.log && console.log(+new Date + ' : ' + module + ' -> ', msg);
 	}
 }
 
@@ -28,47 +38,25 @@ var log = onee.log("onee");
 // base underscorejs
 if ( !global._ ) return log("Base on underscorejs.js");
 
-// base tool
 var extend    = _.extend,
 	each      = _.each,
 	map       = _.map,
 	indexOf   = _.indexOf,
 	isEmpty   = _.isEmpty,
-	isArray   = _.isArray;
+	isArray   = _.isArray,
+	isFunction= _.isFunction,
+	slice     = Array.prototype.slice,
+	debug     = !!0;
 
-
-// static variable
-var slice     = Array.prototype.slice,
-	toString  = Object.prototype.toString,
-	// match style tag
-	rTagStyle = /<style.*?>([^<]*)<\/style>/ig,
-	// match of url
-	rQuery    = /[\?|&](.*?)=([^&#\\$]*)/g,
-	// document head
-	dHead     = document.getElementsByTagName("head")[0],
-	// document body
-	dBody     = document.body,
-	// debug model
-	debug = !!0;
-	// href
-	/*HREF = document.location.href,
-	// root path
-	rootpath  = HREF.substring(0, HREF.lastIndexOf("/")+1),
-	// regexp of current path : ./
-	rCurrPath = /^\.\//;*/
-	
 
 /**
  * NameSpace 工具集
  * 20130130
  * .versionComparison
- * .isArray
- * .each
- * .copy
  * .queryMap
  * .isEmptyObject
  */
-var Util = onee.Util = {
+// var Util = onee.Util = {
 	
 	/**
 	 * Function 版本号对比
@@ -79,7 +67,7 @@ var Util = onee.Util = {
 	 * v1 < v2 return  1
 	 * 20130213
 	 */
-	versionComparison : function ( v1, v2 ) {
+	/*versionComparison : function ( v1, v2 ) {
 		
 		var firstArr = v1.split('.'),
 			lastArr  = v2.split('.'),
@@ -98,30 +86,34 @@ var Util = onee.Util = {
 		}
 		return 0;
 		
-	},
+	},*/
 	/**
 	 * Function query to map
 	 * @param [string] url
 	 * 20121113
 	 */
-	queryMap : function ( url ) {
+	/*queryMap : (function () {
 		
-		var realUrl = url || document.location.href,
-			map = {};
+		var href   = document.location.href;
+		var rQuery = /[\?|&](.*?)=([^&#\\$]*)/g;
 
-		realUrl.replace( rQuery, function ( a, b, c ) {
+		return function ( url ) {
+			var map = {};
 
-			b && c && ( map[b] = c );
+			(url || href).replace( rQuery, function ( a, b, c ) {
 
-		});
+				b && c && ( map[b] = c );
 
-		return map;		
-	},
+			});
+
+			return map;	
+		}	
+	})(),*/
     
 	// 接口初始化
 	// 默认扩展到第一个参数
 	// 仅仅属性为 undefined 时进行赋值
-	interface : function () {
+	/*interface : function () {
 		
 		var extender = arguments[0];
 	
@@ -137,25 +129,35 @@ var Util = onee.Util = {
 		
 		return extender;
 		
-	},
-	
-	// 类型判断
-	isType : function isType( type ) {
-	
-		return function( obj ) {
-	
-			return Object.prototype.toString.call( obj ) === "[object " + type + "]"
-		}
-	}
-}
+	}*/
+// }
 // 初始化/引用
-var isType = Util.isType;
+/*var isType = Util.isType;
 var isArray = Array.isArry || isType("Array");
 var isObject = onee.isObject = isType("Object");
 var isString  = onee.isString  = isType("String");
 var isFunction = onee.isFunction = isType("Function");
-var isUndefined = onee.isUndefined = isType("Undefined");
-var interface = Util.interface;
+var isUndefined = onee.isUndefined = isType("Undefined");*/
+// 接口初始化
+// 默认扩展到第一个参数
+// 仅仅属性为 undefined 时进行赋值
+var interface = onee.interface = function () {
+		
+	var extender = arguments[0];
+
+	each( slice.call(arguments, 1), function (obj, k) {
+		
+		each( obj, function (val, name) {
+			
+			extender[name] === undefined && (extender[name] = val);
+			
+		});
+		
+	});
+	
+	return extender;
+	
+}
 
 
 /**
@@ -165,7 +167,7 @@ var interface = Util.interface;
  * 返回版本号
  * 201301
  */
-var browser = onee.browser = (function () {
+/*var browser = onee.browser = (function () {
 
 	var _ua = navigator.userAgent,
 	
@@ -216,11 +218,11 @@ var browser = onee.browser = (function () {
 
 	return _result;
 	
-})();
+})();*/
 
 
 // define queue
-var queue = onee.queue = function () {
+/*var queue = onee.queue = function () {
 	var _queue = [];
 	return {
 		// 插入元素
@@ -236,7 +238,7 @@ var queue = onee.queue = function () {
 			}
 		}
 	}
-}
+}*/
 
 /**
  * inc - js/css loader
@@ -249,6 +251,7 @@ var queue = onee.queue = function () {
  * @prama file{String|Array}
  * @method done(callback)
  */
+
 var inc = (function () {
 
 	var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
@@ -348,42 +351,51 @@ var inc = (function () {
         // ref: #185 & http://dev.jquery.com/ticket/2709
 		baseElement ?
 			baseHead.insertBefore(node, baseElement) :
-			baseHead.appendChild(node)
+			baseHead.appendChild(node);
+		// log("fetch")
 	}
 
 })();
 
-function GUID () {
-	var d = new Date().getTime(), r;
 
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
-        r = (d + Math.random() * 16) % 16 | 0;
-        d = Math.floor(d / 16);
-
-        return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
-    });
-}
 var getURI = function () {
 
 	var href = document.location.href;
+	// current path
+	var currPath = href.substring(0, href.lastIndexOf("/")+1);
+	// match for uri current path -> ./
 	var rCurrPath = /^\.\//;
+	// match if is independent path
 	var risHTTP = /^https?\:\/\//;
+	// grobal id for anonymous module
+	var guid = 0;
 
 	return function (uri) {
-		return risHTTP.test(uri) ? uri : href.substring(0, href.lastIndexOf("/")+1) + uri.replace(rCurrPath, "");
+		return uri ?
+			risHTTP.test(uri) ? uri : currPath + uri.replace(rCurrPath, "")
+			:
+			currPath+'_default_'+(guid++);
 	}
 
 }();
+
+/**
+ * onee.plugins
+ */
+var plugins = onee.plugins = {"onee.plugins": onee.workspace+"onee.plugins.js"};
+
 /**
  * filepath string 模块路径
  * factory function 模块定义函数
  * [deps] array 依赖模块
  */
+
+// 当前经过define的模块
+var currentDefineModule;
+
 extend(onee, (function () {
 
 	var moduleCache = {};
-	// 匿名模块
-	var anonymousModule;
 
 	var STATUS = {
 		// 模块初始化
@@ -398,23 +410,26 @@ extend(onee, (function () {
 		EXECUTED : 5
 	}
 
-	function _Module (uri, tops) {
+	function Module (uri, tops) {
+				// log(uri)
 		this.uri = uri;
 		this.tops = tops ? [tops] : [];
 		this.status = STATUS.INITIALIZING;
 	}
 
-	_Module.onload = function (that) {
+	Module.onload = function (that) {
 
-		if (anonymousModule) {
+		if (currentDefineModule) {
 
-			moduleCache[that.uri] = extend(that, anonymousModule);
+			moduleCache[that.uri] = extend(that, currentDefineModule);
+
+			currentDefineModule = null;
 
 			var deps = that.deps, depmod, waitting = deps.length, factory = that.factory;
 
 			that.factory = function () {
-				
 				that.status = STATUS.EXECUTED;
+
 				if (!waitting || !--waitting) {
 					// exec self factory
 					factory();
@@ -425,73 +440,77 @@ extend(onee, (function () {
 
 			}
 
-			// mod = moduleCache[that.uri] = anonymousModule;
-
 			if ( deps.length ) {
-				each( deps, function (uri) {
+				// log(that.uri)
+				each( deps, function (uri, k) {
+					// log(uri)
 					if ( !(depmod = moduleCache[uri]) ) {
+// log(that.factory.toString());
+						(moduleCache[uri] = new Module(uri, that.factory)).load();
 
-						(moduleCache[uri] = new _Module(uri, that.factory)).load();
-
-					} else if ( depmod.status < 5 ) 
-
+					} else if ( depmod.status < 5 ) {
+// log("d")
 						depmod.tops.push(that.factory);
 
-					else that.factory();
+					} else {
+						// log("dd")
+						that.factory();
+					}
 
 				})
 			} else that.factory();
 
-			anonymousModule = null;
+		// 不经过define封装的组件
+		} else {
+			// console.log(that)
+			that.status = STATUS.EXECUTED;
+			// factory();
+			var tops = that.tops||[], m;
+			// exec top's factory
+			while((m=tops.shift())) m();
 		}
+
 	}
 
-	_Module.prototype.load = function () {
+	Module.prototype.load = function () {
 
 		this.status = STATUS.LOADING;
 		
 		var that = this;
 		
-		inc(that.uri, function () {_Module.onload(that)})
+		inc(that.uri, function () {Module.onload(that)})
 	}
 
-	function _define ( factory, deps ) {
-		// if (!onee.plugins) onee.plugins = {};
+	function define ( factory, deps ) {
 
-		// var module;
-		// var waitting = (deps || []).length;
-
-		anonymousModule = {
+		currentDefineModule = {
 			status : STATUS.SAVED,
 			deps : map(deps || [], function (dep) { return getURI(dep) }),
 			factory : factory
 		}
 	}
-	function _use () {
-		// if ( arguments.lenght )
-
-		// uri = getURI(uri);
+	function use () {
 		var lastArgumentIndex = arguments.length-1;
 		var lastArgument = arguments[lastArgumentIndex];
 		var hasFactory = isFunction(lastArgument);
 		
 		var factory = hasFactory ? lastArgument : function() {};
-		// var waitting = arguments.length - (hasFactory ? 0 : 1);
-		var uri = GUID();
 
-		anonymousModule = {
+		var uri = getURI();
+
+		currentDefineModule = {
 			status : STATUS.SAVED,
 			deps : map(slice.call(arguments, 0, lastArgumentIndex + (hasFactory?0:1)), function (dep) { return getURI(dep) }),
 			factory : factory
 		}
-		_Module.onload(moduleCache[uri] = new _Module(uri));
+		Module.onload(moduleCache[uri] = new Module(uri));
 	}
 
 	// publish define api
 	return {
-		CACHE : moduleCache,
-		define : _define,
-		use : _use
+		moduleCache : moduleCache,
+		define : define,
+		use : use
 	}
 
 })());

@@ -8,6 +8,6 @@
 
 onee.define(function () {
 	
-	console.log("do")
+	document.body.innerHTML += "do<br>"
 
-}, ["./mymodule.js", "./module4.js"])
+}, ["./mymodule.js"])

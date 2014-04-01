@@ -56,12 +56,33 @@
 	// new a onee's log
 	var log = onee.log("swf");
 	var browser = onee.browser;
-	var versionComparison = onee.Util.versionComparison;
+	// var versionComparison = onee.Util.versionComparison;
 	var find = onee.dom.find;
 	
 	// base method
 	var extend = _.extend;
 	var each   = _.each;
+
+	function _versionComparison ( v1, v2 ) {
+		
+		var firstArr = v1.split('.'),
+			lastArr  = v2.split('.'),
+			i = 0,
+			len = Math.min( firstArr.length, lastArr.length ),
+			item1,
+			item2;
+		
+		for ( ; i < len; i++ ) {
+
+			item1 = parseInt(firstArr[i]);
+			item2 = parseInt(lastArr[i]);
+			if ( item1 > item2 ) return -1;
+			if ( item1 < item2 ) return  1;
+
+		}
+		return 0;
+		
+	}
 	
 	function _getFlashVersion () {
 	
@@ -104,7 +125,7 @@
 			error = '<p stlye="width:100%;text-align:center">您还没安装flash播放器或者版本过低，请点击击<a href="http://www.adobe.com/go/getflash" target="_blank">这里</a>安装</p>';
 		
 		//需要更高版本 || 没有安装flash播放器
-		if ( !ver || versionComparison( ver, need ) === 1 ) {
+		if ( !ver || _versionComparison( ver, need ) === 1 ) {
 
 			return onee.dom.html( context, error );
 
