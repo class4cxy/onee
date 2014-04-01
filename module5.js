@@ -1,7 +1,7 @@
 /**
- * demo - module2
+ * demo - module5
  * just for test
- * 20140327
+ * 20140401
  * design by J.do
  * for more ? http://jdoi.net/
  */
@@ -9,7 +9,7 @@
 onee.define(function () {
 	
 	// onee.mymodule = "chen's module"
-	// document.body.innerHTML += "doii<br>"
-	console.log("module2 -> doii")
+	// document.body.innerHTML += "doiiii<br>"
+	console.log("module5 -> doii")
 
 })

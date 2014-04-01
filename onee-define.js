@@ -252,6 +252,8 @@ var interface = onee.interface = function () {
  * @method done(callback)
  */
 
+var currentlyAddingScriptURI;
+
 var inc = (function () {
 
 	var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
@@ -348,11 +350,20 @@ var inc = (function () {
 
             }
         }
+
+        // ref seajs
+		// For some cache cases in IE 6-8, the script executes IMMEDIATELY after
+		// the end of the insert execution, so use `currentlyAddingScript` to
+		// hold current node, for deriving url in `define` call
+        currentlyAddingScriptURI = uri;
+
         // ref: #185 & http://dev.jquery.com/ticket/2709
 		baseElement ?
 			baseHead.insertBefore(node, baseElement) :
 			baseHead.appendChild(node);
-		// log("fetch")
+
+		currentlyAddingScriptURI = "";
+		// log(uri + " -> fetch")
 	}
 
 })();
@@ -392,6 +403,7 @@ var plugins = onee.plugins = {"onee.plugins": onee.workspace+"onee.plugins.js"};
 
 // 当前经过define的模块
 var currentDefineModule;
+var tmpDefineModule = {};
 
 extend(onee, (function () {
 
@@ -419,11 +431,16 @@ extend(onee, (function () {
 
 	Module.onload = function (that) {
 
+// log(that.uri+" -> loaded")
+// log(currentDefineModule)
+		currentDefineModule = tmpDefineModule[that.uri] || currentDefineModule;
+		
 		if (currentDefineModule) {
 
 			moduleCache[that.uri] = extend(that, currentDefineModule);
 
 			currentDefineModule = null;
+			delete tmpDefineModule[that.uri];
 
 			var deps = that.deps, depmod, waitting = deps.length, factory = that.factory;
 
@@ -481,14 +498,27 @@ extend(onee, (function () {
 		inc(that.uri, function () {Module.onload(that)})
 	}
 
-	function define ( factory, deps ) {
+	/*function getModule (options) {
+		return moduleCache[options.uri] || (moduleCache[options.uri] = new Module(options))
+	}*/
 
+	function define ( factory, deps ) {
+// log("execute")
+// log(currentlyAddingScriptURI)
 		currentDefineModule = {
 			status : STATUS.SAVED,
 			deps : map(deps || [], function (dep) { return getURI(dep) }),
 			factory : factory
 		}
+
+		// If currentlyAddingScriptURI been define
+		// means script file had been cache in IE6-9  
+		if ( currentlyAddingScriptURI && !tmpDefineModule[currentlyAddingScriptURI] ) {
+			tmpDefineModule[currentlyAddingScriptURI] = currentDefineModule;
+		}
+
 	}
+
 	function use () {
 		var lastArgumentIndex = arguments.length-1;
 		var lastArgument = arguments[lastArgumentIndex];

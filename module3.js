@@ -9,6 +9,7 @@
 onee.define(function () {
 	
 	// onee.mymodule = "chen's module"
-	document.body.innerHTML += "doiii<br>"
+	// document.body.innerHTML += "doiii<br>"
+	console.log("doiii")
 
 })
