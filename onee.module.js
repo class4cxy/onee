@@ -11,4 +11,4 @@ onee.define(function () {
 	// document.body.innerHTML += "do<br>"
 	console.log("onee.module -> do")
 
-}, ["./mymodule.js", "./module4.js"])
+}, ["./module1.js", "./module2.js"])

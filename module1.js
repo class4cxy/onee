@@ -12,4 +12,4 @@ onee.define(function () {
 	// document.body.innerHTML += "doi<br>"
 	console.log("mymodule -> doi")
 
-})
+}, ["./module3.js"])

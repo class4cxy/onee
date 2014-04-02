@@ -10,6 +10,6 @@ onee.define(function () {
 	
 	// onee.mymodule = "chen's module"
 	// document.body.innerHTML += "doii<br>"
-	console.log("module2 -> doii")
+	console.log("module2 -> doi")
 
-})
+}, ["./module4.js"])

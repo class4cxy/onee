@@ -16,13 +16,21 @@ var onee = global.onee = {
 	version : "1.0"
 }
 
+// ref seajs
+function getScriptAbsoluteUri (node) {
+	return node.hasAttribute ? // non-IE6/7
+      node.src :
+    // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
+      node.getAttribute("src", 4)
+}
+
 var workspace = onee.workspace = (function(){
 	
 	var scripts = document.getElementsByTagName("script");
-	var scriptSelf = scripts[scripts.length-1];
-	var scriptSelfSrc = scriptSelf.hasAttribute ? scriptSelf.src : scriptSelf.getAttribute("src", 4);
+	// var scriptSelf = scripts[scripts.length-1];
+	var scriptUri = getScriptAbsoluteUri(scripts[scripts.length-1]);
 
-	return scriptSelfSrc.substring(0, scriptSelfSrc.lastIndexOf("/")+1);
+	return scriptUri.substring(0, scriptUri.lastIndexOf("/")+1);
 	
 })();
 
@@ -252,15 +260,19 @@ var interface = onee.interface = function () {
  * @method done(callback)
  */
 
+// ref seajs
+// For some cache cases in IE 6-8, the script executes IMMEDIATELY after
+// the end of the insert execution, so use `currentlyAddingScript` to
+// hold current node, for deriving url in `define` call
 var currentlyAddingScriptURI;
+var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
 
 var inc = (function () {
 
-	var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
 	// ref: #185 & http://dev.jquery.com/ticket/2709
 	var baseElement = baseHead.getElementsByTagName("base")[0];
 	
-    var risCSS = /\.css(?:\?|$)/;
+    var risCSS = /\.css(?:\?|#|$)/;
 	// ref : seajs
 	// `onload` event is not supported in WebKit < 535.23 and Firefox < 9.0
 	// ref:
@@ -351,10 +363,6 @@ var inc = (function () {
             }
         }
 
-        // ref seajs
-		// For some cache cases in IE 6-8, the script executes IMMEDIATELY after
-		// the end of the insert execution, so use `currentlyAddingScript` to
-		// hold current node, for deriving url in `define` call
         currentlyAddingScriptURI = uri;
 
         // ref: #185 & http://dev.jquery.com/ticket/2709
@@ -369,31 +377,25 @@ var inc = (function () {
 })();
 
 
-var getURI = function () {
-
-	var href = document.location.href;
-	// current path
-	var currPath = href.substring(0, href.lastIndexOf("/")+1);
-	// match for uri current path -> ./
-	var rCurrPath = /^\.\//;
-	// match if is independent path
-	var risHTTP = /^https?\:\/\//;
-	// grobal id for anonymous module
-	var guid = 0;
-
-	return function (uri) {
-		return uri ?
-			risHTTP.test(uri) ? uri : currPath + uri.replace(rCurrPath, "")
-			:
-			currPath+'_default_'+(guid++);
-	}
-
-}();
-
 /**
  * onee.plugins
  */
-var plugins = onee.plugins = {"onee.plugins": onee.workspace+"onee.plugins.js"};
+
+var plu = workspace+"plugins/";
+var plugins = onee.plugins = {};
+
+_.extend(plugins, {
+	"sizzle" : workspace + "Sizzle/sizzle.js",
+	"jquery" : workspace + "jquery/jquery.js",
+	"RequestAnimationFrame" : workspace + "Tween/RequestAnimationFrame.js",
+	"Tween" : workspace + "Tween/Tween.js",
+});
+
+_.each(("onee.dom onee.ajax onee.tmplm "+
+	"onee.form onee.powin onee.swf "+
+	"onee.scrollitem onee.LayerScroll").split(" "), function (index, k) {
+		plugins[index] = plu + index + "/index.js"
+	});
 
 /**
  * filepath string 模块路径
@@ -403,7 +405,10 @@ var plugins = onee.plugins = {"onee.plugins": onee.workspace+"onee.plugins.js"};
 
 // 当前经过define的模块
 var currentDefineModule;
-var tmpDefineModule = {};
+// For IE6-9, `onreadystatechange` may not fire exactly
+// after script been execute, use `tmpDefineModuleForIE69`
+// to record the executed module by module's uri
+var tmpDefineModuleForIE69 = {};
 
 extend(onee, (function () {
 
@@ -433,14 +438,15 @@ extend(onee, (function () {
 
 // log(that.uri+" -> loaded")
 // log(currentDefineModule)
-		currentDefineModule = tmpDefineModule[that.uri] || currentDefineModule;
+		currentDefineModule = tmpDefineModuleForIE69[that.uri] || currentDefineModule;
 		
 		if (currentDefineModule) {
 
 			moduleCache[that.uri] = extend(that, currentDefineModule);
 
+			// remove it
 			currentDefineModule = null;
-			delete tmpDefineModule[that.uri];
+			delete tmpDefineModuleForIE69[that.uri];
 
 			var deps = that.deps, depmod, waitting = deps.length, factory = that.factory;
 
@@ -460,11 +466,12 @@ extend(onee, (function () {
 			if ( deps.length ) {
 				// log(that.uri)
 				each( deps, function (uri, k) {
-					// log(uri)
+					// deps is no define
 					if ( !(depmod = moduleCache[uri]) ) {
-// log(that.factory.toString());
+
 						(moduleCache[uri] = new Module(uri, that.factory)).load();
 
+					// deps had been define but no been execute
 					} else if ( depmod.status < 5 ) {
 // log("d")
 						depmod.tops.push(that.factory);
@@ -502,9 +509,22 @@ extend(onee, (function () {
 		return moduleCache[options.uri] || (moduleCache[options.uri] = new Module(options))
 	}*/
 
+	function getInteractiveScript () {
+		var scripts = baseHead.getElementsByTagName("script");
+		var interactiveScript;
+		for (var i = scripts.length - 1; i >= 0; i--) {
+			var script = scripts[i]
+			if (script.readyState === "interactive") {
+				interactiveScript = script
+				return interactiveScript
+			}
+		}
+	}
+
 	function define ( factory, deps ) {
 // log("execute")
 // log(currentlyAddingScriptURI)
+		var interactiveScript;
 		currentDefineModule = {
 			status : STATUS.SAVED,
 			deps : map(deps || [], function (dep) { return getURI(dep) }),
@@ -513,11 +533,16 @@ extend(onee, (function () {
 
 		// If currentlyAddingScriptURI been define
 		// means script file had been cache in IE6-9  
-		if ( currentlyAddingScriptURI && !tmpDefineModule[currentlyAddingScriptURI] ) {
-			tmpDefineModule[currentlyAddingScriptURI] = currentDefineModule;
+		if ( currentlyAddingScriptURI && !tmpDefineModuleForIE69[currentlyAddingScriptURI] ) {
+			tmpDefineModuleForIE69[currentlyAddingScriptURI] = currentDefineModule;
+		} else if ( interactiveScript = getInteractiveScript() ) {
+			tmpDefineModuleForIE69[getScriptAbsoluteUri(interactiveScript)] = currentDefineModule;
 		}
 
 	}
+
+	// 外部文件
+	var rIsExternalFile = /\.(?:css|js)(?:\?|#|$)/;
 
 	function use () {
 		var lastArgumentIndex = arguments.length-1;
@@ -530,11 +555,35 @@ extend(onee, (function () {
 
 		currentDefineModule = {
 			status : STATUS.SAVED,
-			deps : map(slice.call(arguments, 0, lastArgumentIndex + (hasFactory?0:1)), function (dep) { return getURI(dep) }),
+			deps : map(slice.call(arguments, 0, lastArgumentIndex + (hasFactory?0:1)), function (dep) { 
+				return rIsExternalFile.test(dep) ? getURI(dep) :  plugins[dep]
+			}),
 			factory : factory
 		}
 		Module.onload(moduleCache[uri] = new Module(uri));
 	}
+
+	var getURI = function () {
+
+		var href = document.location.href;
+		// current path
+		var currPath = href.substring(0, href.lastIndexOf("/")+1);
+		// match for uri current path -> ./
+		var rCurrPath = /^\.\//;
+		// match if is independent path
+		var risHTTP = /^https?\:\/\//;
+		// grobal id for anonymous module
+		var guid = 0;
+
+		return function (uri) {
+			// log(uri)
+			return uri ?
+				risHTTP.test(uri) ? uri : currPath + uri.replace(rCurrPath, "")
+				:
+				currPath+'_default_'+(guid++);
+		}
+
+	}();
 
 	// publish define api
 	return {
