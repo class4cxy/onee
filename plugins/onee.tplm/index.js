@@ -1,7 +1,7 @@
 /**
- * TmplM 前端模版引擎管理
+ * tplm 前端模版引擎管理
  * why 'M' ? No just a Tmpl engine, but a Tmpl Manager
- * var Tcomm = TmplM("comm.tpl") 引入模板文件
+ * var Tcomm = tplm("comm.tpl") 引入模板文件
  * 当模板文件引入成功的监听
  * Tcomm.done(callback) callback 回调，回调内部的this指向Tcomm
  * 查找指定模板（未必在Tcomm.done触发之后才能正确查找）
@@ -13,15 +13,13 @@
  * more ? http://www.jdoi.net/2013/09/28/api-tmplm-2-0-js-%E5%89%8D%E7%AB%AF%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%E5%99%A8/
  */
 
-;!function (global, undefined) {
+onee.define(function () {
 
-	if ( !onee || !_ || !onee.ajax ) return console && console.log && console.log("Base on onee.js, underscode.js, ajax.js");
-	
 	// is exist
-	if ( onee.TmplM ) return;
+	if ( onee.tplm ) return;
 
 	// new a onee's log
-	var log = onee.log("TmplM");
+	var log = onee.log("tplm");
 	
 	var extend = _.extend;
 	var each   = _.each;
@@ -186,8 +184,8 @@
 	
 	
 	// export tmplm
-	onee.TmplM = function (file) {
+	onee.tplm = function (file) {
 		return new _manager(file)
 	}
 
-}(this);
+}, ["onee.ajax"]);

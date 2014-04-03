@@ -35,21 +35,7 @@
  * @param {boolean} options.devicefont  设置静态文本对象是否以设备字体呈现。允许值：true/false 
  * @param {boolean} options.swliveconnect  第一次加载flash时浏览器是否应启动Java。允许值：true/false 
  */
-;!function (undefined) {
-
-	if (
-		!onee ||
-		!_ ||
-		!onee.dom
-	) return console && console.log && console.log(
-
-			"Base on "+
-			"onee.js /"+
-			"underscode.js /"+
-			"dom.js"
-
-		);
-	
+onee.define(function () {
 	// is exist
 	if ( onee.swf ) return;
 
@@ -248,5 +234,4 @@
 		return new _swf(options);
 	}
 	onee.swf.version = "2.0.0";
-	
-}();
+}, ["onee.dom"]);

@@ -1,15 +1,10 @@
 /**
- * demo - 
  * onee.dom 节点操作方法
  * 20130929
  * design by J.do
  * for more ? http://jdoi.net/
  */
-
-;!function (global, undefined) {
-
-	if ( !onee || !_ || !Sizzle ) return console && console.log && console.log("Base on onee.js & underscode.js & Sizzle.js");
-
+onee.define(function () {
 	// is exist
 	if ( onee.dom ) return;
 
@@ -995,6 +990,4 @@
 		}
 	
 	})());
-
-
-}(this);
+}, ["sizzle"]);

@@ -1,35 +1,20 @@
 /**
- * Class PowinM & Class Popwin
+ * Class powinM & Class Popwin
  * design by chen's
  * 20130610
  * base jquery.js
  */
-!function (undefined) {
-	
-	if (
-		!onee ||
-		!_ ||
-		!Sizzle ||
-		!onee.ajax ||
-		!onee.dom
-	) return console && console.log && console.log(
 
-		"Base on "+
-		"onee.js /"+
-		"underscode.js /"+
-		"Sizzle.js /"+
-		"dom.js"
+onee.define(function () {
 
-	);
-	
 	// is exist
-	if ( onee.Powin ) return;
+	if ( onee.powin ) return;
 
 	// new a onee's log
-	var log       = onee.log("Powin");
+	var log       = onee.log("powin");
 	var getwins   = onee.get;
 	var find      = onee.dom.find;
-	var interface = onee.Util.interface;
+	var interface = onee.interface;
 	var browser   = onee.browser;
 	// base tool
 	var isEmpty = _.isEmpty;
@@ -373,6 +358,6 @@
 	});
 
 	// export
-	(onee.Powin = _popwin).cache = _cache_;
-	
-}();
+	(onee.powin = _popwin).cache = _cache_;
+
+}, ["sizzle", "onee.dom", "onee.ajax", onee.workspace + "plugins/onee.Powin/powin-style.css"]);

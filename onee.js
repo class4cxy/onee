@@ -1,17 +1,9 @@
 ﻿/*
- * ONEE JavaScript Library
- * Create time 2011-05-15 9:28
- * aim at build my F2E tree / use when need / less code, more done
- * Copyright (c) 2013-2099 design by J.do.
+ * onee.define JavaScript module define
+ * Create time 2014-03-30 10:36
+ * close to cmd
+ * Copyright (c) 2014-2099 design by J.do.
  * for more -> http://www.jdoi.net/
- */
-
-/**
- * fix list
- * 20131217 相同文件名，不同路径加载有问题 [修复]
- * 20131217-20131217 CACHE索引存在问题，已改回以加载路径为索引，取代之前的以文件名为索引
- * 20131222 样式加载在android原生浏览器报错 [修复]
- * 20131222-20131222 样式加载逻辑出错！高级浏览器已经支持onload加载css，所以并没有报错
  */
 
 !function (global, undefined) {
@@ -24,32 +16,27 @@ var onee = global.onee = {
 	version : "1.0"
 }
 
-/*
- * <script src="../onee/Base/onee.js" type="text/javascript"></script>
- * onee.js的工作目录workspace 三种情况：
- * workspace 值为空， src属性为onee.js的绝对路径
- * workspace 值为空， onee文件默认存放在根目录，例如：目录默认为 http://www.xxx.com/onee/
- * workspace 值不为空，根据个人需求配置好改属性
- */
+// ref seajs
+function getScriptAbsoluteUri (node) {
+	return node.hasAttribute ? // non-IE6/7
+      node.src :
+    // see http://msdn.microsoft.com/en-us/library/ms536429(VS.85).aspx
+      node.getAttribute("src", 4)
+}
 
 var workspace = onee.workspace = (function(){
 	
 	var scripts = document.getElementsByTagName("script");
-	var scriptSelf = scripts[scripts.length-1];
-	var scriptSelfSrc = scriptSelf.src;
-	var rHTTP = /^https?\:\/\//;
-	var workspace = scriptSelf.getAttribute("workspace");
-	var docUrl = document.location.href;
-	!workspace && (workspace = rHTTP.test(scriptSelfSrc) ? scriptSelfSrc.substring(0, scriptSelfSrc.indexOf("/onee/")+6) : "/onee/");
+	// var scriptSelf = scripts[scripts.length-1];
+	var scriptUri = getScriptAbsoluteUri(scripts[scripts.length-1]);
 
-//    console.log(workspace)
-	return workspace;
+	return scriptUri.substring(0, scriptUri.lastIndexOf("/")+1);
 	
 })();
 
 onee.log = function ( module ) {
 	return function ( msg ) {
-		!!console && !!console.log && console.log.call(null, +new Date + ' : ' + module + ' -> ', msg);
+		!!console && !!console.log && console.log(+new Date + ' : ' + module + ' -> ', msg);
 	}
 }
 
@@ -59,47 +46,25 @@ var log = onee.log("onee");
 // base underscorejs
 if ( !global._ ) return log("Base on underscorejs.js");
 
-// base tool
 var extend    = _.extend,
 	each      = _.each,
 	map       = _.map,
 	indexOf   = _.indexOf,
 	isEmpty   = _.isEmpty,
-	isArray   = _.isArray;
+	isArray   = _.isArray,
+	isFunction= _.isFunction,
+	slice     = Array.prototype.slice,
+	debug     = !!0;
 
-
-// static variable
-var slice     = Array.prototype.slice,
-	toString  = Object.prototype.toString,
-	// match style tag
-	rTagStyle = /<style.*?>([^<]*)<\/style>/ig,
-	// match of url
-	rQuery    = /[\?|&](.*?)=([^&#\\$]*)/g,
-	// document head
-	dHead     = document.getElementsByTagName("head")[0],
-	// document body
-	dBody     = document.body,
-	// debug model
-	debug = !!0;
-	// href
-	/*HREF = document.location.href,
-	// root path
-	rootpath  = HREF.substring(0, HREF.lastIndexOf("/")+1),
-	// regexp of current path : ./
-	rCurrPath = /^\.\//;*/
-	
 
 /**
  * NameSpace 工具集
  * 20130130
  * .versionComparison
- * .isArray
- * .each
- * .copy
  * .queryMap
  * .isEmptyObject
  */
-var Util = onee.Util = {
+// var Util = onee.Util = {
 	
 	/**
 	 * Function 版本号对比
@@ -110,7 +75,7 @@ var Util = onee.Util = {
 	 * v1 < v2 return  1
 	 * 20130213
 	 */
-	versionComparison : function ( v1, v2 ) {
+	/*versionComparison : function ( v1, v2 ) {
 		
 		var firstArr = v1.split('.'),
 			lastArr  = v2.split('.'),
@@ -129,30 +94,34 @@ var Util = onee.Util = {
 		}
 		return 0;
 		
-	},
+	},*/
 	/**
 	 * Function query to map
 	 * @param [string] url
 	 * 20121113
 	 */
-	queryMap : function ( url ) {
+	/*queryMap : (function () {
 		
-		var realUrl = url || document.location.href,
-			map = {};
+		var href   = document.location.href;
+		var rQuery = /[\?|&](.*?)=([^&#\\$]*)/g;
 
-		realUrl.replace( rQuery, function ( a, b, c ) {
+		return function ( url ) {
+			var map = {};
 
-			b && c && ( map[b] = c );
+			(url || href).replace( rQuery, function ( a, b, c ) {
 
-		});
+				b && c && ( map[b] = c );
 
-		return map;		
-	},
+			});
+
+			return map;	
+		}	
+	})(),*/
     
 	// 接口初始化
 	// 默认扩展到第一个参数
 	// 仅仅属性为 undefined 时进行赋值
-	interface : function () {
+	/*interface : function () {
 		
 		var extender = arguments[0];
 	
@@ -168,25 +137,35 @@ var Util = onee.Util = {
 		
 		return extender;
 		
-	},
-	
-	// 类型判断
-	isType : function isType( type ) {
-	
-		return function( obj ) {
-	
-			return Object.prototype.toString.call( obj ) === "[object " + type + "]"
-		}
-	}
-}
+	}*/
+// }
 // 初始化/引用
-var isType = Util.isType;
+/*var isType = Util.isType;
 var isArray = Array.isArry || isType("Array");
 var isObject = onee.isObject = isType("Object");
 var isString  = onee.isString  = isType("String");
 var isFunction = onee.isFunction = isType("Function");
-var isUndefined = onee.isUndefined = isType("Undefined");
-var interface = Util.interface;
+var isUndefined = onee.isUndefined = isType("Undefined");*/
+// 接口初始化
+// 默认扩展到第一个参数
+// 仅仅属性为 undefined 时进行赋值
+var interface = onee.interface = function () {
+		
+	var extender = arguments[0];
+
+	each( slice.call(arguments, 1), function (obj, k) {
+		
+		each( obj, function (val, name) {
+			
+			extender[name] === undefined && (extender[name] = val);
+			
+		});
+		
+	});
+	
+	return extender;
+	
+}
 
 
 /**
@@ -251,7 +230,7 @@ var browser = onee.browser = (function () {
 
 
 // define queue
-var queue = onee.queue = function () {
+/*var queue = onee.queue = function () {
 	var _queue = [];
 	return {
 		// 插入元素
@@ -267,9 +246,7 @@ var queue = onee.queue = function () {
 			}
 		}
 	}
-}
-// define event
-
+}*/
 
 /**
  * inc - js/css loader
@@ -282,19 +259,20 @@ var queue = onee.queue = function () {
  * @prama file{String|Array}
  * @method done(callback)
  */
-var inc = onee.inc = (function () {
 
+// ref seajs
+// For some cache cases in IE 6-8, the script executes IMMEDIATELY after
+// the end of the insert execution, so use `currentlyAddingScript` to
+// hold current node, for deriving url in `define` call
+var currentlyAddingScriptURI;
+var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
 
-	var interface = Util.interface;
-	var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
+var inc = (function () {
+
 	// ref: #185 & http://dev.jquery.com/ticket/2709
 	var baseElement = baseHead.getElementsByTagName("base")[0];
 	
-	
-	var CACHE = {};
-	var CACHE_INDEX_TYPE = /(?:^|\/)((?:[\w\.\-]+)\.(js|css))[?#]*/;
-	var isHTTP = /^https?\:\/\//;
-    var risCSS = /\.css(?:\?|$)/;
+    var risCSS = /\.css(?:\?|#|$)/;
 	// ref : seajs
 	// `onload` event is not supported in WebKit < 535.23 and Firefox < 9.0
 	// ref:
@@ -302,124 +280,13 @@ var inc = onee.inc = (function () {
 	//  - https://bugzilla.mozilla.org/show_bug.cgi?id=185236
 	//  - https://developer.mozilla.org/en/HTML/Element/link#Stylesheet_load_events
 	var isOldWebKit = (navigator.userAgent.replace(/.*AppleWebKit\/(\d+)\..*/, "$1")) * 1 < 536;
-	var READY_STATE_RE = /^(?:loaded|complete|undefined)$/
+	var READY_STATE_RE = /^(?:loaded|complete|undefined)$/;
 
-	
-	/* status:
-	 * 1 -> initialize
-	 * 2 -> loading
-	 * 3 -> complete
-	 */
-	function _file (index) {
-//console.log(index)
-		// initialize arguments
-		interface(this, {
-			index : isHTTP.test(index) ? index : getURI(index),
-			// initialize file
-			status: 1,
-			// triggle callback list
-			events: [],
-			// typeof file
-			isCSS : risCSS.test(index)
-		});
-
-	}
-	_file.realCallback = function () {
-		
-		//log(this.events.length)
-
-		var events = this.events;
-		// complete
-		this.status = 3;
-		// triggle callbacks
-		for ( var i = 0, len = events.length; i < len; i++ ) {
-			//alert(events[i].toString())
-			events[i]();
-			
-		}
-
-	}
-	_file.prototype.done = function ( callback ) {
-	
-		if ( this.status == 3 ) {
-		
-			return callback()
-		
-		}
-		
-		this.events.push(callback)
-	
-	}
-	_file.prototype.load = function () {
-		// loading
-		this.status = 2;
-
-		var node = document.createElement(this.isCSS ? "link" : "script"),
-			ts = this;
-
-        if (this.isCSS) {
-            node.rel = "stylesheet";
-            node.href = this.index;
-        }
-        else {
-            node.async = true;
-            node.src = this.index;
-        }
-
-        var missingOnload = this.isCSS && (isOldWebKit || !("onload" in node));
-
-        // 低版本浏览器使用传统css检测方案
-        if (missingOnload) {
-            setTimeout(function() {
-                _handcss.call( ts, node )
-            }, 1) // Begin after node insertion
-        } else {
-            node.onload = node.onerror = node.onreadystatechange = function () {
-
-                if (READY_STATE_RE.test(node.readyState)) {
-
-                    // log(currentModule)
-                    var len, isCache, index;
-                    if ( currentModule && (len=currentModule.deps.length) ) {
-                    	// onee.plugins[currentModule.id].uri = node.src
-                    	// currentModule.uri = node.src;
-                    	while(len--) {
-                    		index = currentModule.deps[len];
-                    		!CACHE[index] && (CACHE[index] = new _file(index)).load()
-                    		// new _file(currentModule.deps[len]);
-                    	}
-                    } else {
-                    	currentModule.factory()
-                    }
-                    currentModule = null;
-                    // Ensure only run once and handle memory leak in IE
-                    node.onload = node.onerror = node.onreadystatechange = null;
-                    // Remove the script to reduce memory leak
-                    !ts.isCSS && !debug && baseHead.removeChild(node);
-                    // Dereference the node
-                    node = null;
-                    //callback(index);
-                    _file.realCallback.call(ts);
-
-                }
-
-            }
-        }
-        // ref: #185 & http://dev.jquery.com/ticket/2709
-		baseElement ?
-			baseHead.insertBefore(node, baseElement) :
-			baseHead.appendChild(node)
-		
-		return this
-		
-	}
-	
 	// loading css file
 	// ref : seajs
-	function _handcss ( node ) {
+	function _handcss ( node, callback ) {
 		var sheet = node.sheet;
 		var isLoaded;
-		var ts = this;
 
 		// for WebKit < 536
 		if (isOldWebKit) {
@@ -446,301 +313,289 @@ var inc = onee.inc = (function () {
 		setTimeout(function() {
 			if (isLoaded) {
 				// Place callback here to give time for style rendering
-				_file.realCallback.call(ts);
+				callback()
 			}
 			else {
-				_handcss.call(ts, node);
+				_handcss.call( node, callback );
 			}
 		}, 20);
 		
 	}
 
+	return function (uri, callback) {
 
-	// 异步加载
-	// 内部方法，不想做接口检测了
-	function _synchronous () {
-		
-		var arg = arguments;
-		var len = arg.length;
-		//log(arg[0])
-		if ( len == 1 ) {
-			// 存在缓存情况需延迟
-			// 等待done装载callback
-			//console.log(arg[0].toString())
-			setTimeout(function () {
-				try{arg[0]()}catch(e){log(e)}
-			}, 10);
-			
-		} else if ( len > 1 ) {
-			
-			var files = Array.prototype.shift.call(arg);
-//			console.log(files)
-			// 数组，将跳入同步加载处理
-			if ( isArray(files) ) {
-			
-				_asynchronous( files, function () { _synchronous.apply( null, arg )});
+		var isCSS = risCSS.test(uri);
 
-			} else {
-			
-			    //var isCSS = _reIndexType(files);
-				
-				//if ( re = _reIndexType(files) ) {
-					
-					//var isCache = CACHE[re.index];
-                    var isCache = CACHE[files];
+		var node = document.createElement(isCSS ? "link" : "script")
 
-					if ( !!isCache ) {
+        if (isCSS) {
+            node.rel = "stylesheet";
+            node.href = uri;
+        }
+        else {
+            node.async = true;
+            node.src = uri;
+        }
 
-						isCache.status == 3 ?
-							_synchronous.apply( null, arg )
-						:
-							isCache.events.push(
-								function () {
-									_synchronous.apply( null, arg )
-								}
-							);
-						
-					} else (CACHE[files] = new _file(files)).load().done(function () { _synchronous.apply( null, arg ) });
+        var notSupportOnload = isCSS && (isOldWebKit || !("onload" in node));
 
-				//}
-			
-			}
-			
-		}
+        // 低版本浏览器使用传统css检测方案
+        if (notSupportOnload) {
+            setTimeout(function() {
+                _handcss( node, callback )
+            }, 1) // Begin after node insertion
+        } else {
+            node.onload = node.onerror = node.onreadystatechange = function () {
 
+                if (READY_STATE_RE.test(node.readyState)) {
+
+                    // Ensure only run once and handle memory leak in IE
+                    node.onload = node.onerror = node.onreadystatechange = null;
+                    // Remove the script to reduce memory leak
+                    !isCSS && !debug && baseHead.removeChild(node);
+                    // Dereference the node
+                    node = null;
+                    //callback(index);
+                    callback();
+
+                }
+
+            }
+        }
+
+        currentlyAddingScriptURI = uri;
+
+        // ref: #185 & http://dev.jquery.com/ticket/2709
+		baseElement ?
+			baseHead.insertBefore(node, baseElement) :
+			baseHead.appendChild(node);
+
+		currentlyAddingScriptURI = "";
+		// log(uri + " -> fetch")
 	}
-	
-	// 同步加载
-	function _asynchronous ( files, callback ) {
-		
-		//_loadedFile
-		var len = files.length,
-			done = function () {
-				// 存在缓存情况需延迟
-				// 等待done装载callback
-				!--len && setTimeout(function () {
-					try{callback && callback()}catch(e){log(e)}
-				}, 10);
-			},
-			isCache,
-			re;
-
-		each ( files, function ( file, k ) {
-
-			// plugin/scroll/scroll.js?ver=2.0 => scroll.js
-			//if ( re = _reIndexType(file) ) {
-				// index = rre[1];
-				// isCss = rre[2] == "css" ? !!1 : !!0;
-				// if object has been CACHE
-				if ( !!(isCache=CACHE[file]) ) {
-					// if status is complete
-					isCache.status == 3 ?
-						done()
-					:
-						isCache.events.push( done );
-	
-				} else (CACHE[file] = new _file(file)).load().done(done);
-			//}
-
-		});
-
-	}
-	
-	// Common callback
-	function _cmcallback (callbacks) {
-
-		each(callbacks, function (callback, k) {
-
-			typeof callback === "function" && callback();
-			
-		});
-	}
-	
-	function _inc_ ( files ) {
-		
-		var callbacks = this.callbacks = [];
-
-		// 无需加载，即可执行
-		if ( !files.length ) {
-//            alert("ddd")
-			// 延迟等待done装载callback
-			return setTimeout(function () {
-				_cmcallback( callbacks );
-			}, 10);
-		}
-		// 异步处理参数
-		Array.prototype.push.call(
-			files,
-			function () {
-				_cmcallback( callbacks );
-			}
-		)
-		_synchronous.apply( null, files );
-		
-	}
-	
-	_inc_.prototype.done = function ( callback ) {
-		this.callbacks.push( callback );
-		return this
-	}
-	
-	return function () {
-		//console.log(arguments.length)
-		return new _inc_(arguments);
-	}
-
 
 })();
-/*
-var anonymousModule;
-var moduleCache;
 
-function module () {
 
-}*/
+/**
+ * onee.plugins
+ */
 
-function GUID () {
-	var d = new Date().getTime(), r;
+var plu = workspace+"plugins/";
+var plugins = onee.plugins = {};
 
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){
-        r = (d + Math.random() * 16) % 16 | 0;
-        d = Math.floor(d / 16);
+_.extend(plugins, {
+	"sizzle" : workspace + "Sizzle/sizzle.js",
+	"jquery" : workspace + "jquery/jquery.js",
+	"RequestAnimationFrame" : workspace + "Tween/RequestAnimationFrame.js",
+	"Tween" : workspace + "Tween/Tween.js"
+});
 
-        return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
-    });
-}
-var getURI = function () {
+_.each(("onee.dom onee.ajax onee.tplm "+
+	"onee.form onee.powin onee.swf "+
+	"onee.scroller onee.layerscroller "+
+	"onee.mslider").split(" "), function (index, k) {
+		plugins[index] = plu + index + "/index.js"
+	});
 
-	var href = document.location.href;
-	var rCurrPath = /^\.\//;
-	return function (uri) {
-		var ret;
-		if ( uri ) {
-			ret = href.substring(0, href.lastIndexOf("/")+1) + uri.replace(rCurrPath, "");
-		} else {
-			var scripts = dHead.getElementsByTagName("script");
-			/*var scriptlen = scripts.length;
-			while ( scriptlen-- ) {
-				scripts.src ===
-			}*/
-			var scriptSelf = scripts[0];
-
-			ret = scriptSelf.src;
-			// console.log(scripts)
-		}
-		return ret
-	}
-
-}();
 /**
  * filepath string 模块路径
  * factory function 模块定义函数
  * [deps] array 依赖模块
  */
-var moduleCache = {};
 
-function Module (option) {
-	interface(this, option, {
-		// default is GUID code
-		index : GUID(),
-		uri : "",
-		deps : [],
-		tops : [],
-		factory : function () {}
-	});
-}
-/*extend(Module.prototype, {
-	load : function () {
+// 当前经过define的模块
+var currentDefineModule;
+// For IE6-9, `onreadystatechange` may not fire exactly
+// after script been execute, use `tmpDefineModuleForIE69`
+// to record the executed module by module's uri
+var tmpDefineModuleForIE69 = {};
 
-	},
-});*/
+extend(onee, (function () {
 
-var currentModule;
+	var moduleCache = {};
 
-var define = onee.define = function ( name, factory, deps ) {
-
-	// console.log(document.currentScript)
-	// if ( !onee.plugins ) return log("Missing onee-plugins.js");
-	if (!onee.plugins) onee.plugins = {};
-
-	// var module;
-
-	if ( isFunction(name) ) {
-		deps = factory;
-		factory = name;
-		// name = GUID();
+	var STATUS = {
+		// 模块初始化
+		INITIALIZING : 1,
+		// 模块加载中
+		LOADING : 2,
+		// 模块保存
+		SAVED : 3,
+		// 加载完成回调
+		LOADED : 4,
+		// 执行
+		EXECUTED : 5
 	}
-	if ( !isString(name) ) {
-		// name = getURI();
-		name = GUID();
-		// module = onee.plugins[name] = {};
+
+	function Module (uri, tops) {
+				// log(uri)
+		this.uri = uri;
+		this.tops = tops ? [tops] : [];
+		this.status = STATUS.INITIALIZING;
 	}
-	// console.log(anonymousModule)
 
-	var module = onee.plugins[name] = {};
-	module.id = name;
-	// log(name)
+	Module.onload = function (that) {
 
-	// if ( module && (module.deps || module.factory) ) return log("name of `"+ name +"` had been define.");
-	// if ( !module ) module = onee.plugins[name] = {};
+// log(that.uri+" -> loaded")
+// log(currentDefineModule)
+		currentDefineModule = tmpDefineModuleForIE69[that.uri] || currentDefineModule;
+		
+		if (currentDefineModule) {
 
-	// rewrite factory
-	module.factory = function () {
-		// exec self factory
-		(!module.waitting || !--module.waitting) && factory();
+			moduleCache[that.uri] = extend(that, currentDefineModule);
 
-		var tops = module.top||[], m;
-		// exec top's factory
-		while((m=tops.shift())) m();
-		// console.log(module.waitting)
+			// remove it
+			currentDefineModule = null;
+			delete tmpDefineModuleForIE69[that.uri];
+
+			var deps = that.deps, depmod, waitting = deps.length, factory = that.factory;
+
+			that.factory = function () {
+				that.status = STATUS.EXECUTED;
+
+				if (!waitting || !--waitting) {
+					// exec self factory
+					factory();
+					var tops = that.tops||[], m;
+					// exec top's factory
+					while((m=tops.shift())) m();
+				}
+
+			}
+
+			if ( deps.length ) {
+				// log(that.uri)
+				each( deps, function (uri, k) {
+					// deps is no define
+					if ( !(depmod = moduleCache[uri]) ) {
+
+						(moduleCache[uri] = new Module(uri, that.factory)).load();
+
+					// deps had been define but no been execute
+					} else if ( depmod.status < 5 ) {
+// log("d")
+						depmod.tops.push(that.factory);
+
+					} else {
+						// log("dd")
+						that.factory();
+					}
+
+				})
+			} else that.factory();
+
+		// 不经过define封装的组件
+		} else {
+			// console.log(that)
+			that.status = STATUS.EXECUTED;
+			// factory();
+			var tops = that.tops||[], m;
+			// exec top's factory
+			while((m=tops.shift())) m();
+		}
+
 	}
-	// module.waitting = [];
-	module.deps = deps || [];
-	module.waitting = map(module.deps, function(uri) {return getURI(uri)});
-	// deps = deps || [];
-	// var _module_ = onee.plugins[name] = {};
-	/*var _thatdeps_ = [], _depsmodule_;
 
-	if (deps && (module.waitting = deps.length)) {
+	Module.prototype.load = function () {
 
-		each(deps, function (dep, k) {
-			// onee.plugins[dep]
-			dep = getURI(dep);
-			_depsmodule_ = onee.plugins[dep];
+		this.status = STATUS.LOADING;
+		
+		var that = this;
+		
+		inc(that.uri, function () {Module.onload(that)})
+	}
 
-			if ( !_depsmodule_ ) _depsmodule_ = onee.plugins[dep] = {top : []};
+	/*function getModule (options) {
+		return moduleCache[options.uri] || (moduleCache[options.uri] = new Module(options))
+	}*/
 
-			if ( _depsmodule_.deps && _depsmodule_.deps.length ) _thatdeps_ = _thatdeps_.concat(_depsmodule_.deps);
-			else _thatdeps_.push(dep);
+	function getInteractiveScript () {
+		var scripts = baseHead.getElementsByTagName("script");
+		var interactiveScript;
+		for (var i = scripts.length - 1; i >= 0; i--) {
+			var script = scripts[i]
+			if (script.readyState === "interactive") {
+				interactiveScript = script
+				return interactiveScript
+			}
+		}
+	}
 
-			_depsmodule_.top.push(module.factory)
-		});
+	function define ( factory, deps ) {
+// log("execute")
+// log(currentlyAddingScriptURI)
+		var interactiveScript;
+		currentDefineModule = {
+			status : STATUS.SAVED,
+			deps : map(deps || [], function (dep) {
+				return rIsExternalFile.test(dep) ? getURI(dep) :  plugins[dep]
+			}),
+			factory : factory
+		}
+
+		// If currentlyAddingScriptURI been define
+		// means script file had been cache in IE6-9  
+		if ( currentlyAddingScriptURI && !tmpDefineModuleForIE69[currentlyAddingScriptURI] ) {
+			tmpDefineModuleForIE69[currentlyAddingScriptURI] = currentDefineModule;
+		} else if ( interactiveScript = getInteractiveScript() ) {
+			tmpDefineModuleForIE69[getScriptAbsoluteUri(interactiveScript)] = currentDefineModule;
+		}
 
 	}
-	module.deps = _thatdeps_;*/
 
-	currentModule = module;
+	// 外部文件
+	var rIsExternalFile = /\.(?:css|js)(?:\?|#|$)/;
 
-}
+	function use () {
+		var lastArgumentIndex = arguments.length-1;
+		var lastArgument = arguments[lastArgumentIndex];
+		var hasFactory = isFunction(lastArgument);
+		
+		var factory = hasFactory ? lastArgument : function() {};
 
-// use - 内置模板的引用
-var use = onee.use = function ( index ) {
+		var uri = getURI();
 
-	if ( !onee.plugins ) return log("Missing onee-plugins.js");
+		currentDefineModule = {
+			status : STATUS.SAVED,
+			deps : map(slice.call(arguments, 0, lastArgumentIndex + (hasFactory?0:1)), function (dep) { 
+				return rIsExternalFile.test(dep) ? getURI(dep) :  plugins[dep]
+			}),
+			factory : factory
+		}
+		Module.onload(moduleCache[uri] = new Module(uri));
+	}
 
-//    var filewrap = [];
-//    console.log(slice.call(arguments, 0))
-//    each( slice.call(arguments, 0), function ( index, k ) {
-        var files = onee.plugins[index];
-//        console.log(isArray(files))
-//        if ( isArray(files) ) filewrap[filewrap.length] = files;
-//        console.log(files)
-//    });
+	var getURI = function () {
 
-//    console.log(filewrap);
-	return files && files.deps && files.deps.length ? inc.apply(null, files.deps) : inc(index);
-	// if ( files && files.deps && files.deps.length ) return inc.apply(null, files.deps);
+		var href = document.location.href;
+		// current path
+		var currPath = href.substring(0, href.lastIndexOf("/")+1);
+		// match for uri current path -> ./
+		var rCurrPath = /^\.\//;
+		// match if is independent path
+		var risHTTP = /^https?\:\/\//;
+		// grobal id for anonymous module
+		var guid = 0;
 
-};
+		return function (uri) {
+			// log(uri)
+			return uri ?
+				risHTTP.test(uri) ? uri : currPath + uri.replace(rCurrPath, "")
+				:
+				currPath+'_default_'+(guid++);
+		}
+
+	}();
+
+	// publish define api
+	return {
+		moduleCache : moduleCache,
+		define : define,
+		use : use
+	}
+
+})());
+
 
 }( this );

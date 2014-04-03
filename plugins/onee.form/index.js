@@ -26,23 +26,9 @@
  *       20140311 - 增加_toggleFormStatus_，控制表单提交状态
  *       20140311 - 增加对<select type="Multipleselect" .. 控件的取值支持
  */
-;!function (undefined) {
 
-	if (
-		!onee ||
-		!_ ||
-		!Sizzle ||
-		!onee.ajax
-	) return console && console.log && console.log(
+onee.define(function () {
 
-			"Base on "+
-			"onee.js /"+
-			"underscode.js /"+
-			"Sizzle.js /"+
-			"ajax.js"
-
-		);
-	
 	// is exist
 	if ( onee.form ) return;
 
@@ -238,8 +224,8 @@
 	});
 	
 	
-	onee.Form = function (id) {
+	onee.form = function (id) {
 		return new _form(id);
 	}
-	
-}();
+
+}, ["sizzle", "onee.ajax"]);

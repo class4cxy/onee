@@ -4,21 +4,8 @@
  * more ? http://jdoi.net/
  * slide banner of img on moblie & pad
  */
-;!function (global, undefined) {
 
-    if (
-        !onee ||
-        !_ ||
-        !onee.dom
-    ) return console && console.log && console.log(
-        "Base on "+
-        "onee.js /"+
-        "underscode.js /"+
-        "dom.js"
-    );
-
-    // is exist
-    if ( onee.swf ) return;
+onee.define(function () {
 
     // is exist
     if ( onee.mslider ) return;
@@ -26,7 +13,7 @@
     var moduleName = "mslider";
     // new a onee's log
     var log = onee.log( moduleName );
-    var interface = onee.Util.interface;
+    var interface = onee.interface;
     var GG = onee.dom.find;
     var setCSS = onee.dom.css;
     var append = onee.dom.append;
@@ -185,4 +172,4 @@
         return new _slider(  selector, options  )
     }
 
-}(this);
+}, ["onee.dom"]);

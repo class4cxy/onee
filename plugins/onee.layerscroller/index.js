@@ -1,40 +1,22 @@
 /**
- * module scrollanimation
+ * module layerscroller
  * use for
  * design by Jdo.
  * 13-12-17
  * more ? http://jdoi.net
  */
 
-;!function (global, undefined) {
+
+onee.define(function () {
 
     'use stick';
-    if (
-        !onee ||
-            !_ ||
-            !Sizzle ||
-            !onee.dom ||
-            !TWEEN ||
-            !requestAnimationFrame ||
-            !onee.scrollitem
-        ) return console && console.log && console.log(
-        "Base on "+
-            "onee.js /"+
-            "underscode.js /"+
-            "Sizzle.js /"+
-            "dom.js /"+
-            "Tween.js /"+
-            "requestAnimationFrame.js /"+
-            "scrollitem.js /"
-    );
-
     // is exist
-    if ( onee.scrollanimation ) return;
+    if ( onee.layerscroller ) return;
 
     // new a onee's log
-    var log         = onee.log("scrollanimation");
+    var log         = onee.log("layerscroller");
     var GG          = onee.dom.find;
-    var interface   = onee.Util.interface;
+    var interface   = onee.interface;
     var setCss      = onee.dom.css;
     var append      = onee.dom.append;
     var onEvt       = onee.dom.on;
@@ -231,7 +213,7 @@
         });
     }
 
-    onee.scrollanimation = function (id, options) {
+    onee.layerscroller = function (id, options) {
 
         (options = options || {}).onStart = function (index) {
             var scrollin = animateNode[index];
@@ -269,4 +251,4 @@
 
     }
 
-}(this);
+}, ["onee.scroller"]);

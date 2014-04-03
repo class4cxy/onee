@@ -5,28 +5,11 @@
  * a banner animation for each son element
  *
  */
-;!function (global, undefined) {
+onee.define(function () {
 
     'use stick';
-    if (
-        !onee ||
-        !_ ||
-        !Sizzle ||
-        !onee.dom ||
-        !TWEEN ||
-        !requestAnimationFrame
-    ) return console && console.log && console.log(
-        "Base on "+
-        "onee.js /"+
-        "underscode.js /"+
-        "Sizzle.js /"+
-        "dom.js /"+
-        "Tween.js /"+
-        "requestAnimationFrame.js /"
-    );
-
     // is exist
-    if ( onee.scrollitem ) return;
+    if ( onee.scroller ) return;
 
     var typeOfDiration = {
 
@@ -40,8 +23,7 @@
     // new a onee's log
     var log = onee.log("bannerAnimation");
     var GG = onee.dom.find;
-    var interface = onee.Util.interface;
-    var isFunction = onee.Util.isType("Function");
+    var interface = onee.interface;
     var setCss = onee.dom.css;
     var append = onee.dom.append;
     var onEvt = onee.dom.on;
@@ -51,6 +33,7 @@
 
     var extend = _.extend;
     var each = _.each;
+    var isFunction = _.isFunction;
 
     // listenning onresize
     var _autoUpdateSize = function () {
@@ -312,10 +295,10 @@
     }
 
 
-    onee.scrollitem = function (id, options) {
+    onee.scroller = function (id, options) {
 
         return new _scroller(id, options);
 
     }
 
-}(this);
+}, ["onee.dom", "Tween", "RequestAnimationFrame"]);
