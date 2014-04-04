@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Tool - ajax.js</title>
+<style>
+*{margin:0; padding:0}
+body, html{
+	font-size:12px;
+	font-family:"Microsofe yahei"
+}
+a {
+	text-decoration:none
+}
+pre {
+	background-color:#CCC;
+	padding:0 10px;
+	line-height:22px
+}
+pre em{
+	color:#999
+}
+h1{
+	font:bold 20px/50px "a";
+	text-align:center;
+	background-color:#993;
+	margin-bottom:20px;
+	box-shadow: 0 5px 5px rgba(0,0,0,.3)
+}
+h2{
+	font:bold 14px/30px "Microsofe yahei"
+}
+.article{
+	width:23%;
+	float:left;
+	margin:0 1% 20px;
+	box-shadow:5px 5px 5px rgba(0,0,0,.3)
+}
+</style>
+</head>
+<body>
+<h1>api - onee.ajax</h1>
+<div class="article w1">
+<h2>(1)ajax - 接口全字段</h2>
+<pre>
+<em>// @param file    {String}</em>
+<em>// @param method  [String] 默认"GET"</em>
+<em>// @param time    [Number] 默认启动超时</em>
+<em>// @param cache   [Boolean] 默认开启</em>
+<em>// @param data    [Object] 提交的数据</em>
+<em>// @param done    [Function] 成功回调，会把数据传回</em>
+<em>// @param err     [Function] 出错回调，会把状态码传回</em>
+<em>// @param timeout [Function] 超时回调</em>
+onee.ajax("dd.json", {
+	
+	method: "POST",
+	time  : 1e3,
+	cache : !!0,
+	type  : "json",
+	data  : {name:"chen", job : "web developer"},
+	done  : function (J) {
+		console.log(J)
+	},
+	err   : function (code) {
+		console.log(code)
+	},
+	timeout: function () {
+		console.log("timeout")
+	}
+	
+});
+</pre>
+</div>
+
+
+<div class="article w2">
+<h2>(2)getJSON - 接口全字段</h2>
+<pre>
+<em>// @param file    {String}</em>
+<em>// @param done    [Function] 成功回调，会把数据传回</em>
+<em>// @param err     [Function] 出错回调，会把状态码传回</em>
+<em>// @param data    [Object] 提交的数据</em>
+onee.getJSON(
+	"dd.json",
+	function (J) {
+		console.log(J)
+	},
+	function (ecode) {
+		console.log(ecode)
+	},
+	{name:"chen", job : "web developer"}
+);
+</pre>
+</div>
+
+
+<div class="article w3">
+<h2>(3)getXML - 接口全字段</h2>
+<pre>
+<em>// @param file    {String}</em>
+<em>// @param done    [Function] 成功回调，会把数据传回</em>
+<em>// @param err     [Function] 出错回调，会把状态码传回</em>
+<em>// @param data    [Object] 提交的数据</em>
+onee.getXML(
+	"dd.json",
+	function (J) {
+		console.log(J)
+	},
+	function (ecode) {
+		console.log(ecode);
+	},
+	{name:"chen", job : "web developer"}
+);
+</pre>
+</div>
+
+<div class="article w4">
+<h2>(4)get - 接口全字段</h2>
+<pre>
+<em>// @param file    {String}</em>
+<em>// @param done    [Function] 成功回调，会把数据传回</em>
+<em>// @param err     [Function] 出错回调，会把状态码传回</em>
+<em>// @param data    [Object] 提交的数据</em>
+onee.get(
+	"dd.json",
+	function (J) {
+		console.log(J)
+	},
+	function (ecode) {
+		console.log(ecode);
+	},
+	{name:"chen", job : "web developer"}
+);
+</pre>
+</div>
+
+<div class="article w5">
+<h2>(5)post - 接口全字段</h2>
+<pre>
+<em>// @param file    {String}</em>
+<em>// @param done    [Function] 成功回调，会把数据传回</em>
+<em>// @param err     [Function] 出错回调，会把状态码传回</em>
+<em>// @param data    [Object] 提交的数据</em>
+onee.post(
+	"dd.json",
+	function (J) {
+		console.log(J)
+	},
+	function (ecode) {
+		console.log(ecode);
+	},
+	{name:"chen", job : "web developer"}
+);
+</pre>
+</div>
+<!--<svg width="100%" height="100%" version="1.1" xmlns="http://www.w3.org/2000/svg">
+
+<circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red"/>
+
+</svg>-->
+</body>
+</html>
+<script src="../../Lodash/Lodash.js"></script>
+<script src="../../onee.js"></script>
+<!-- <script src="ajax.js"></script> -->
+<script>
+onee.use("onee.ajax", function () {
+	// var postData = {name:"chen", job : "web developer"};
+	/*onee.ajax("dd.json", {
+		
+		method: "POST",
+		time  : 1e3,
+		cache : !!0,
+		type  : "json",
+		data  : {name:"chen", job : "web developer"},
+		done  : function (J) {
+			console.log(J)
+		},
+		err   : function (code) {
+			//console.log(code)
+		},
+		timeout: function () {
+			console.log("timeout")
+		}
+		
+	});*/
+	onee.getJSON(
+		"dd.json",
+		function (J) {
+			console.log(J)
+		},
+		{name:"chen", job : "web developer"}
+	);
+	onee.getJSONP("./jsonp.php", function (J) {
+		console.log(J)
+	}, {name:"chen", job : "web developer"})
+	/*onee.post(
+		"dd.json",
+		function (J) {
+			console.log(J)
+		},
+		function (code) {
+			console.log(code);
+		},
+		{name:"chen", job : "web developer"}
+	);*/
+})
+</script>

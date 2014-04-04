@@ -11,7 +11,7 @@
  * @param [Function] options.err 请求失败回调函数
  * @param [Function] options.timeout 请求超时回调函数
  * How to use :
-	_ajax('dat.json', {
+	onee.ajax('dat.json', {
 		type : 'json',
 		method : 'GET',
 		cache : !!1,
@@ -27,11 +27,12 @@
  */
 onee.define(function () {
 	// base function
-	var log         = onee.log("ajax");
-	var interface   = onee.interface;
-	var isObject    = _.isObject;
-	var each        = _.each;
-	var extend      = _.extend;
+	var log           = onee.log("ajax");
+	var interface     = onee.interface;
+	var include = onee.inc;
+	var isPlainObject = _.isPlainObject;
+	var each          = _.each;
+	var extend        = _.extend;
 
 
 	// static variable
@@ -72,6 +73,7 @@ onee.define(function () {
 	}
 
 	function _ajax ( url, options ) {
+		// log(options)
 		// check url is legal
 		if ( !url || typeof url != 'string' ) return log( 'Wrong URL.' );
 		// new XMLHttpRequest
@@ -107,7 +109,7 @@ onee.define(function () {
 
 		var params = "";
 
-		isObject(options.data) && each(options.data, function (val, index) {
+		isPlainObject(options.data) && each(options.data, function (val, index) {
 			
 			params += index +'='+ encodeURIComponent(val) +'&'
 			
@@ -179,12 +181,12 @@ onee.define(function () {
 	 */
 	function _params_ ( done, err, data ) {
 		// 一个回调都不存
-		if( isObject(done) ) {
+		if( isPlainObject(done) ) {
 			data = done;
 			done = err = _empty_;
 		
 		// 不存在err回调
-		} else if ( isObject(err) ) {
+		} else if ( isPlainObject(err) ) {
 			data = err;
 			err = _empty_;
 		}
@@ -236,29 +238,21 @@ onee.define(function () {
 		 * Create time : 2011-09-05 17:08
 		 * How to use :
 		 *
-		 * C.jsonp('http://class4cxy.sinaapp.com/jsonp.php', function( d ){alert( d.sex )})
-		 *@fix : 更换命名空间 - 20120904
+		 * onee.jsonp('http://class4cxy.sinaapp.com/jsonp.php', function( d ){alert( d.sex )})
 		*/
-		jsonp : function ( url, callback, dat ) {
-			var fn = 'jsonp' + new Date(),
+		getJSONP : function ( url, callback, dat ) {
+			var fn = 'jsonp' + (Date.now ? Date.now() : +new Date),
 			
-				cleaned = !1,
+				cleaned = !1;
 
-				js = C.dom.create( 'script', {
-					type : 'text/javascript',
-					charset : 'utf-8'
-				});
-
-			url = url + ( url.indexOf('?') >= 0 ? '&callback=' + fn : '?callback=' + fn );
+			url += (url.indexOf('?') >= 0 ? '&' : '?') +'jpcallback=' + fn;
 			
 			dat && each( dat,
-				
-				function ( key, val ) {
-					
+				function ( val, key ) {
 					url += '&'+ key +'='+ val;
-				})
-			
-			js.src = url;
+				}
+			);
+
 			function clean() {
 				try{
 					delete window[ fn ];
@@ -267,16 +261,11 @@ onee.define(function () {
 				}catch(e){}
 				cleaned = !0
 			}
-			window[ fn ] = function(){
-				clean();
-				callback.apply( this, arguments )
-			}
-			js.onload = js.onreadystatechange = function(){			//For IE
 
-				var rs = this.readyState;
-				!cleaned && (!rs || rs === 'loaded' || rs === 'complete') && clean()
-			}
-			dHead.appendChild( js )
+			include(url, window[ fn ] = function(J){
+				cleaned || clean();
+				callback( J )
+			});
 		}
 
 	});

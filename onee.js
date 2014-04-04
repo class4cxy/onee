@@ -267,7 +267,7 @@ var browser = onee.browser = (function () {
 var currentlyAddingScriptURI;
 var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
 
-var inc = (function () {
+var inc = onee.inc = (function () {
 
 	// ref: #185 & http://dev.jquery.com/ticket/2709
 	var baseElement = baseHead.getElementsByTagName("base")[0];
