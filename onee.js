@@ -46,99 +46,18 @@ var log = onee.log("onee");
 // base underscorejs
 if ( !global._ ) return log("Base on underscorejs.js");
 
-var extend    = _.extend,
-	each      = _.each,
-	map       = _.map,
-	indexOf   = _.indexOf,
-	isEmpty   = _.isEmpty,
-	isArray   = _.isArray,
-	isFunction= _.isFunction,
-	slice     = Array.prototype.slice,
-	debug     = !!0;
+var 
+	extend     = _.extend,
+	each       = _.each,
+	map        = _.map,
+	indexOf    = _.indexOf,
+	isEmpty    = _.isEmpty,
+	isArray    = _.isArray,
+	isFunction = _.isFunction,
+	slice      = Array.prototype.slice,
+	debug      = !!0;
 
 
-/**
- * NameSpace 工具集
- * 20130130
- * .versionComparison
- * .queryMap
- * .isEmptyObject
- */
-// var Util = onee.Util = {
-	
-	/**
-	 * Function 版本号对比
-	 * @param {string} v1
-	 * @param {string} v2
-	 * v1 > v2 return -1
-	 * v1 = v2 return  0
-	 * v1 < v2 return  1
-	 * 20130213
-	 */
-	/*versionComparison : function ( v1, v2 ) {
-		
-		var firstArr = v1.split('.'),
-			lastArr  = v2.split('.'),
-			i = 0,
-			len = Math.min( firstArr.length, lastArr.length ),
-			item1,
-			item2;
-		
-		for ( ; i < len; i++ ) {
-
-			item1 = parseInt(firstArr[i]);
-			item2 = parseInt(lastArr[i]);
-			if ( item1 > item2 ) return -1;
-			if ( item1 < item2 ) return  1;
-
-		}
-		return 0;
-		
-	},*/
-	/**
-	 * Function query to map
-	 * @param [string] url
-	 * 20121113
-	 */
-	/*queryMap : (function () {
-		
-		var href   = document.location.href;
-		var rQuery = /[\?|&](.*?)=([^&#\\$]*)/g;
-
-		return function ( url ) {
-			var map = {};
-
-			(url || href).replace( rQuery, function ( a, b, c ) {
-
-				b && c && ( map[b] = c );
-
-			});
-
-			return map;	
-		}	
-	})(),*/
-    
-	// 接口初始化
-	// 默认扩展到第一个参数
-	// 仅仅属性为 undefined 时进行赋值
-	/*interface : function () {
-		
-		var extender = arguments[0];
-	
-		each( slice.call(arguments, 1), function (obj, k) {
-			
-			each( obj, function (val, name) {
-				
-				extender[name] === undefined && (extender[name] = val);
-				
-			});
-			
-		});
-		
-		return extender;
-		
-	}*/
-// }
 // 初始化/引用
 /*var isType = Util.isType;
 var isArray = Array.isArry || isType("Array");
