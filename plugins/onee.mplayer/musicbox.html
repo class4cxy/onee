@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>personal music box</title>
+    <link rel="stylesheet" href="/git/onee/style/initialize.css">
+</head>
+<style>
+	html,body{
+		height:100%;
+		width: 100%;
+		background-color: #000;
+		overflow: hidden;
+	}
+	*{
+		margin: 0;
+		padding: 0
+	}
+	.mboxwrap{
+		width: 800px;
+		height: 400px;
+		margin: auto;
+		background-color: #283034;
+		padding: 20px
+	}
+	.mboxwrap .list{
+		float: left;
+		height: 100%;
+		width: 25%;
+	}
+	.mboxwrap .list ul{
+		height: 100%;
+		overflow: auto;
+	}
+	.mboxwrap .list li{
+		position: relative;
+		margin-bottom: 2px
+	}
+	.mboxwrap .list span[mplayer=remove]{
+		position: absolute;
+		z-index: 10;
+		top: 5px;
+		right: 5px;
+		display: inline-block;
+		height: 15px;
+		width: 15px;
+		line-height: 15px;
+		text-align: center;
+		cursor:pointer;
+		background-color:#59c2ff;
+	}
+	.mboxwrap .list a{
+		display: block;
+		line-height: 27px;
+		width: 100%;
+		height: 27px;
+		overflow: hidden;
+		color: #ccc;
+		text-indent: 0.5em;
+		background-color: #094c73
+	}
+	.mboxwrap .list a:hover{
+		background-color: #8f9294;
+		color: #fff
+	}
+	.mboxwrap .article{
+		margin-left: 28%;
+		background-color: #000;
+		height: 100%;
+		width: 570px;
+		height: 400px
+	}
+</style>
+<body>
+	<div class="mboxwrap clearfix" mplayer="mMain">
+		<div class="list">
+			<p mplayer="mDrop"><input type="file" mplayer="mAdd" multiple></p>
+			<ul mplayer="mList">
+				<!-- <li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li>
+				<li><a href="#">music list</a></li> -->
+			</ul>
+		</div>
+		<div class="article">
+			<canvas mplayer="mMeter" height="400" width="570">
+				Your browser not support canvas.
+			</canvas>
+		</div>
+	</div>
+</body>
+<script src="/git/onee/Underscode/underscodejs.min.js"></script>
+<script src="/git/onee/onee.js"></script>
+<script>
+	onee.use("onee.mplayer");
+</script>
+</html>
