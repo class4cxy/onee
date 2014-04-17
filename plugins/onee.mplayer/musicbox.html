@@ -64,44 +64,38 @@
 		color: #fff
 	}
 	.mboxwrap .article{
+		position: relative;
 		margin-left: 28%;
 		background-color: #000;
 		height: 100%;
 		width: 570px;
 		height: 400px
 	}
+	.mboxwrap .article .userbar{
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		height: 27px;
+		line-height: 27px;
+	}
 </style>
 <body>
-	<div class="mboxwrap clearfix" mplayer="mMain">
+	<div class="mboxwrap clearfix" mplayer="main">
 		<div class="list">
-			<p mplayer="mDrop"><input type="file" mplayer="mAdd" multiple></p>
-			<ul mplayer="mList">
-				<!-- <li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li>
-				<li><a href="#">music list</a></li> -->
-			</ul>
+			<p mplayer="drop"><input type="file" mplayer="add" multiple accept="audio/*" capture="microphone"></p>
+			<ul mplayer="list"></ul>
 		</div>
 		<div class="article">
-			<canvas mplayer="mMeter" height="400" width="570">
+			<canvas mplayer="meter" height="400" width="570">
 				Your browser not support canvas.
 			</canvas>
+			<div class="userbar">
+				<a href="#stop" mplayer="stop">停止</a>
+				<a href="#play" mplayer="play">播放/暂停</a>
+				<a href="#next" mplayer="next">下一首</a>
+				<a href="#prev" mplayer="prev">上一首</a>
+			</div>
 		</div>
 	</div>
 </body>
