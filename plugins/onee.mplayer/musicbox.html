@@ -79,6 +79,10 @@
 		height: 27px;
 		line-height: 27px;
 	}
+	.mboxwrap .article .userbar a{
+		color: #fff;
+		font-weight: bold;
+	}
 </style>
 <body>
 	<div class="mboxwrap clearfix" mplayer="main">
@@ -95,6 +99,13 @@
 				<a href="#play" mplayer="play">播放/暂停</a>
 				<a href="#next" mplayer="next">下一首</a>
 				<a href="#prev" mplayer="prev">上一首</a>
+				<select mplayer="playmodel">
+					<option value="playone">单曲播放</option>
+					<option value="loopone">单曲循环</option>
+					<option value="playall">顺序播放</option>
+					<option value="loopall">列表循环</option>
+					<option value="random">随机播放</option>
+				</select>
 			</div>
 		</div>
 	</div>

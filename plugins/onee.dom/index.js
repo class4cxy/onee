@@ -200,6 +200,7 @@ onee.define(function () {
 							if ( _contain(agent, obj) || agent === obj ) return index = key;
 
 						});
+						// console.log(index)
 
 						index > -1 && eventCallback && eventCallback.call( AgentSelector[index], evt );
 
@@ -741,6 +742,25 @@ onee.define(function () {
 				
 				return retFragment;
 			
+			},
+			/**
+			 * Function remove element
+			 * 20140417
+			 * @{String|Element Object|Array} selector
+			 * @{String|Element Object|Array} elements
+			 */
+			remove : function ( selector ) {
+
+				// hack for IE memory leak
+				var tmpNode;
+				each(GG(selector), function (el, index) {
+					el.remove ?
+						el.remove() //W3C
+					:
+						tmpNode = el.removeNode(!!1); //IE
+					tmpNode = null;
+				})
+				
 			},
 			/**
 			 * Function 新建节点
