@@ -1,0 +1,9 @@
+JSON.stringify
+
+不支持转换dom对象
+
+
+当列表为空时，触发添加音乐事件
+
+input[type=range]
+event - input

@@ -19,6 +19,7 @@ onee.define(function () { "use strict";
 	var each = _.each;
 	var indexOf = _.indexOf;
 	var uniq = _.uniq;
+	var random = _.random;
 	var slice = Array.prototype.slice;
 	var getAttr = Sizzle.attr;
 	var setAttr = onee.dom.setAttr;
@@ -58,9 +59,11 @@ onee.define(function () { "use strict";
 			log(audioCtx.currentTime)
 		}, 2e3)*/
 		// 音量控件模板
-		var vVolume = '<input type="range" min="0" max="100" mplayer="volume" class="vvolume" value="{volume}" />';
+		var vVolume = '<input type="range" min="0" max="100" mplayer="volume" class="volume" value="{volume}" />';
 		// 播放模式控件模板
-		var vPlayModel = '<a href="#playmodel" title="{title}" class="vplaymodel {key}">{title}</a>';
+		var vPlayModel = '<a href="#playmodel" title="{title}" class="playmodel {key}">{title}</a>';
+		// 播放进度条控件模板
+		var vProgress = '<input type="range" min="0" max="0" class="progress" value="0" />';
 
 		function mplayer(options) {
 
@@ -91,30 +94,6 @@ onee.define(function () { "use strict";
 				// 音量
 				volume : 0.8
 			});
-
-			// 获取缓存列表数据，生成播放列表
-			// mplayer.renderPlaylist(this.ui.list);
-
-			// 更新播放进度
-			// var duration;
-			var startTime = 0;
-			var offsetTime = 0;
-			// 改用setInterval
-			// 由于requestAnimationFrame在窗口最小化/不在当前窗口时
-			// 执行频率会降低，导致时间计算不准确
-			setInterval(function () {
-				if ( that.status === "playing" ) {
-					that.offsetTime = offsetTime+audioCtx.currentTime-startTime;
-					// that.offsetTime
-				} else if ( that.status === "pause" ) {
-					offsetTime = that.offsetTime;
-					startTime = 0|audioCtx.currentTime;
-				} else if ( that.status === "stop" ) {
-					// log("dodo")
-					offsetTime = that.offsetTime = 0;
-					startTime = 0|audioCtx.currentTime;
-				}
-			}, 30);
 
 			// 监听添加音乐
 			onEvt(ui.add, "change", function () {
@@ -158,7 +137,7 @@ onee.define(function () { "use strict";
 							setAttr(this, "title", title),
 							title
 						),
-						"vplaymodel "+(that.playModel=model.key)
+						"playmodel "+(that.playModel=model.key)
 					)
 				}
 			);
@@ -177,11 +156,71 @@ onee.define(function () { "use strict";
 					that.volume = that.gainNode.gain.value = volume * volume;
 				}
 			});
+			// 监听播放进度条控件
+			onEvt(
+				// 动态插入播放进度条节点
+				ui.progress = appendTo(ui.userctrl, vProgress),
+				"change",
+				function () {
+					// log(this.value)
+					that.offsetTime = this.value;
+					// 先暂停，后播放
+					that.play().play();
+				}
+			);
+			// 监听播放进度条控件更改状态
+			onEvt(
+				// 监听播放进度条控件更改状态
+				onEvt(
+					// 动态插入播放进度条节点
+					ui.progress,
+					"input",
+					function () {
+						this.isChanging = !!1
+					}
+				),
+				"mouseup",
+				function () {
+					this.isChanging = !!0
+				}
+			)
+			// 增加额外方法
+			ui.progress[0].enable = function () {
+				// log(this)
+				setAttr(this, "max", 0|that.buffer.duration);
+			}
 
 			// 监听功能按钮(播放/暂停/下一首/上一首)
 			each(["play", "next", "prev"], function (fn) {
 				onEvt(ui[fn], "click", proxy(that[fn], that));
 			});
+
+
+			// 更新播放进度
+			// var duration;
+			var startTime = 0;
+			var offsetTime = 0;
+			var UIprogress = ui.progress[0];
+			// 改用setInterval
+			// 由于requestAnimationFrame在窗口最小化/不在当前窗口时
+			// 执行频率会降低，导致时间计算不准确
+			setInterval(function () {
+				if ( that.status === "playing" ) {
+					that.offsetTime = offsetTime+audioCtx.currentTime-startTime;
+					// update play progress ui, 取整
+					// 当用户改变ui.progress的进度时
+					// 暂停追随播放进度，changing是自定义一属性
+					UIprogress.isChanging || (UIprogress.value = 0|that.offsetTime);
+					// that.offsetTime
+				} else if ( that.status === "pause" ) {
+					offsetTime = that.offsetTime;
+					startTime = 0|audioCtx.currentTime;
+				} else if ( that.status === "stop" ) {
+					// log("dodo")
+					offsetTime = that.offsetTime = 0;
+					startTime = 0|audioCtx.currentTime;
+				}
+			}, 30);
 
 		}
 
@@ -210,7 +249,7 @@ onee.define(function () { "use strict";
 
 				var file, that = this, playlist = mplayer.playlist;
 				// 如果播放列表为空，一律触发input[type=file]的click事件
-				if ( playlist.length === 0 ) return fireEvt(this.ui.add[0], "click");
+				if ( playlist.length === 0 ) return this.ui.add[0].click();
 				// index存在，则清空当前的，直接播放mplayer.playlist[index]
 				if ( index !== undefined ) {
 					file = mplayer.playlist[that.currentPlay = index].file;
@@ -243,18 +282,20 @@ onee.define(function () { "use strict";
 						that.meterDrawer.goon(that.sourceNode);
 						that.status = "playing"
 					}
-					return
+
+					return this
 				}
 				// log(mplayer.playlist)
 				if ( !file ) return log("Can't find the file.");
 
 				mplayer.fileReader(file, function (result) {
 					mplayer.decodeAudio(result, function (buffer) {
-						// 从audio context对象获取
-						// that.startTime = audioCtx.currentTime;
 						// playing
 						that.status = "playing";
 						that.buffer = buffer
+
+						// 初始化播放进度条
+						that.ui.progress[0].enable()
 
 						// 新建音频节点
 						mplayer.createBufferSource.call(that);
@@ -267,15 +308,46 @@ onee.define(function () { "use strict";
 				});
 			},
 			next : function () {
-				// log("nex")
+
+				// 当为随机播放模式，下一首也为随机
+				if ( this.playModel === "random" ) return this.random();
+
 				if ( mplayer.playlist.length <= ++this.currentPlay ) {
 					this.currentPlay = 0
 				}
 				this.play(this.currentPlay)
+
 			},
 			prev : function () {
+
+				// 当为随机播放模式，上一首也为随机
+				if ( this.playModel === "random" ) return this.random();
+
 				if ( 0 >= --this.currentPlay ) {
-					this.currentPlay = mplayer.playlist.length-1
+					var len = mplayer.playlist.length;
+					this.currentPlay = len === 0 ? 0 : len-1;
+				}
+				this.play(this.currentPlay)
+			},
+			random : function () {
+				// 随机且不与上一首相同
+				while(!!1) {
+					var len = mplayer.playlist.length;
+					// 当播放列表数量小于3时，不需要经过random随机函数
+					// 提高效率
+					if ( len === 1 ) {
+						this.currentPlay = 0;
+						break;
+					}
+					if ( len === 2 ) {
+						this.currentPlay = this.currentPlay === 0 ? 1 : 0;
+						break
+					}
+					var index = random(len-1)
+					if ( this.currentPlay !== index ) {
+						this.currentPlay = index;
+						break
+					}
 				}
 				this.play(this.currentPlay)
 			},
@@ -353,8 +425,7 @@ onee.define(function () { "use strict";
 	        				this.next();
 	        			break;
 	        			case "random" :
-	        				this.currentPlay = (0|Math.random()*mplayer.playlist.length)-1
-	        				this.next();
+	        				this.random();
 	        			break;
 	        		}
 
