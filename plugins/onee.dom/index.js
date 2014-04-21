@@ -278,7 +278,32 @@ onee.define(function () {
 			
 			return Selector;
 		},
-		
+
+		/**
+		 * Function 触发事件
+		 * @param {object dom} selector 节点
+		 * @param {string} type 触发类型
+		 * 20140421
+		 */
+		fire : function ( selector, type ) {
+			
+			var Selector = GG(selector);
+			var realType = _diff[type] || type;
+			var Events = document.createEventObject || document.createEvent( 'HTMLEvents' );
+
+			if ( document.createEventObject ) {
+				each(Selector, function (element, index) {
+					element.fireEvent('on'+realType, Events)
+				})
+			} else {
+				each(Selector, function (element, index) {
+					// 事件类型，是否冒泡，是否阻止浏览器的默认行为
+					Events.initEvent(realType, !!1, !!0);
+					element.dispatchEvent(Events);
+				})
+			}
+			return Selector;
+		},
 		/**
 		 * Function key.on 支持 组合键 (ctrl,shift,alt)；
 		 * 支持 同一按键上绑定不同方法，会按照绑定先后顺序而执行；
