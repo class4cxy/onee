@@ -17,6 +17,7 @@ onee.define(function () { "use strict";
 	// base method
 	var extend  = _.extend;
 	var each = _.each;
+	var map = _.map;
 	var indexOf = _.indexOf;
 	var uniq = _.uniq;
 	var random = _.random;
@@ -48,6 +49,58 @@ onee.define(function () { "use strict";
 		catch(e) {
 			return log('Web Audio API is not supported in this browser');
 		}
+
+
+
+		// File System API
+		// only support chrome
+		// #https://developer.mozilla.org/en-US/docs/WebGuide/API/File_System/Introduction#The_File_System_API_can_use_different_storage_types
+		var FileSys = (function (factory) {
+
+			return new factory(window.requestFileSystem || window.webkitRequestFileSystem)
+
+		})(function (fs) {
+			if ( !fs ) return null;
+			
+			var filer = null;
+			var cwd = null;
+			
+			this.readEntries = function (callback) {
+				// log(cwd)
+				var dirReader = cwd.createReader();
+
+				dirReader.readEntries(function(results) {
+					callback(results.slice(0))
+				}, function (e) {
+					log("ERROR", e)
+				});
+			}
+
+			this.rm = function () {
+
+			}
+
+			this.cp = function (entry, success, error) {
+				return entry.copyTo(cwd, null, success||function(){}, error||function(){});
+			}
+
+			this.init = function (callback) {
+				// initialize
+				fs(TEMPORARY, 1024 * 1204, function(fileSystem) {
+					filer = fileSystem;
+					cwd = fileSystem.root;
+					callback && callback();
+				}, function(e) {
+					log('Error', e);
+				})
+			}
+		});
+
+		/*FileSys.readDirectory(function(entry) {
+			log(entry)
+		})*/
+
+
 		// 代理
 		function proxy (factory, context, param) {
 			return function () {
@@ -96,8 +149,28 @@ onee.define(function () { "use strict";
 			});
 
 			// 监听添加音乐
-			onEvt(ui.add, "change", function () {
-				that.add(this)
+			onEvt(ui.add, "change", function (e) {
+				that.add(e.target.files)
+			});
+			// 初始化拖拽事件添加文件
+			new DnDFileController('ul[mplayer=list]', function(files, e) {
+				if (FileSys) {
+					var items = e.dataTransfer.items;
+					each(items, function (item) {
+						var entry = item.webkitGetAsEntry();
+						// Folder? Copy the DirectoryEntry over to our local filesystem.
+						if (entry.isFile) {
+							// Copy to my location
+							FileSys.cp(entry);
+							// change to [object file]
+							entry.file(function (file) {
+								that.add([file]);
+							}, function (e) {
+								log("ERROR", e)
+							})
+						}
+					})
+				} else that.add(files);
 			});
 
 			// 监听列表播放
@@ -156,36 +229,31 @@ onee.define(function () { "use strict";
 					that.volume = that.gainNode.gain.value = volume * volume;
 				}
 			});
-			// 监听播放进度条控件
+
+			// 插入播放进度条节点
+			var UIprogress = (ui.progress = appendTo(ui.userctrl, vProgress))[0];
+
+			// 监听播放进度条控件改变后事件
 			onEvt(
-				// 动态插入播放进度条节点
-				ui.progress = appendTo(ui.userctrl, vProgress),
+				UIprogress,
 				"change",
-				function () {
-					// log(this.value)
-					that.offsetTime = this.value;
+				function (e) {
 					// 先暂停，后播放
+					that.offsetTime = offsetTime = parseInt(this.value)
 					that.play().play();
+					this.isChanging = !!0;
 				}
 			);
-			// 监听播放进度条控件更改状态
+			// 监听播放进度条控件改变中事件
 			onEvt(
-				// 监听播放进度条控件更改状态
-				onEvt(
-					// 动态插入播放进度条节点
-					ui.progress,
-					"input",
-					function () {
-						this.isChanging = !!1
-					}
-				),
-				"mouseup",
+				UIprogress,
+				"input",
 				function () {
-					this.isChanging = !!0
+					this.isChanging = !!1;
 				}
-			)
+			);
 			// 增加额外方法
-			ui.progress[0].enable = function () {
+			UIprogress.enable = function () {
 				// log(this)
 				setAttr(this, "max", 0|that.buffer.duration);
 			}
@@ -195,55 +263,73 @@ onee.define(function () { "use strict";
 				onEvt(ui[fn], "click", proxy(that[fn], that));
 			});
 
+			that.pause = function () {
+				that.status = "pause"
+				// log(audioCtx.currentTime);
+				that.sourceNode.stop(0);
+				// pause meter drawer
+				that.meterDrawer.pause();
+				// 记录当前播放时间
+				offsetTime = that.offsetTime;
+			}
+			that.stop = function () {
+				// log("dododo")
+				// 清空音频视图
+				if ( that.meterDrawer ) {
+					that.meterDrawer.stop();
+					delete that.meterDrawer;
+				}
+				// 清空正在播放的音源
+				if ( that.sourceNode ) {
+					that.sourceNode.stop();
+					delete that.sourceNode;
+					that.status = "stop"
+				}
+				// 重置播放进度条 重置播放时间
+				UIprogress.value = offsetTime = that.offsetTime = 0;
+			}
 
 			// 更新播放进度
 			// var duration;
 			var startTime = 0;
 			var offsetTime = 0;
-			var UIprogress = ui.progress[0];
 			// 改用setInterval
 			// 由于requestAnimationFrame在窗口最小化/不在当前窗口时
 			// 执行频率会降低，导致时间计算不准确
 			setInterval(function () {
-				if ( that.status === "playing" ) {
+				// update play progress ui, 取整
+				// 当用户改变ui.progress的进度时
+				// 暂停追随播放进度，changing是自定义一属性
+				if ( !UIprogress.isChanging && that.status === "playing" ) {
 					that.offsetTime = offsetTime+audioCtx.currentTime-startTime;
-					// update play progress ui, 取整
-					// 当用户改变ui.progress的进度时
-					// 暂停追随播放进度，changing是自定义一属性
-					UIprogress.isChanging || (UIprogress.value = 0|that.offsetTime);
+					UIprogress.value = 0|that.offsetTime
 					// that.offsetTime
-				} else if ( that.status === "pause" ) {
-					offsetTime = that.offsetTime;
-					startTime = 0|audioCtx.currentTime;
-				} else if ( that.status === "stop" ) {
-					// log("dodo")
-					offsetTime = that.offsetTime = 0;
-					startTime = 0|audioCtx.currentTime;
-				}
-			}, 30);
+				} else startTime = 0|audioCtx.currentTime;
+
+			}, 13);
 
 		}
 
 		extend(mplayer.prototype, {
-			add : function (input) {
-				var playlist = mplayer.playlist;
-				// 此次添加动作之前，播放列表是否为空
-				// 若为空，则添加完之后自动开始播放
-				// 若不为空，添加完之后不做任何操作
-				var isEmpty = !playlist.length;
-				// log(input)
-				each(input.files, function (file) {
-					// log(Object.prototype.toString.call(file))
-	            	playlist[playlist.length] = {
-	            		name : file.name.replace(rSuffix, ""),
-	            		file : file
-	            	}
-	            });
-	            // 去重
-	            mplayer.playlist = uniq(playlist, "name");
-	            // 生成列表
-	            mplayer.renderPlaylist(this.ui.list);
-	            isEmpty && this.play()
+			add : function (files) {
+				if (files.length) {
+					var playlist = mplayer.playlist;
+					// 此次添加动作之前，播放列表是否为空
+					// 若为空，则添加完之后自动开始播放
+					// 若不为空，添加完之后不做任何操作
+					var isEmpty = !playlist.length;
+					each(files, function (file) {
+		            	playlist[playlist.length] = {
+		            		name : file.name.replace(rSuffix, ""),
+		            		file : file
+		            	}
+		            });
+		            // 去重
+		            mplayer.playlist = uniq(playlist, "name");
+		            // 生成列表
+		            mplayer.renderPlaylist(this.ui.list);
+		            isEmpty && this.play()
+				}
 			},
 			play : function (index) {
 
@@ -262,13 +348,8 @@ onee.define(function () { "use strict";
 				} else {
 					// 暂停
 					if ( that.status === "playing" ) {
-						that.status = "pause"
-						// log(audioCtx.currentTime);
-						that.sourceNode.stop(0);
-						// pause meter drawer
-						that.meterDrawer.pause();
-						// 记录当前暂停位置
-						// that.offsetTime += audioCtx.currentTime-that.startTime;
+
+						that.pause()
 
 					// 继续播放
 					} else if ( that.status === "pause" ) {
@@ -351,7 +432,7 @@ onee.define(function () { "use strict";
 				}
 				this.play(this.currentPlay)
 			},
-			stop : function () {
+			/*stop : function () {
 				// log("dododo")
 				// 清空音频视图
 				if ( this.meterDrawer ) {
@@ -366,7 +447,7 @@ onee.define(function () { "use strict";
 				}
 				// this.startTime = 0;
 				// this.offsetTime = 0
-			},
+			},*/
 			remove : function (index) {
 				var playlist = mplayer.playlist;
 				// 索引不存在，则移除全部数据
@@ -619,11 +700,23 @@ onee.define(function () { "use strict";
 			}
 		});
 
-		var cfg = onee.mplayer = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
-
+		FileSys.init(function () {
+			onee.mplayer = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
+			// read the location entry
+			FileSys && FileSys.readEntries(function (entries) {
+				each(entries, function (entry) {
+					entry.file(function (file) {
+						onee.mplayer.add([file]);
+					}, function (e) {
+						log("ERROR", e)
+					})
+				})
+			})
+		});
 		// 监听浏览器关闭动作
 		onEvt(window, "beforeunload", function () {
 			// log("beforeunload")
+			var cfg = onee.mplayer;
 			// 存储当前用户习惯
 			localStorage.setItem("mplayer-user-custom", JSON.stringify({
 				// currentPlay : cfg.currentPlay,
@@ -636,4 +729,4 @@ onee.define(function () { "use strict";
 
 	})(Sizzle("*[mplayer=main]")[0]);
 
-}, ["onee.dom", "sizzle", "RequestAnimationFrame"]);
+}, ["onee.dom", "sizzle", "RequestAnimationFrame", "dnd"]);
