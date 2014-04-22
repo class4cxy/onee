@@ -1,4 +1,4 @@
-﻿/*
+/*
  * onee.define JavaScript module define
  * Create time 2014-03-30 10:36
  * close to cmd
@@ -306,6 +306,7 @@ var plugins = onee.plugins = {};
 _.extend(plugins, {
 	"sizzle" : workspace + "Sizzle/sizzle.js",
 	"jquery" : workspace + "jquery/jquery.js",
+	"dnd" : workspace + "dnd/index.js",
 	"RequestAnimationFrame" : workspace + "Tween/RequestAnimationFrame.js",
 	"Tween" : workspace + "Tween/Tween.js"
 });
@@ -313,7 +314,7 @@ _.extend(plugins, {
 _.each(("onee.dom onee.ajax onee.tplm "+
 	"onee.form onee.powin onee.swf "+
 	"onee.scroller onee.layerscroller "+
-	"onee.mslider").split(" "), function (index, k) {
+	"onee.mslider onee.mplayer").split(" "), function (index, k) {
 		plugins[index] = plu + index + "/index.js"
 	});
 
