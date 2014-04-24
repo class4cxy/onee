@@ -78,7 +78,7 @@
 	.musicbox .article{
 		z-index: 4
 	}
-	 .musicbox .article .logo{
+	.musicbox .article .logo{
 		position: absolute;
 		font-size: 36px;
 		font-weight: bold;
@@ -90,7 +90,27 @@
 		top: 12px;
 		background-color: 
 		left: 0
-	} 
+	}
+	.article .loading{
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		z-index: 1000;
+		background-color: rgba(0,0,0,.5);
+		text-align: center;
+		color: #fff;
+		font: bold 16px/500px arial;
+	    -webkit-transition-duration:.4s;
+	    -moz-transition-duration:.4s;
+		-webkit-transform:translate(0, -590px);
+		-moz-transform:translate(0, -590px);
+	}
+	.article .loading.on{
+		-webkit-transform:translate(0, 0);
+		-moz-transform:translate(0, 0);
+	}
 	.article .tiggle{
 		position: absolute;
 		height: 37px;
@@ -159,7 +179,7 @@
 	.article .playlist li{
 		height: 32px;
 		line-height: 32px;
-		color: #747474
+		color: #a6a6a6
 	}
 	.article .playlist li *{
 		display: inline-block;
@@ -185,7 +205,7 @@
 		background-color: rgba(35,35,35,.5)
 	}
 	.article .playlist li a{
-		color: #747474
+		color: #a6a6a6
 	}
 	.article .playlist .playing,
 	.article .playlist .playing a,
@@ -383,6 +403,7 @@
 					</a>
 				</div>
 			</div>
+			<p mplayer="decoding" class="ease loading">decoding audio...</p>
 		</div>
 	</div>
 </body>
@@ -393,6 +414,8 @@
 
 		var setCSS = onee.dom.css;
 		var setClass = onee.dom.setClass;
+		var addClass = onee.dom.addClass;
+		var removeClass = onee.dom.delClass;
 		var onEvt = onee.dom.on;
 
 		onee.mplayer.ready(function () {
@@ -422,7 +445,17 @@
 				// isShowing
 				setClass(that.ui._wrap, isShowing ? "ease wrap showing" : "ease wrap");
 				isShowing = !isShowing;
-			})
+			});
+
+			// 当解析音频文件时触发
+			// onDone为解析完成后的执行函数索引
+			that.onDecodingAudio = function () {
+				addClass(that.ui.decoding, "on");
+				// 为解析完成建立临时回调索引
+				that.onDecodingAudio.onDone = function() {
+					removeClass(that.ui.decoding, "on");
+				}
+			}
 
 		})
 	});

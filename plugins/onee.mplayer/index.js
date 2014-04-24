@@ -156,6 +156,8 @@ onee.define(function () { "use strict";
 				volume : 0.8,
 				// 更新播放列表事件
 				onUpdatePlayList : function () {},
+				// 当解析音频文件事件
+				onDecodingAudio : function () {},
 				// 播放列表
 				playlist : []
 			});
@@ -409,13 +411,19 @@ onee.define(function () { "use strict";
 
 				// update item ui
 				addClass(playlist[that.currentPlay].node, "active");
-				prevIndex && removeClass(playlist[prevIndex].node, "active");
+				prevIndex !== undefined && removeClass(playlist[prevIndex].node, "active");
+
+				// 触发decoding
+				that.onDecodingAudio();
 
 				mplayer.fileReader(file, function (result) {
 					mplayer.decodeAudio(result, function (buffer) {
 						// playing
 						that.status = "playing";
-						that.buffer = buffer
+						that.buffer = buffer;
+						that.onDecodingAudio.onDone();
+						// 移除临时回调
+						delete that.onDecodingAudio.onDone;
 
 						// 初始化播放进度条
 						that.ui.progress[0].enable()
@@ -754,7 +762,7 @@ onee.define(function () { "use strict";
 		// 监听浏览器关闭动作
 		onEvt(window, "beforeunload", function () {
 			// log("beforeunload")
-			var cfg = onee.mplayer;
+			var cfg = onee.mplayer.instance;
 			// 存储当前用户习惯
 			localStorage.setItem("mplayer-user-custom", JSON.stringify({
 				// currentPlay : cfg.currentPlay,
