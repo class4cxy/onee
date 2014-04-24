@@ -142,4 +142,8 @@ onee.inc(fileurl, callback);
 		<td>onee.mslider</td>
 		<td>onee滑动组件，手机端</td>
 	</tr>
+	<tr>
+		<td>onee.mplayer</td>
+		<td>onee web版 音乐播放器 filesystem+canvas+audiocontext</td>
+	</tr>
 </table>
