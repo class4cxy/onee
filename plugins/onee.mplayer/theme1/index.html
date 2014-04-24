@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>personal music box</title>
+    <link rel="stylesheet" href="/git/onee/style/initialize.css">
+</head>
+<style>
+	html,body{
+		height:100%;
+		width: 100%;
+		background-color: #0d0f0d;
+		overflow: hidden;
+	}
+	*{
+		margin: 0;
+		padding: 0
+	}
+	input[type=range]{
+		-webkit-appearance:none;
+	}
+	input[type=range]::-moz-range-track{
+		background: none;
+		border:none;
+	}
+	input[type=range]::-webkit-slider-thumb{
+		-webkit-appearance :none;
+		cursor: pointer;
+	}
+	input[type=range]::-moz-range-thumb{
+		background: none;
+		cursor: pointer;
+		border:none;
+	}
+	.ease{
+		-webkit-transition-property:all;
+	    -webkit-transition-duration:.6s;
+	    -webkit-transition-timing-function:ease-in-out;
+		-moz-transition-property:all;
+	    -moz-transition-duration:.6s;
+	    -moz-transition-timing-function:ease-in-out;
+	}
+	.musicbox{
+		height: 560px;
+		width: 590px;
+		margin: auto;
+		color: #007fd5;
+		position: relative;
+	}
+	.musicbox .disk,
+	.musicbox .cover,
+	.musicbox .meter,
+	.musicbox .article{
+		position: absolute;
+		height: 100%;
+		width: 100%;
+		z-index: 1
+	}
+	.musicbox .disk{
+		background: url(images/disk.png) center no-repeat;
+	}
+	.musicbox .cover{
+		z-index: 2;
+		background: url(images/bg.png) repeat;
+	}
+	.musicbox .cover img{
+		width: 100%;
+		height: 100%
+	}
+	.musicbox .meter{
+		opacity: .4;
+		z-index: 3;
+		text-align: center;
+	}
+	.musicbox .meter canvas{
+		margin: auto
+	}
+	.musicbox .article{
+		z-index: 4
+	}
+	 .musicbox .article .logo{
+		position: absolute;
+		font-size: 36px;
+		font-weight: bold;
+		height: 60px;
+		line-height: 60px;
+		text-align: center;
+		width: 195px;
+		text-shadow:0 0 5px rgba(0,0,0,.4);
+		top: 12px;
+		background-color: 
+		left: 0
+	} 
+	.article .tiggle{
+		position: absolute;
+		height: 37px;
+		line-height: 75px;
+		z-index: 2;
+		width: 47px;
+		top: 24px;
+		right: 27px;
+		background: url(images/tiggle.png);
+		display: block;
+	}
+	.article .wrap{
+		overflow: hidden;
+		position: relative;
+		background: url(images/bg.png) repeat;
+		-webkit-transform:translate(0, 0);
+		-moz-transform:translate(0, 0);
+	}
+	.article .wrap.showing{
+		-webkit-transform:translate(0, -408px);
+		-moz-transform:translate(0, -408px);
+		/*top: -408px;*/
+	}
+	.article .wrap .dnd{
+		text-align: center;
+		width: 100%;
+		height: 308px;
+		position: absolute;
+		top: 84px;
+		z-index: 3;
+		left: 0;
+	    -webkit-transition-duration:.4s;
+	    -moz-transition-duration:.4s;
+		-webkit-transform:scale(1);
+		-moz-transform:scale(1);
+		font: bold 18px/308px arial;
+	}
+	.article .wrap .dnd.dropping{
+		-webkit-transform:scale(0.8);
+		-moz-transform:scale(0.8);
+		background-color: rgba(0,127,213,.3)
+	}
+	.article .playlist{
+		position: relative;
+		z-index: 2;
+		margin-top: 84px;
+		border-top:1px solid #424242;
+		border-bottom: 1px solid #000;
+		box-shadow: 0 -1px 1px #000;
+		height: 323px;
+		overflow: auto
+	}
+	.article .playlist::-webkit-scrollbar {
+		width: 5px;
+	}
+
+	.article .playlist::-webkit-scrollbar-track {
+		background-color: #747474;
+		border-radius: 2px;
+	}
+
+	.article .playlist::-webkit-scrollbar-thumb {
+		border-radius: 2px;
+		background-color: #007fd5
+	}
+	.article .playlist li{
+		height: 32px;
+		line-height: 32px;
+		color: #747474
+	}
+	.article .playlist li *{
+		display: inline-block;
+	}
+	.article .playlist li i{
+		width: 7%;
+		text-align: center;
+	}
+	.article .playlist li a[mplayer=play]{
+		width: 85%
+	}
+	.article .playlist li em[mplayer=remove]{
+		font-style: normal;
+		padding: 4px 5px;
+		border-radius: 5px;
+		cursor: pointer;
+		background-color: #ccc;
+		font-weight: bold;
+		line-height: 10px;
+		display: none
+	}
+	.article .playlist li:nth-child(even){
+		background-color: rgba(35,35,35,.5)
+	}
+	.article .playlist li a{
+		color: #747474
+	}
+	.article .playlist .playing,
+	.article .playlist .playing a,
+	.article .playlist li:hover,
+	.article .playlist li:hover a,
+	.article .playlist .active,
+	.article .playlist .active a{
+		color: #007fd5
+	}
+	.article .playlist li:hover em[mplayer=remove]{
+		display: inline-block;
+	}
+
+	.article .ctrl{
+		border-top: 1px solid #424242;
+		background: url(images/bg.png) repeat;
+		height: 150px;
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 96%;
+		padding: 0 2%;
+		text-align: center;
+		z-index: 2
+	}
+	.ctrl .progress{
+		width: 96%;
+		height: 4px;
+		background-color: #999;
+		margin: 15px 0 20px
+	}
+	.ctrl .progress:focus{
+		outline: none
+	}
+	.ctrl .progress::-webkit-slider-thumb{
+		box-shadow: 0 0 8px rgba(255,255,255,.8);
+		border-radius: 4px;
+		background-color: #016eb7;
+		height: 8px;
+		width: 8px;
+	}
+
+	.ctrl .progress::-moz-range-thumb{
+		box-shadow: 0 0 8px rgba(255,255,255,.8);
+		border-radius: 4px;
+		background-color: #016eb7;
+		height: 8px;
+		width: 8px;
+	}
+	.article .btn{
+		line-height: 0;
+	}
+	.article .btn a{
+		background: url(images/ctrl-map.png) no-repeat;
+		display: inline-block;
+		vertical-align: middle;
+	}
+	.article .btn .play{
+		height: 96px;
+		width: 100px;
+		margin-left: 5px;
+		background-position: left -96px
+	}
+	.article .btn .play:hover{
+		background-position: left 0
+	}
+	.article .btn .next{
+		height: 77px;
+		width: 75px;
+		background-position: left -346px
+	}
+	.article .btn .next:hover{
+		background-position: left  -269px
+	}
+	.article .btn .prev{
+		height: 77px;
+		width: 75px;
+		background-position: left -192px
+	}
+	.article .btn .prev:hover{
+		background-position: left -423px
+	}
+	.article .ctrl .tools{
+		position: absolute;
+		top: 60px;
+		left: 0;
+		width: 170px;
+		-webkit-transform:scale(0.75);
+		-moz-transform:scale(0.75);
+		box-shadow:inset 0 0 10px rgba(1,1,1,1)
+	}
+	.article .tools a{
+		height: 31px;
+		width: 31px;
+		margin: 5px;
+	}
+	.article .tools .hmeter{
+		background-position: left -536px
+	}
+	.article .tools .hmeter:hover{
+		background-position: left -500px
+	}
+	.article .tools .heq{
+		background-position: left -612px
+	}
+	.article .tools .heq:hover{
+		background-position: left -572px
+	}
+	.article .tools .loopone{
+		background-position: left -795px
+	}
+	.article .tools .loopall{
+		background-position: left -756px
+	}
+	.article .tools .random{
+		background-position: left -835px
+	}
+	.article .tools .add{
+		background-position: 3px -871px
+	}
+	.article .tools .add:hover{
+		background-position: 3px -907px
+	}
+	.article .btn .hvolume{
+		position: absolute;
+		top: 66px;
+		right: 30px;
+		width: 92px;
+		background-position: right -935px;
+		height: 26px
+	}
+	.article .hvolume .leve0{
+		background-position: 0 -725px
+	}
+	.article .hvolume .leve1{
+		background-position: 0 -702px
+	}
+	.article .hvolume .leve2{
+		background-position: 0 -669px
+	}
+	.article .hvolume .leve3{
+		background-position: 0 -646px
+	}
+	.article .hvolume input{
+		width: 64px;
+		height: 28px;
+		padding-left: 28px;
+		background: url(images/ctrl-map.png) no-repeat;
+	}
+	.article .hvolume input:focus{
+		outline: none
+	}
+	.article .hvolume input::-moz-range-thumb{
+		width: 3px;
+		height: 14px;
+		background-color: #007ed2;
+	}
+	.article .hvolume input::-webkit-slider-thumb{
+		width: 3px;
+		height: 14px;
+		background-color: #007ed2;
+	}
+</style>
+<body>
+	<div class="musicbox" mplayer="main">
+		<div class="disk" mplayer="disk"></div>
+		<div class="cover" mplayer="cover">
+			<img src="images/cover.jpg" alt="">
+		</div>
+		<div class="meter">
+			<canvas mplayer="meter" height="408" width="550"></canvas>
+		</div>
+		<div class="article">
+			<h1 class="logo">JMplayer</h1>
+			<a href="javascript:;" class="tiggle" mplayer="tiggle"></a>
+			<div class="ease wrap" mplayer="_wrap">
+				<p mplayer="dnd" class="ease dnd">You can drag and drop the audio file here or <button mplayer="add">click me</button></p>
+				<ul class="playlist" mplayer="list"></ul>
+			</div>
+			<div class="ctrl" mplayer="userctrl">
+				<input type="range" min="0" max="0" class="progress" mplayer="progress" value="0">
+				<div class="btn">
+					<div class="clearfix tools">
+						<a href="javascript:;" class="hide-text hmeter" title="音频图">音频图</a><!--
+					--><a href="javascript:;" class="hide-text heq" title="均衡器">均衡器</a><!--
+					--><a href="javascript:;" mplayer="playmodel" title="..." class="hide-text">...</a><!--
+					--><a href="javascript:;" class="hide-text add" mplayer="add" title="添加音乐">添加音乐</a>
+					</div>
+					
+					<a href="javascript:;" class="hide-text prev" mplayer="prev" title="上一首">上一首</a><!--
+					--><a href="javascript:;" class="hide-text play" mplayer="play" title="播放/暂停">播放/暂停</a><!--
+					--><a href="javascript:;" class="hide-text next" mplayer="next" title="下一首">下一首</a><!--
+					--><a href="javascript:;" class="hvolume">
+						<input type="range" min="0" max="100" class="leve1" mplayer="volume">
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script src="/git/onee/Lodash/lodash.min.js"></script>
+<script src="/git/onee/onee.js"></script>
+<script>
+	onee.use("onee.mplayer", function () {
+
+		var setCSS = onee.dom.css;
+		var setClass = onee.dom.setClass;
+		var onEvt = onee.dom.on;
+
+		onee.mplayer.ready(function () {
+			// console.log(that)
+			var that = this;
+			// 当更新播放列表事件逻辑
+			that.onUpdatePlayList = function () {
+				// console.log("dpdpdp")
+				// 当拖拽方式增加音乐文件，会频繁触发onUpdatePlayList事件
+				// isEmpty用于判断当前状态，避免重复执行
+				var playlist = that.playlist;
+				var isEmpty = !!1;
+				// console.log( that.playlist )
+				if ( playlist.length ) {
+					if (isEmpty) {
+						setCSS(that.ui.dnd, "display", "none")
+						isEmpty = !!0
+					}
+				} else {
+					setCSS(that.ui.dnd, "display", "block")
+					isEmpty = !!1
+				}
+			}
+
+			var isShowing = !!1;
+			onEvt(that.ui.tiggle, "click", function () {
+				// isShowing
+				setClass(that.ui._wrap, isShowing ? "ease wrap showing" : "ease wrap");
+				isShowing = !isShowing;
+			})
+
+		})
+	});
+</script>
+</html>

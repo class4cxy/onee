@@ -25,6 +25,8 @@ onee.define(function () { "use strict";
 	var getAttr = Sizzle.attr;
 	var setAttr = onee.dom.setAttr;
 	var setClass = onee.dom.setClass;
+	var addClass = onee.dom.addClass;
+	var removeClass = onee.dom.delClass;
 	var onEvt = onee.dom.on;
 	var fireEvt = onee.dom.fire;
 	var appendTo = onee.dom.append;
@@ -56,11 +58,12 @@ onee.define(function () { "use strict";
 		// only support chrome
 		// #https://developer.mozilla.org/en-US/docs/WebGuide/API/File_System/Introduction#The_File_System_API_can_use_different_storage_types
 		var FileSys = (function (factory) {
-
-			return new factory(window.requestFileSystem || window.webkitRequestFileSystem)
+			window.resolveLocalFileSystemURL = window.resolveLocalFileSystemURL || window.webkitResolveLocalFileSystemURL;
+			window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem
+			return window.requestFileSystem ? new factory(window.requestFileSystem) : null
 
 		})(function (fs) {
-			if ( !fs ) return null;
+			if ( !fs ) return;
 			
 			var filer = null;
 			var cwd = null;
@@ -76,7 +79,17 @@ onee.define(function () { "use strict";
 				});
 			}
 
-			this.rm = function () {
+			this.rm = function (fullpath, callback) {
+				// log(fullpath)
+				if ( fullpath ) {
+					var fsUrl = cwd.toURL() + fullpath;
+				
+					window.resolveLocalFileSystemURL(fsUrl, function(entry) {
+
+						entry.isFile && entry.remove(function() {},function() {});
+						// callback();
+					});
+				}
 
 			}
 
@@ -96,11 +109,6 @@ onee.define(function () { "use strict";
 			}
 		});
 
-		/*FileSys.readDirectory(function(entry) {
-			log(entry)
-		})*/
-
-
 		// 代理
 		function proxy (factory, context, param) {
 			return function () {
@@ -111,12 +119,12 @@ onee.define(function () { "use strict";
 /*		setInterval(function () {
 			log(audioCtx.currentTime)
 		}, 2e3)*/
-		// 音量控件模板
-		var vVolume = '<input type="range" min="0" max="100" mplayer="volume" class="volume" value="{volume}" />';
-		// 播放模式控件模板
-		var vPlayModel = '<a href="#playmodel" title="{title}" class="playmodel {key}">{title}</a>';
-		// 播放进度条控件模板
-		var vProgress = '<input type="range" min="0" max="0" class="progress" value="0" />';
+		var TPL = {
+			// 播放列表模板
+			item : '<li><i>{num}</i><a href="javascript:;" mplayer="play" rel={index}>{name}</a><em mplayer="remove" rel={index} title="删除 {name}">X</em></li>',
+			// 添加音乐控件模板
+			adder : '<input type="file" multiple accept="audio/*" capture="microphone" style="position:absolute; height:0; width:0; overflow:hidden; top:0; left:0">'
+		}
 
 		function mplayer(options) {
 
@@ -145,26 +153,43 @@ onee.define(function () { "use strict";
 				// 音频增益控制节点/控制音量
 				gainNode : audioCtx.createGain(),
 				// 音量
-				volume : 0.8
+				volume : 0.8,
+				// 更新播放列表事件
+				onUpdatePlayList : function () {},
+				// 播放列表
+				playlist : []
 			});
 
 			// 监听添加音乐
-			onEvt(ui.add, "change", function (e) {
-				that.add(e.target.files)
-			});
+			onEvt(
+				ui.adder = appendTo(ui.userctrl, TPL.adder)[0],
+				"change",
+				function (e) {
+					that.add(e.target.files)
+				}
+			);
+			// 监听添加音乐
+			onEvt(
+				ui.add,
+				"click",
+				function (e) {
+					ui.adder.click()
+				}
+			);
 			// 初始化拖拽事件添加文件
-			new DnDFileController('ul[mplayer=list]', function(files, e) {
+			new DnDFileController('p[mplayer=dnd]', function(files, e) {
 				if (FileSys) {
 					var items = e.dataTransfer.items;
 					each(items, function (item) {
 						var entry = item.webkitGetAsEntry();
 						// Folder? Copy the DirectoryEntry over to our local filesystem.
 						if (entry.isFile) {
-							// Copy to my location
-							FileSys.cp(entry);
 							// change to [object file]
 							entry.file(function (file) {
-								that.add([file]);
+								that.add([file], function () {
+									// Copy to my location
+									FileSys.cp(entry);
+								});
 							}, function (e) {
 								log("ERROR", e)
 							})
@@ -176,14 +201,14 @@ onee.define(function () { "use strict";
 			// 监听列表播放
 			onEvt(ui.list, "dblclick", function () {
 				// log(this)
-				that.play(parseInt(getAttr(this, "rel")))
+				that.play(that.currentPlay, parseInt(getAttr(this, "rel")))
 			}, "a[mplayer=play]")
 
 			// 监听列表播放
 			onEvt(ui.list, "click", function () {
 				// log(this)
 				that.remove(parseInt(getAttr(this, "rel")))
-			}, "span[mplayer=remove]")
+			}, "em[mplayer=remove]")
 
 
 			// 播放模式字典
@@ -193,45 +218,49 @@ onee.define(function () { "use strict";
 				{key : "random", title : "随机播放"}
 			];
 			var playModelsArr = ["loopone", "loopall", "random"];
-			var currentPlayModelInfo = playModels[indexOf(playModelsArr, that.playModel)];
+			// var currentPlayModelInfo = playModels[indexOf(playModelsArr, that.playModel)];
+			function _updatePlayModel_ (option) {
+				return setClass(
+					innerTEXT(
+						setAttr(ui.playmodel, "title", option.title),
+						option.title
+					),
+					"hide-text "+option.key
+				)
+			}
 			// 监听播放模式
 			onEvt(
-				ui.playmodel = appendTo(ui.userctrl, vPlayModel.replace(rtpl, function (a, b) {
-					return currentPlayModelInfo[b];
-				})),
+				// 初始化UI
+				_updatePlayModel_(playModels[indexOf(playModelsArr, that.playModel)]),
 				"click",
 				function () {
 					var index = indexOf(playModelsArr, that.playModel);
 					if ( --index < 0 ) index = playModels.length-1;
 					var model = playModels[index];
-					var title = model.title;
-					setClass(
-						innerTEXT(
-							setAttr(this, "title", title),
-							title
-						),
-						"playmodel "+(that.playModel=model.key)
-					)
+					// var title = model.title;
+					_updatePlayModel_(model);
+					that.playModel=model.key
 				}
 			);
 
-			// 监听音量控件
+			// 监听音量控件/初始化
+			ui.volume[0].value = Math.sqrt(that.volume)*100;
 			onEvt(
-				// 动态插入音量控制节点
-				ui.volume = appendTo(ui.userctrl, vVolume.replace("{volume}", function () {return Math.sqrt(that.volume)*100})),
+				ui.volume,
 				"input",
 				function () {
-				if ( that.gainNode ) {
-					var volume = parseInt(this.value) / parseInt(this.max);
-					// Let's use an x*x curve (x-squared) since simple linear (x) does not
-					// sound as good.
-					// log(volume * volume)
-					that.volume = that.gainNode.gain.value = volume * volume;
+					if ( that.gainNode ) {
+						var volume = parseInt(this.value) / parseInt(this.max);
+						// Let's use an x*x curve (x-squared) since simple linear (x) does not
+						// sound as good.
+						// log(volume * volume)
+						that.volume = that.gainNode.gain.value = volume * volume;
+					}
 				}
-			});
+			);
 
 			// 插入播放进度条节点
-			var UIprogress = (ui.progress = appendTo(ui.userctrl, vProgress))[0];
+			var UIprogress = ui.progress[0];
 
 			// 监听播放进度条控件改变后事件
 			onEvt(
@@ -259,8 +288,12 @@ onee.define(function () { "use strict";
 			}
 
 			// 监听功能按钮(播放/暂停/下一首/上一首)
-			each(["play", "next", "prev"], function (fn) {
-				onEvt(ui[fn], "click", proxy(that[fn], that));
+			each(["next", "prev", "play"], function (fn) {
+				onEvt(
+					ui[fn],
+					"click",
+					proxy(that[fn], that)
+				)
 			});
 
 			that.pause = function () {
@@ -311,39 +344,44 @@ onee.define(function () { "use strict";
 		}
 
 		extend(mplayer.prototype, {
-			add : function (files) {
+			add : function (files, callback) {
 				if (files.length) {
-					var playlist = mplayer.playlist;
+					var playlist = this.playlist;
 					// 此次添加动作之前，播放列表是否为空
 					// 若为空，则添加完之后自动开始播放
 					// 若不为空，添加完之后不做任何操作
 					var isEmpty = !playlist.length;
 					each(files, function (file) {
-		            	playlist[playlist.length] = {
-		            		name : file.name.replace(rSuffix, ""),
-		            		file : file
-		            	}
+						// log(file.type.indexOf("audio"))
+						if ( file.type.indexOf("audio") > -1 ) {
+							playlist[playlist.length] = {
+			            		name : file.name.replace(rSuffix, ""),
+			            		file : file,
+			            		fullpath : file._fullpath_ || ""
+			            	}
+			            	// for storage in entry cache
+			            	callback && callback()
+						} else log( "ERROR : "+ file.name + " is not an audio." )
 		            });
 		            // 去重
-		            mplayer.playlist = uniq(playlist, "name");
 		            // 生成列表
-		            mplayer.renderPlaylist(this.ui.list);
-		            isEmpty && this.play()
+		            mplayer.renderPlaylist(this.playlist = uniq(playlist, "name"), this.ui.list, proxy(this.onUpdatePlayList, this));
+		            isEmpty && this.play();
 				}
 			},
-			play : function (index) {
+			play : function (prevIndex, index) {
 
-				var file, that = this, playlist = mplayer.playlist;
+				var file, that = this, playlist = that.playlist;
 				// 如果播放列表为空，一律触发input[type=file]的click事件
 				if ( playlist.length === 0 ) return this.ui.add[0].click();
 				// index存在，则清空当前的，直接播放mplayer.playlist[index]
 				if ( index !== undefined ) {
-					file = mplayer.playlist[that.currentPlay = index].file;
+					file = playlist[that.currentPlay = index].file;
 					// 确保清空上一首正在播放的
 					that.stop();
 				// 否则当status == stop时，则直接播放mplayer.playlist[currentPlay]
 				} else if ( that.status === "stop" ) {
-					file = mplayer.playlist[that.currentPlay].file;
+					file = playlist[that.currentPlay].file;
 				// status为pause或者playing时，切换播放/暂停状态即可
 				} else {
 					// 暂停
@@ -369,6 +407,10 @@ onee.define(function () { "use strict";
 				// log(mplayer.playlist)
 				if ( !file ) return log("Can't find the file.");
 
+				// update item ui
+				addClass(playlist[that.currentPlay].node, "active");
+				prevIndex && removeClass(playlist[prevIndex].node, "active");
+
 				mplayer.fileReader(file, function (result) {
 					mplayer.decodeAudio(result, function (buffer) {
 						// playing
@@ -393,10 +435,12 @@ onee.define(function () { "use strict";
 				// 当为随机播放模式，下一首也为随机
 				if ( this.playModel === "random" ) return this.random();
 
-				if ( mplayer.playlist.length <= ++this.currentPlay ) {
+				var prevIndex = this.currentPlay;
+
+				if ( this.playlist.length <= ++this.currentPlay ) {
 					this.currentPlay = 0
 				}
-				this.play(this.currentPlay)
+				this.play(prevIndex, this.currentPlay)
 
 			},
 			prev : function () {
@@ -404,16 +448,19 @@ onee.define(function () { "use strict";
 				// 当为随机播放模式，上一首也为随机
 				if ( this.playModel === "random" ) return this.random();
 
+				var prevIndex = this.currentPlay;
+
 				if ( 0 >= --this.currentPlay ) {
-					var len = mplayer.playlist.length;
+					var len = this.playlist.length;
 					this.currentPlay = len === 0 ? 0 : len-1;
 				}
-				this.play(this.currentPlay)
+				this.play(prevIndex, this.currentPlay)
 			},
 			random : function () {
 				// 随机且不与上一首相同
+				var prevIndex = this.currentPlay;
 				while(!!1) {
-					var len = mplayer.playlist.length;
+					var len = this.playlist.length;
 					// 当播放列表数量小于3时，不需要经过random随机函数
 					// 提高效率
 					if ( len === 1 ) {
@@ -430,26 +477,10 @@ onee.define(function () { "use strict";
 						break
 					}
 				}
-				this.play(this.currentPlay)
+				this.play(prevIndex, this.currentPlay)
 			},
-			/*stop : function () {
-				// log("dododo")
-				// 清空音频视图
-				if ( this.meterDrawer ) {
-					this.meterDrawer.stop();
-					delete this.meterDrawer;
-				}
-				// 清空正在播放的音源
-				if ( this.sourceNode ) {
-					this.sourceNode.stop();
-					delete this.sourceNode;
-					this.status = "stop"
-				}
-				// this.startTime = 0;
-				// this.offsetTime = 0
-			},*/
 			remove : function (index) {
-				var playlist = mplayer.playlist;
+				var playlist = this.playlist;
 				// 索引不存在，则移除全部数据
 				if ( index === undefined ) {
 					// remove from playlist
@@ -461,7 +492,7 @@ onee.define(function () { "use strict";
 				// 索引存在且在有效范围，则移除对应的数据
 				} else if ( index >-1 && index < playlist.length ) {
 					// remove from playlist
-					playlist.splice(index,1);
+					var file = playlist.splice(index,1);
 					// 若删除当前播放音乐，则停止播放
 					if ( this.currentPlay === index ) {
 						// 设置当前播放为
@@ -469,28 +500,18 @@ onee.define(function () { "use strict";
 						this.stop()
 					}
 					// call the playlist render
-					mplayer.renderPlaylist(innerHTML(this.ui.list, ""))
-				}
-				if ( playlist.length === 0 ) {
-					setCSS(this.ui.add[0], {
-						display : "block"
-					});
-					setCSS(this.ui.list, {
-						display : "none"
-					})
+					mplayer.renderPlaylist(playlist, innerHTML(this.ui.list, ""), proxy(this.onUpdatePlayList, this));
+					// clear entry
+					// log(file)
+					FileSys && FileSys.rm(file[0].fullpath)
 				}
 			}
 		})
 
-		// 播放列表模板
-		var playListTpl = '<li><a href="#" mplayer="play" rel={index}>{num}.{name}</a><span mplayer="remove" rel={index}>X</span></li>';
 		var rtpl = /\{(.*?)\}/g;
 		var rSuffix = /\.\w+$/;
 		// 静态属性
 		extend(mplayer, {
-			// 播放列表
-			// [NOTE] 由于浏览器安全机制，无法实现播放列表真正固化
-			playlist : [],
 			// 当播放结束，用于相对应播放模式的逻辑控制
 			onPlayEnd : function () {
 				// note: when stop function or playend will disapatch it
@@ -513,19 +534,18 @@ onee.define(function () { "use strict";
 	        	}
 			},
 			// 生成列表UI
-			renderPlaylist : function (ui) {
+			renderPlaylist : function (playlist, ui, callback) {
 				// var html = "";
 				innerHTML(ui, "");
-				each(mplayer.playlist, function (item, k) {
-					item.node = appendTo(ui, playListTpl.replace(rtpl, function (a, b) {
+				each(playlist, function (item, k) {
+					item.node = appendTo(ui, TPL.item.replace(rtpl, function (a, b) {
 	            		if (b === "num") return k+1;
 	            		if (b === "index") return k;
+	            		// if (b === "duration") return item.buffer[b]
 	            		return item[b];
 	            	}))
 	            });
-	            if ( mplayer.playlist.length ) {
-
-	            }
+	            callback && callback()
 			},
 			// 新建音频节点
 			createBufferSource : function () {
@@ -700,19 +720,37 @@ onee.define(function () { "use strict";
 			}
 		});
 
-		FileSys.init(function () {
-			onee.mplayer = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
-			// read the location entry
-			FileSys && FileSys.readEntries(function (entries) {
-				each(entries, function (entry) {
-					entry.file(function (file) {
-						onee.mplayer.add([file]);
-					}, function (e) {
-						log("ERROR", e)
-					})
-				})
-			})
-		});
+		onee.mplayer = {
+			ready : function (callback) {
+
+				var that = this;
+				try {
+					FileSys.init(function () {
+						that.instance = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
+						callback && callback.call(that.instance)
+						// read the location entry
+						FileSys && FileSys.readEntries(function (entries) {
+							each(entries, function (entry) {
+								entry.file(function (file) {
+									// 增加Entry的fullpath属性
+									// 用于移除列表时同时移除缓存区的entry实例
+									file._fullpath_ = entry.fullPath;
+									that.instance.add([file]);
+								}, function (e) {
+									log(e)
+								})
+							})
+						})
+					});
+				} catch(e) {
+					that.instance = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
+					callback && callback.call(that.instance);
+					// callback && callback.call(that.instance = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}")))
+				}
+
+			}
+		}
+		
 		// 监听浏览器关闭动作
 		onEvt(window, "beforeunload", function () {
 			// log("beforeunload")
