@@ -471,6 +471,7 @@ onee.define(function () { "use strict";
 					var len = this.playlist.length;
 					// 当播放列表数量小于3时，不需要经过random随机函数
 					// 提高效率
+					if ( len === 0 ) break;
 					if ( len === 1 ) {
 						this.currentPlay = 0;
 						break;
