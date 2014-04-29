@@ -298,7 +298,7 @@ onee.define(function () {
 			} else {
 				each(Selector, function (element, index) {
 					// 事件类型，是否冒泡，是否阻止浏览器的默认行为
-					Events.initEvent(realType, !!1, !!0);
+					Events.initEvent(realType, !!1, !!1);
 					element.dispatchEvent(Events);
 				})
 			}
@@ -721,7 +721,7 @@ onee.define(function () {
 						
 					});
 		
-				} else return Selector[innerText];
+				} else return Selector[0][innerText];
 				
 				return Selector;
 			},
