@@ -298,29 +298,29 @@ onee.define(function () { "use strict";
 			});
 
 			that.pause = function () {
-				that.status = "pause"
+				this.status = "pause"
 				// log(audioCtx.currentTime);
-				that.sourceNode.stop(0);
+				this.sourceNode.stop(0);
 				// pause meter drawer
-				that.meterDrawer.pause();
+				this.meterDrawer && this.meterDrawer.pause();
 				// 记录当前播放时间
-				offsetTime = that.offsetTime;
+				offsetTime = this.offsetTime;
 			}
 			that.stop = function () {
 				// log("dododo")
 				// 清空音频视图
-				if ( that.meterDrawer ) {
-					that.meterDrawer.stop();
-					delete that.meterDrawer;
+				if ( this.meterDrawer ) {
+					this.meterDrawer.stop();
+					delete this.meterDrawer;
 				}
 				// 清空正在播放的音源
-				if ( that.sourceNode ) {
-					that.sourceNode.stop();
-					delete that.sourceNode;
-					that.status = "stop"
+				if ( this.sourceNode ) {
+					this.sourceNode.stop();
+					delete this.sourceNode;
+					this.status = "stop"
 				}
 				// 重置播放进度条 重置播放时间
-				UIprogress.value = offsetTime = that.offsetTime = 0;
+				UIprogress.value = offsetTime = this.offsetTime = 0;
 			}
 
 			// 更新播放进度
@@ -424,8 +424,9 @@ onee.define(function () { "use strict";
 						// that.sourceNode.start(0);
 						that.sourceNode.start(0, that.offsetTime);
 						// goon meter drawer
-						that.meterDrawer.goon(that.sourceNode);
+						that.meterDrawer && that.meterDrawer.goon(that.sourceNode);
 						that.status = "playing"
+						// addClass(that.ui.play, that.status = "playing");
 					}
 
 					return this
@@ -458,7 +459,10 @@ onee.define(function () { "use strict";
 						that.sourceNode.start(0);
 				        // sourceNode.onended = proxy(that.stop, that);
 
-						that.meterDrawer = mplayer.meterLab[that.meter](that.ctx, that.sourceNode);
+				        // that.setMeter(that.meter);
+				        try{
+				        	that.meterDrawer = mplayer.meterLab[that.meter](that.ctx, that.sourceNode);
+				        } catch(e){}
 					})
 				});
 			},
@@ -553,6 +557,17 @@ onee.define(function () { "use strict";
 					FileSys && FileSys.rm(file.fullpath);
 					// free memory
 					file = null
+				}
+			},
+			setMeter : function (meter) {
+				if (meter !== this.meter) {
+					if ( this.meterDrawer ) {
+						this.meterDrawer.stop();
+						delete this.meterDrawer;
+					}
+					if ( (this.meter=meter) && (meter=mplayer.meterLab[meter]) ) {
+						this.meterDrawer = meter(this.ctx, this.sourceNode);
+					}
 				}
 			}
 		})
@@ -765,9 +780,9 @@ onee.define(function () { "use strict";
 				    return {
 				    	stop : function () {
 				    		cancelAnimationFrame(autoAnimationHandle);
-				    		ctx.clearRect(0, 0, cwidth, -cheight);
+				    		ctx.clearRect(0, 2, cwidth, -cheight);
 				    		autoAnimationHandle = null;
-				    		sourceNode.disconnect(analyser);
+				    		// sourceNode.disconnect(analyser);
 				    		// 每次暂停后就恢复translate之前
 				    		ctx.restore();
 				    		// analyser.disconnect(audioCtx.destination);
@@ -787,36 +802,31 @@ onee.define(function () { "use strict";
 			}
 		});
 
-		onee.mplayer = {
+		onee.mplayer = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
+
+		// 扩展实例化后的对象
+		extend(onee.mplayer, {
 			ready : function (callback) {
-
 				var that = this;
-				try {
-					FileSys.init(function () {
-						that.instance = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
-						callback && callback.call(that.instance)
-						// read the location entry
-						FileSys && FileSys.readEntries(function (entries) {
-							mplayer.entry2file(entries,
-								function (files) {
-									that.instance.add(files);
-								}
-							);
-						})
-					});
-				} catch(e) {
-					that.instance = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
-					callback && callback.call(that.instance);
-					// callback && callback.call(that.instance = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}")))
-				}
+				FileSys ? FileSys.init(function () {
+					callback && callback.call(that)
+					// read the location entry
+					FileSys.readEntries(function (entries) {
+						mplayer.entry2file(entries,
+							function (files) {
+								that.add(files);
+							}
+						);
+					})
+				}) : callback && callback.call(that);
+			},
+			meters : ["default", "none"]
+		});
 
-			}
-		}
-		
 		// 监听浏览器关闭动作
 		onEvt(window, "beforeunload", function () {
 			// log("beforeunload")
-			var cfg = onee.mplayer.instance;
+			var cfg = onee.mplayer;
 			// 存储当前用户习惯
 			localStorage.setItem("mplayer-user-custom", JSON.stringify({
 				// currentPlay : cfg.currentPlay,

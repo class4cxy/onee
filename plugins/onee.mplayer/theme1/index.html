@@ -300,10 +300,39 @@
 		margin: 5px;
 	}
 	.article .tools .hmeter{
-		background-position: left -536px
+		background-position: left -536px;
+		position: relative;
 	}
 	.article .tools .hmeter:hover{
 		background-position: left -500px
+	}
+	.article .tools .hmeter:hover p{
+		display: block;
+	}
+	.article .tools .hmeter p{
+		position: absolute;
+		bottom: 32px;
+		left: 50%;
+		margin-left: -35px;
+		width: 70px;
+		display: none;
+		background-color: rgba(0,0,0,.5);
+		border: 1px solid #a6a6a6;
+		border-radius: 10px;
+		color: #a6a6a6;
+		font: 12px/24px arial;
+		box-shadow: 2px 2px 5px rgba(0,0,0,.8);
+		padding: 10px 0
+	}
+	.article .tools .hmeter span{
+		display: block;
+		text-align: center;
+		margin-bottom: 1px
+	}
+	.article .tools .hmeter span:hover,
+	.article .tools .hmeter span.on{
+		color: #007FD5;
+		background-color: #9f9f9f
 	}
 	.article .tools .heq{
 		background-position: left -612px
@@ -386,7 +415,10 @@
 				<input type="range" min="0" max="0" class="progress" mplayer="progress" value="0">
 				<div class="btn">
 					<div class="clearfix tools">
-						<a href="javascript:;" class="hide-text hmeter" title="音频图">音频图</a><!--
+						<a href="javascript:;" class="hide-text hmeter" title="音频图">
+							音频图
+							<p mplayer="hmeter"></p>
+						</a><!--
 					--><a href="javascript:;" class="hide-text heq" title="均衡器">均衡器</a><!--
 					--><a href="javascript:;" mplayer="playmodel" title="..." class="hide-text">...</a><!--
 					--><a href="javascript:;" class="hide-text add" mplayer="add" title="添加音乐">添加音乐</a>
@@ -411,16 +443,21 @@
 
 		var setCSS = onee.dom.css;
 		var setClass = onee.dom.setClass;
+		var innerHTML = onee.dom.html;
 		var addClass = onee.dom.addClass;
 		var removeClass = onee.dom.delClass;
 		var onEvt = onee.dom.on;
+		var fireEvt = onee.dom.fire;
+		var innerText = onee.dom.text;
+		var each = _.each;
+		var find = onee.dom.find;
 
+		// 播放器UI层控制逻辑
 		onee.mplayer.ready(function () {
 			// console.log(that)
 			var that = this;
 			// 当更新播放列表事件逻辑
 			that.onUpdatePlayList = function () {
-				// console.log(this)
 				// isEmpty用于判断当前状态，避免重复执行
 				var playlist = that.playlist;
 				var isEmpty = !!1;
@@ -450,8 +487,34 @@
 				// 为解析完成建立临时回调索引
 				that.onDecodingAudio.onDone = function() {
 					removeClass(that.ui.decoding, "on");
+					isShowing && fireEvt(that.ui.tiggle, "click")
 				}
 			}
+
+			// 初始化音频视图控件
+			var meterlist = [],
+				meterspan,
+				hmeter = that.ui.hmeter[0],
+				currmeter = that.meter;
+			// console.log(that.meters)
+			each(that.meters, function (meter, k) {
+				// console.log(k)
+				meterlist[k] = '<span'+ (currmeter===meter? ' class="on"' : '') +'>' + meter + '</span>';
+			});
+			onEvt(
+				innerHTML(hmeter, meterlist.join('')),
+				"click",
+				function () {
+					// console.log(this)
+					that.setMeter(innerText(this));
+
+					meterspan || (meterspan = find("span", hmeter));
+					removeClass(meterspan, "on");
+					setClass(this, "on");
+					// setCSS(that.ui.hmeter, "display", "none")
+				},
+				"span"
+			)
 
 		})
 	});
