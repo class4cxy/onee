@@ -7,10 +7,7 @@
 </head>
 <style>
 	html,body{
-		height:100%;
-		width: 100%;
 		background-color: #0d0f0d;
-		overflow: hidden;
 	}
 	*{
 		margin: 0;
@@ -423,8 +420,7 @@
 			var that = this;
 			// 当更新播放列表事件逻辑
 			that.onUpdatePlayList = function () {
-				// console.log("dpdpdp")
-				// 当拖拽方式增加音乐文件，会频繁触发onUpdatePlayList事件
+				// console.log(this)
 				// isEmpty用于判断当前状态，避免重复执行
 				var playlist = that.playlist;
 				var isEmpty = !!1;
