@@ -34,9 +34,6 @@ onee.define(function () { "use strict";
 	var innerTEXT = onee.dom.text;
 	var removeNode = onee.dom.remove;
 	var Interface = onee.interface;
-	// var 
-	// var interface = onee.interface;
-	// var audioCtx = 
 
 	(function (uiMain, undefined) {
 
@@ -66,8 +63,8 @@ onee.define(function () { "use strict";
 			
 			var filer = null;
 			var cwd = null;
-			
-			this.readEntries = function (callback) {
+			// list entries from localhost
+			this.ls = function (callback) {
 				// log(cwd)
 				var dirReader = cwd.createReader();
 
@@ -77,7 +74,7 @@ onee.define(function () { "use strict";
 					log("ERROR", e)
 				});
 			}
-
+			// remove entries from localhost
 			this.rm = function (fullpath, callback) {
 				// log(fullpath)
 				if ( fullpath ) {
@@ -90,6 +87,19 @@ onee.define(function () { "use strict";
 					});
 				}
 
+			}
+			this.create = function (file, callback) {
+				cwd.getFile(file.name, {create: !!1, exclusive : !!1}, function(fileEntry) {
+					fileEntry.createWriter(function(writer) {
+						writer.onwriteend = callback;
+						writer.onerror = callback;
+						writer.write(file);
+					}, function(e) {
+						log(e.name)
+					});
+				}, function(e) {
+					log(e.name)
+				});
 			}
 
 			this.cp = function (entries, success, error) {
@@ -118,14 +128,253 @@ onee.define(function () { "use strict";
 			}
 		}
 
-/*		setInterval(function () {
-			log(audioCtx.currentTime)
-		}, 2e3)*/
-		var TPL = {
-			// 播放列表模板
-			item : '<li><i>{num}</i><a href="javascript:;" mplayer="play" rel={index}>{name}</a><em mplayer="remove" rel={index} title="删除 {name}">X</em></li>',
-			// 添加音乐控件模板
-			adder : '<input type="file" multiple accept="audio/*" capture="microphone" style="position:absolute; height:0; width:0; overflow:hidden; top:0; left:0">'
+		// 用于快速查询重复音频
+		// 增加/删除操作都要同步到该缓存
+		var cachePlayListName = [];
+		var rSuffix = /\.\w+$/;
+		// 批量entries转换/过滤非audio格式
+		function entry2file (entries, callback) {
+			var len = entries.length;
+			var files = [];
+			var retEntries = [];
+			var endCallback = function () {
+				--len || callback(files,retEntries);
+			}
+			each(entries, function (entry, k) {
+				// if (entry.isFile) {
+				// change to [object file]
+				entry.file(function (file) {
+
+					if ( file.type.indexOf("audio") > -1 ) {
+						// 记录Entry的fullpath属性
+						// 用于移除列表时同时移除缓存区的entry
+						// file._fullpath_ = entry.fullPath;
+						files[files.length] = file;
+						retEntries[retEntries.length] = entry;
+					} else log( "ERROR : "+ file.name + " is not an audio." );
+
+					endCallback()
+				}, function (e) {
+					log("ERROR : "+e);
+					endCallback()
+				})
+				// }
+			})
+		}
+		// 当播放结束，用于相对应播放模式的逻辑控制
+		function onPlayEnd () {
+			// note: when stop function or playend will disapatch it
+	        // i just need it dispatch by playend
+        	if (this.buffer.duration<=this.offsetTime) {
+        		this.stop();
+        		switch( this.playModel ) {
+        			case "loopone" :
+	        			this.currentPlay--;
+	        			this.next();
+        			break;
+        			case "loopall" :
+        				this.next();
+        			break;
+        			case "random" :
+        				this.random();
+        			break;
+        		}
+        	}
+		}
+		// 新建音频节点
+		function createBufferSource () {
+
+			// 不知道新建会不会之前造成什么不良反应
+			// 手动清掉
+			if (this.sourceNode) {
+				this.sourceNode.disconnect(this.gainNode);
+				this.gainNode.disconnect(audioCtx.destination);
+				this.sourceNode = null;
+			}
+
+			this.sourceNode = audioCtx.createBufferSource();
+	        //then assign the buffer to the buffer source node
+	        this.sourceNode.buffer = this.buffer;
+	        // 重新连接增益节点
+	        this.sourceNode.connect(this.gainNode);
+	        // this.sourceNode.connect(audioCtx.destination);
+
+	        this.gainNode.connect(audioCtx.destination);
+	        this.gainNode.gain.value = this.volume
+
+	        // fix in old browsers
+	        if (!this.sourceNode.start) {
+	            this.sourceNode.start = this.sourceNode.noteOn;
+	            this.sourceNode.stop = this.sourceNode.noteOff;
+	        }
+
+	        // on end
+	        this.sourceNode.onended = proxy(onPlayEnd, this);
+	    	// return sourceNode;
+		}
+		// 读取本地文件
+		var fileReader = (function () {
+			var isReading = !!0;
+			return function ( file, callback ) {
+
+				if ( !isReading && file ) {
+					isReading = !!1;
+					// 异步读取本地文件 #https://developer.mozilla.org/zh-CN/docs/DOM/FileReader
+					var fread = new FileReader();
+
+					fread.onloadend = function (e) {
+
+						isReading = !!0
+						fread.readyState === 2 ?
+							callback && callback(e.target.result)
+						:
+							log(e);
+						fread = fread.onloadend = null
+						
+					}
+
+					fread.readAsArrayBuffer(file);
+				}
+
+			}
+		})();
+		// 解析音频文件
+		var decodeAudio = (function () {
+
+			var isDecoding = !!0;
+
+			return function (audioData, callback) {
+
+				if ( !isDecoding && audioData ) {
+
+					isDecoding = !!1;
+					audioCtx.decodeAudioData(
+
+						audioData,
+						// on success
+						function (buffer) {
+							// end decode
+							isDecoding = !!0;
+							callback && callback(buffer);
+						},
+						// on fail
+						function(e) {
+							isDecoding = !!0;
+		                	log('Fail to decode the file!');
+		                	log(e)
+		            	}
+	            	)
+				}
+			}
+		})();
+		var compliePlaylistNode = function () {
+			var rtpl = /\{(.*?)\}/g;
+			var tItem = '<li><i>{num}</i><a href="javascript:;" mplayer="play" rel={index}>{name}</a><em mplayer="remove" rel={index} title="删除 {name}">X</em></li>';
+			return function (dat) {
+				return tItem.replace(rtpl, function (a, b) {
+	        		if (b === "num") return dat.index+1;
+	        		if (b === "index") return dat.index;
+	        		if (b === "name") return dat.name;
+	        		return dat[b];
+	        	})
+			}
+		}();
+		// 音频效果库
+		// 扩展格式
+		// meterLibrary.meterxxx = function (ctx, sourceNode) {
+		//	your meter logic...
+		//	return {
+		//		when music stop
+		//		stop : function(){},
+		//		when music pause
+		//		pause : function(){},
+		//		when music go on
+		//		goon : function (){}
+		//	}
+		//}
+		var meterLibrary = {
+			default : function (ctx, sourceNode) {
+				var 
+					analyser = audioCtx.createAnalyser(),
+					// that           = this,
+					cwidth            = ctx.canvas.width,
+					cheight           = ctx.canvas.height-2,
+					meterNum          = cwidth/8|0,
+					//width of the meters in the spectrum;
+					meterWidth        = 6,
+					capHeight         = 2,
+					capStyle          = '#fff',
+					capYPositionArray = [],
+					autoAnimationHandle;
+
+				//connect the source to the analyser
+		        sourceNode.connect(analyser);
+		        // set style of bar
+				var gradient = ctx.createLinearGradient(0, -300, 0, 0);
+		        gradient.addColorStop(1, '#0f0');
+		        gradient.addColorStop(0.5, '#ff0');
+		        gradient.addColorStop(0, '#f00');
+
+		        // 先保存当前状态，以免下次translate递增
+		        ctx.save();
+		        ctx.translate(0, cheight)
+		        // ctx.translate(0, cheight-100);
+
+		        var _outer_ = function _inner_ () {
+
+			        autoAnimationHandle = requestAnimationFrame( _inner_ );
+
+			        var array = new Uint8Array(analyser.frequencyBinCount);
+			        // var meterNum = array.length;
+		            analyser.getByteFrequencyData(array);
+		            
+		            var step = Math.round(array.length / meterNum); //sample limited data from the total array
+		            ctx.clearRect(0, 0, cwidth, -cheight);
+		            for (var i = 0; i < meterNum; i++) {
+		                var value = array[i*step];
+		                var rwidth = i*8;
+		                if (capYPositionArray.length < meterNum) {
+		                    capYPositionArray.push(value);
+		                }
+		                // log(value)
+						ctx.fillStyle = capStyle;
+						// console.log(value)
+						//draw the cap, with transition effect
+						if (value < capYPositionArray[i]) {
+						    ctx.fillRect(rwidth, -capYPositionArray[i]--, meterWidth, capHeight);
+						} else {
+						    ctx.fillRect(rwidth, -value, meterWidth, capHeight);
+						    capYPositionArray[i] = value;
+						};
+		                ctx.fillStyle = gradient; //set the filllStyle to gradient for a better look
+		                ctx.fillRect(rwidth, -value+capHeight, meterWidth, cheight); //the meter
+		            }
+		            return _inner_
+
+			    }();
+
+			    return {
+			    	stop : function () {
+			    		cancelAnimationFrame(autoAnimationHandle);
+			    		ctx.clearRect(0, 2, cwidth, -cheight);
+			    		autoAnimationHandle = null;
+			    		// sourceNode.disconnect(analyser);
+			    		// 每次暂停后就恢复translate之前
+			    		ctx.restore();
+			    		// analyser.disconnect(audioCtx.destination);
+			    		analyser = null;
+			    		gradient = null
+			    	},
+			    	pause : function () {
+			    		cancelAnimationFrame(autoAnimationHandle);
+			    	},
+			    	goon : function (sourceNode) {
+			    		//reconnect the source to the analyser again
+			    		sourceNode.connect(analyser);
+			    		_outer_();
+			    	}
+			    }
+			}
 		}
 
 		function mplayer(options) {
@@ -165,11 +414,37 @@ onee.define(function () { "use strict";
 			});
 
 			// 监听添加音乐
+			var tAdder = '<input type="file" multiple accept="audio/*" capture="microphone" style="position:absolute; height:0; width:0; overflow:hidden; top:0; left:0">';
 			onEvt(
-				ui.adder = appendTo(ui.userctrl, TPL.adder)[0],
+				ui.adder = appendTo(ui.userctrl, tAdder)[0],
 				"change",
 				function (e) {
-					that.add(e.target.files);
+					e.stopPropagation();
+					e.preventDefault();
+					var files = e.target.files;
+					var len = files.length;
+					var t = +new Date;
+					var entries = e.target.webkitEntries;
+
+					if (FileSys) {
+						// Dragging and dropping into the file input works fine but onchange doesn't
+						// populate .webkitEntries when selecting from the file dialog
+						// #https://code.google.com/p/chromium/issues/detail?id=138987
+						// we need to write out the file
+						if  (!entries.length) {
+							each(files, function ( file ) {
+								if (file.type.indexOf("audio") > -1) {
+									FileSys.create(file, function () {
+										--len || log(+new Date-t);
+									});
+								} else {
+									log( "ERROR : " + file.name + " is not an audio." )
+								}
+							})
+						} else FileSys.cp(entries);
+						// FileSys.cp(entries);
+					}
+					that.add(files);
 					// reset input[file] very time
 					e.target.value = ''
 				}
@@ -186,7 +461,7 @@ onee.define(function () { "use strict";
 			new DnDFileController('p[mplayer=dnd]', function(files, e) {
 				if (FileSys) {
 					// var items = e.dataTransfer.items;
-					mplayer.entry2file(
+					entry2file(
 						map(e.dataTransfer.items, function(item) {
 							return item.webkitGetAsEntry()
 						}),
@@ -262,6 +537,7 @@ onee.define(function () { "use strict";
 
 			// 插入播放进度条节点
 			var UIprogress = ui.progress[0];
+			var UIprogressbg = ui.progressbg[0];
 
 			// 监听播放进度条控件改变后事件
 			onEvt(
@@ -285,7 +561,9 @@ onee.define(function () { "use strict";
 			// 增加额外方法
 			UIprogress.enable = function () {
 				// log(this)
+				var max = 0|that.buffer.duration
 				setAttr(this, "max", 0|that.buffer.duration);
+				setAttr(UIprogressbg, "max", 0|that.buffer.duration);
 			}
 
 			// 监听功能按钮(播放/暂停/下一首/上一首)
@@ -320,7 +598,7 @@ onee.define(function () { "use strict";
 					this.status = "stop"
 				}
 				// 重置播放进度条 重置播放时间
-				UIprogress.value = offsetTime = this.offsetTime = 0;
+				UIprogressbg.value = UIprogress.value = offsetTime = this.offsetTime = 0;
 			}
 
 			// 更新播放进度
@@ -336,7 +614,7 @@ onee.define(function () { "use strict";
 				// 暂停追随播放进度，changing是自定义一属性
 				if ( !UIprogress.isChanging && that.status === "playing" ) {
 					that.offsetTime = offsetTime+audioCtx.currentTime-startTime;
-					UIprogress.value = 0|that.offsetTime
+					UIprogressbg.value = UIprogress.value = 0|that.offsetTime
 					// that.offsetTime
 				} else startTime = 0|audioCtx.currentTime;
 
@@ -347,19 +625,20 @@ onee.define(function () { "use strict";
 		extend(mplayer.prototype, {
 			add : function (files) {
 				if (files.length) {
-					var playlist          = this.playlist;
+					// log(files)
+					var playlist   = this.playlist;
 					// 添加前列表长度
-					var orgLength         = playlist.length;
+					var orgLength  = playlist.length;
 					// 此次添加动作之前，播放列表是否为空
 					// 若为空，则添加完之后自动开始播放
 					// 若不为空，添加完之后不做任何操作
-					var isEmpty           = !playlist.length;
+					var isEmpty    = !playlist.length;
 					var name;
-					var cachePlayListName = mplayer.cachePlayListName;
-					var that              = this;
+					var cache      = cachePlayListName;
+					var that       = this;
 					// 当前列表长度
 					// 每次成功添加都会更新
-					var currLength        = orgLength;
+					var currLength = orgLength;
 					// var addList = [];
 					each(files, function (file, k) {
 						// log(file.type.indexOf("audio"))
@@ -367,22 +646,22 @@ onee.define(function () { "use strict";
 						// 检查格式
 						if ( file.type.indexOf("audio") > -1 ) {
 							// 检查是否存在
-							if ( indexOf(cachePlayListName, name) === -1 ) {
+							if ( indexOf(cache, name) === -1 ) {
 								currLength = playlist.length;
 								playlist[currLength] = {
 				            		name : name,
 				            		file : file,
-				            		fullpath : file._fullpath_ || "",
+									// 记录Entry的fullpath属性
+									// 用于移除列表时同时移除缓存区的entry
+									// 本地存储均在根目录
+				            		fullpath : "/" + file.name,
 				            		// 生成/缓存节点
-				            		node : appendTo(that.ui.list, TPL.item.replace(rtpl, function (a, b) {
-					            		if (b === "num") return currLength+1;
-					            		if (b === "index") return currLength;
-					            		if (b === "name") return name;
-					            		return file[b];
-					            	}))
+				            		node : appendTo(that.ui.list, compliePlaylistNode({index : currLength, name : name}))
 				            	}
 				            	// 同步cache
-				            	cachePlayListName[cachePlayListName.length] = name
+				            	cache[cache.length] = name;
+				            	// 当仅增加1条数据时，currLength并没有改变
+				            	currLength++;
 							}
 						} else log( "ERROR : " + file.name + " is not an audio." )
 		            });
@@ -420,7 +699,7 @@ onee.define(function () { "use strict";
 						// 重新获取全局时间戳
 						// that.startTime = audioCtx.currentTime;
 						// log(that.sourceNode)
-						mplayer.createBufferSource.call(that);
+						createBufferSource.call(that);
 						// that.sourceNode.start(0);
 						that.sourceNode.start(0, that.offsetTime);
 						// goon meter drawer
@@ -441,8 +720,8 @@ onee.define(function () { "use strict";
 				// 触发decoding
 				that.onDecodingAudio();
 
-				mplayer.fileReader(file, function (result) {
-					mplayer.decodeAudio(result, function (buffer) {
+				fileReader(file, function (result) {
+					decodeAudio(result, function (buffer) {
 						// playing
 						that.status = "playing";
 						that.buffer = buffer;
@@ -454,14 +733,14 @@ onee.define(function () { "use strict";
 						that.ui.progress[0].enable()
 
 						// 新建音频节点
-						mplayer.createBufferSource.call(that);
+						createBufferSource.call(that);
 						// that.sourceNode = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
 						that.sourceNode.start(0);
 				        // sourceNode.onended = proxy(that.stop, that);
 
 				        // that.setMeter(that.meter);
 				        try{
-				        	that.meterDrawer = mplayer.meterLab[that.meter](that.ctx, that.sourceNode);
+				        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.sourceNode);
 				        } catch(e){}
 					})
 				});
@@ -531,7 +810,7 @@ onee.define(function () { "use strict";
 					// remove from playlist
 					var file = playlist.splice(index,1)[0];
 		            // 同步cachePlayListName
-		            mplayer.cachePlayListName.splice(index,1);
+		            cachePlayListName.splice(index,1);
 					// 若删除当前播放音乐，则播放播放下一首
 					if ( this.currentPlay === index ) {
 						// 设置当前播放为
@@ -542,12 +821,7 @@ onee.define(function () { "use strict";
 					var list = this.ui.list;
 					innerHTML(list, "");
 					each(playlist, function (item, k) {
-						item.node = appendTo(list, TPL.item.replace(rtpl, function (a, b) {
-		            		if (b === "num") return k+1;
-		            		if (b === "index") return k;
-		            		// if (b === "duration") return item.buffer[b]
-		            		return item[b];
-		            	}))
+						item.node = appendTo(list, compliePlaylistNode({index : k, name : item.name}))
 		            });
 		            // 重新标示当前播放
 		            addClass(playlist[this.currentPlay].node, "active");
@@ -565,242 +839,12 @@ onee.define(function () { "use strict";
 						this.meterDrawer.stop();
 						delete this.meterDrawer;
 					}
-					if ( (this.meter=meter) && (meter=mplayer.meterLab[meter]) ) {
+					if ( (this.meter=meter) && (meter=meterLibrary[meter]) && this.status !== "stop" ) {
 						this.meterDrawer = meter(this.ctx, this.sourceNode);
 					}
 				}
 			}
 		})
-
-		var rtpl = /\{(.*?)\}/g;
-		var rSuffix = /\.\w+$/;
-		// 静态属性
-		extend(mplayer, {
-			// 用于快速查询重复音频
-			// 增加/删除操作都要同步到该缓存
-			cachePlayListName : [],
-			// 批量entries转换/过滤非audio格式
-			entry2file : function (entries, callback) {
-				var len = entries.length;
-				var files = [];
-				var retEntries = [];
-				var endCallback = function () {
-					--len || callback(files,retEntries);
-				}
-				each(entries, function (entry, k) {
-					// if (entry.isFile) {
-					// change to [object file]
-					entry.file(function (file) {
-
-						if ( file.type.indexOf("audio") > -1 ) {
-							// 记录Entry的fullpath属性
-							// 用于移除列表时同时移除缓存区的entry
-							file._fullpath_ = entry.fullPath;
-							files[files.length] = file;
-							retEntries[retEntries.length] = entry;
-						} else log( "ERROR : "+ file.name + " is not an audio." );
-
-						endCallback()
-					}, function (e) {
-						log("ERROR : "+e);
-						endCallback()
-					})
-					// }
-				})
-			},
-			// 当播放结束，用于相对应播放模式的逻辑控制
-			onPlayEnd : function () {
-				// note: when stop function or playend will disapatch it
-		        // i just need it dispatch by playend
-	        	if (this.buffer.duration<=this.offsetTime) {
-	        		this.stop();
-	        		switch( this.playModel ) {
-	        			case "loopone" :
-		        			this.currentPlay--;
-		        			this.next();
-	        			break;
-	        			case "loopall" :
-	        				this.next();
-	        			break;
-	        			case "random" :
-	        				this.random();
-	        			break;
-	        		}
-
-	        	}
-			},
-			// 新建音频节点
-			createBufferSource : function () {
-
-				// 不知道新建会不会之前造成什么不良反应
-				// 手动清掉
-				if (this.sourceNode) {
-					this.sourceNode.disconnect(this.gainNode);
-					this.gainNode.disconnect(audioCtx.destination);
-					this.sourceNode = null;
-				}
-
-				this.sourceNode = audioCtx.createBufferSource();
-		        //then assign the buffer to the buffer source node
-		        this.sourceNode.buffer = this.buffer;
-		        // 重新连接增益节点
-		        this.sourceNode.connect(this.gainNode);
-		        // this.sourceNode.connect(audioCtx.destination);
-
-		        this.gainNode.connect(audioCtx.destination);
-		        this.gainNode.gain.value = this.volume
-
-		        // fix in old browsers
-		        if (!this.sourceNode.start) {
-		            this.sourceNode.start = this.sourceNode.noteOn;
-		            this.sourceNode.stop = this.sourceNode.noteOff;
-		        }
-
-		        // on end
-		        this.sourceNode.onended = proxy(mplayer.onPlayEnd, this);
-		    	// return sourceNode;
-			},
-			// 读取本地文件
-			fileReader : (function () {
-				var isReading = !!0;
-				return function ( file, callback ) {
-
-					if ( !isReading && file ) {
-						isReading = !!1;
-						// 异步读取本地文件 #https://developer.mozilla.org/zh-CN/docs/DOM/FileReader
-						var fread = new FileReader();
-
-						fread.onloadend = function (e) {
-
-							isReading = !!0
-							fread.readyState === 2 ?
-								callback && callback(e.target.result)
-							:
-								log(e);
-							fread = fread.onloadend = null
-							
-						}
-
-						fread.readAsArrayBuffer(file);
-					}
-
-				}
-			})(),
-			// 解析音频文件
-			decodeAudio : (function () {
-
-				var isDecoding = !!0;
-
-				return function (audioData, callback) {
-
-					if ( !isDecoding && audioData ) {
-
-						isDecoding = !!1;
-						audioCtx.decodeAudioData(
-
-							audioData,
-							// on success
-							function (buffer) {
-								// end decode
-								isDecoding = !!0;
-								callback && callback(buffer);
-							},
-							// on fail
-							function(e) {
-								isDecoding = !!0;
-			                	log('Fail to decode the file!');
-			                	log(e)
-			            	}
-		            	)
-					}
-				}
-			})(),
-			// 音频效果库
-			meterLab : {
-				default : function (ctx, sourceNode) {
-					var 
-						analyser = audioCtx.createAnalyser(),
-						// that           = this,
-						cwidth            = ctx.canvas.width,
-						cheight           = ctx.canvas.height-2,
-						meterNum          = cwidth/8|0,
-						//width of the meters in the spectrum;
-						meterWidth        = 6,
-						capHeight         = 2,
-						capStyle          = '#fff',
-						capYPositionArray = [],
-						autoAnimationHandle;
-
-					//connect the source to the analyser
-			        sourceNode.connect(analyser);
-			        // set style of bar
-					var gradient = ctx.createLinearGradient(0, -300, 0, 0);
-			        gradient.addColorStop(1, '#0f0');
-			        gradient.addColorStop(0.5, '#ff0');
-			        gradient.addColorStop(0, '#f00');
-
-			        // 先保存当前状态，以免下次translate递增
-			        ctx.save();
-			        ctx.translate(0, cheight)
-			        // ctx.translate(0, cheight-100);
-
-			        var _outer_ = function _inner_ () {
-
-				        autoAnimationHandle = requestAnimationFrame( _inner_ );
-
-				        var array = new Uint8Array(analyser.frequencyBinCount);
-				        // var meterNum = array.length;
-			            analyser.getByteFrequencyData(array);
-			            
-			            var step = Math.round(array.length / meterNum); //sample limited data from the total array
-			            ctx.clearRect(0, 0, cwidth, -cheight);
-			            for (var i = 0; i < meterNum; i++) {
-			                var value = array[i*step];
-			                var rwidth = i*8;
-			                if (capYPositionArray.length < meterNum) {
-			                    capYPositionArray.push(value);
-			                }
-			                // log(value)
-							ctx.fillStyle = capStyle;
-							// console.log(value)
-							//draw the cap, with transition effect
-							if (value < capYPositionArray[i]) {
-							    ctx.fillRect(rwidth, -capYPositionArray[i]--, meterWidth, capHeight);
-							} else {
-							    ctx.fillRect(rwidth, -value, meterWidth, capHeight);
-							    capYPositionArray[i] = value;
-							};
-			                ctx.fillStyle = gradient; //set the filllStyle to gradient for a better look
-			                ctx.fillRect(rwidth, -value+capHeight, meterWidth, cheight); //the meter
-			            }
-			            return _inner_
-
-				    }();
-
-				    return {
-				    	stop : function () {
-				    		cancelAnimationFrame(autoAnimationHandle);
-				    		ctx.clearRect(0, 2, cwidth, -cheight);
-				    		autoAnimationHandle = null;
-				    		// sourceNode.disconnect(analyser);
-				    		// 每次暂停后就恢复translate之前
-				    		ctx.restore();
-				    		// analyser.disconnect(audioCtx.destination);
-				    		analyser = null;
-				    		gradient = null
-				    	},
-				    	pause : function () {
-				    		cancelAnimationFrame(autoAnimationHandle);
-				    	},
-				    	goon : function (sourceNode) {
-				    		//reconnect the source to the analyser again
-				    		sourceNode.connect(analyser);
-				    		_outer_();
-				    	}
-				    }
-				}
-			}
-		});
 
 		onee.mplayer = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
 
@@ -811,8 +855,8 @@ onee.define(function () { "use strict";
 				FileSys ? FileSys.init(function () {
 					callback && callback.call(that)
 					// read the location entry
-					FileSys.readEntries(function (entries) {
-						mplayer.entry2file(entries,
+					FileSys.ls(function (entries) {
+						entry2file(entries,
 							function (files) {
 								that.add(files);
 							}

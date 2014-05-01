@@ -15,6 +15,10 @@
 	}
 	input[type=range]{
 		-webkit-appearance:none;
+		background: none
+	}
+	input[type=range]::-webkit-slider-runnable-track{
+
 	}
 	input[type=range]::-moz-range-track{
 		background: none;
@@ -229,15 +233,31 @@
 		z-index: 2
 	}
 	.ctrl .progress{
-		width: 96%;
-		height: 4px;
-		background-color: #999;
+		position: relative;
 		margin: 15px 0 20px
 	}
-	.ctrl .progress:focus{
+	.ctrl .progress progress,
+	.ctrl .progress input{
+		display: block;
+		width: 100%;
+		position: absolute;
+		height: 4px;
+		z-index: 1;
+	}
+	.ctrl .progress progress{
+		border: none;
+		top: 0;
+		left: 0
+	}
+	.ctrl .progress input{
+		position: relative;
+		height: 4px;
+		z-index: 2;
+	}
+	.ctrl .progress input:focus{
 		outline: none
 	}
-	.ctrl .progress::-webkit-slider-thumb{
+	.ctrl .progress input::-webkit-slider-thumb{
 		box-shadow: 0 0 8px rgba(255,255,255,.8);
 		border-radius: 4px;
 		background-color: #016eb7;
@@ -245,7 +265,7 @@
 		width: 8px;
 	}
 
-	.ctrl .progress::-moz-range-thumb{
+	.ctrl .progress input::-moz-range-thumb{
 		box-shadow: 0 0 8px rgba(255,255,255,.8);
 		border-radius: 4px;
 		background-color: #016eb7;
@@ -412,7 +432,10 @@
 				<ul class="playlist" mplayer="list"></ul>
 			</div>
 			<div class="ctrl" mplayer="userctrl">
-				<input type="range" min="0" max="0" class="progress" mplayer="progress" value="0">
+				<p class="progress">
+					<progress max="0" value="0" mplayer="progressbg"></progress>
+					<input type="range" min="0" max="0" mplayer="progress" value="0">
+				</p>
 				<div class="btn">
 					<div class="clearfix tools">
 						<a href="javascript:;" class="hide-text hmeter" title="音频图">
@@ -487,7 +510,7 @@
 				// 为解析完成建立临时回调索引
 				that.onDecodingAudio.onDone = function() {
 					removeClass(that.ui.decoding, "on");
-					isShowing && fireEvt(that.ui.tiggle, "click")
+					// isShowing && fireEvt(that.ui.tiggle, "click")
 				}
 			}
 
