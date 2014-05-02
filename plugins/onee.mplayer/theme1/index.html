@@ -47,6 +47,7 @@
 		margin: auto;
 		color: #007fd5;
 		position: relative;
+		overflow: hidden;
 	}
 	.musicbox .disk,
 	.musicbox .cover,
@@ -59,15 +60,71 @@
 	}
 	.musicbox .disk{
 		background: url(images/disk.png) center no-repeat;
+		animation: rotate 15s linear infinite;
+		-webkit-animation: rotate 15s linear infinite;
+		-moz-animation: rotate 15s linear infinite;
+		-ms-animation: rotate 15s linear infinite;
 	}
-	.musicbox .cover{
+	.musicbox .disk.pause{
+		animation-play-state: paused;
+		-webkit-animation-play-state: paused;
+		-moz-animation-play-state: paused;
+		-ms-animation-play-state: paused;
+	}
+	.musicbox .disk .cover,
+	.musicbox .disk .axis{
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		height: 552px;
+		width: 552px;
+		z-index: 1
+	}
+	@-moz-keyframes rotate {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+	@-webkit-keyframes rotate {
+		0% {
+			-webkit-transform: rotate(0deg);
+		}
+		100% {
+			-webkit-transform: rotate(360deg);
+		}
+	}
+	.musicbox .disk .cover{
+		background: url('about:blank') center no-repeat;
+		background-size: cover;
+		margin:-279px 0 0 -274px;
+		border-radius: 500px;
+		opacity: 0
+	}
+	 .musicbox .disk .cover.show{
+		opacity: 1
+	}
+	.musicbox .disk .axis{
+		z-index: 5;
+		height: 60px;
+		width: 60px;
+		margin: -34px 0 0 -28px;
+		background-color: #0d0f0e;
+		box-shadow: inset 2px 4px 5px rgba(13,15,14,.5),
+					0 0 0 45px rgba(21,24,21,.7),
+					0 0 0 55px rgba(21,24,21,.4);
+		border-radius: 100px;
+	}
+	/* .musicbox .cover{
 		z-index: 2;
 		background: url(images/bg.png) repeat;
 	}
 	.musicbox .cover img{
 		width: 100%;
 		height: 100%
-	}
+	} */
 	.musicbox .meter{
 		opacity: .4;
 		z-index: 3;
@@ -215,6 +272,9 @@
 	.article .playlist .active,
 	.article .playlist .active a{
 		color: #007fd5
+	}
+	.article .playlist li:hover{
+		background-color: rgba(35,35,35,.8)
 	}
 	.article .playlist li:hover em[mplayer=remove]{
 		display: inline-block;
@@ -417,10 +477,13 @@
 </style>
 <body>
 	<div class="musicbox" mplayer="main">
-		<div class="disk" mplayer="disk"></div>
-		<div class="cover" mplayer="cover">
-			<img src="images/cover.jpg" alt="">
+		<div class="disk pause" mplayer="hdisk">
+			<p class="ease cover" mplayer="hcover"></p>
+			<p class="axis"></p>
 		</div>
+		<!-- <div class="cover" mplayer="cover">
+			<img src="images/cover.jpg" alt="">
+		</div> -->
 		<div class="meter">
 			<canvas mplayer="meter" height="408" width="550"></canvas>
 		</div>
@@ -480,7 +543,7 @@
 			// console.log(that)
 			var that = this;
 			// 当更新播放列表事件逻辑
-			that.onUpdatePlayList = function () {
+			that.on("onUpdatePlayList", function () {
 				// isEmpty用于判断当前状态，避免重复执行
 				var playlist = that.playlist;
 				var isEmpty = !!1;
@@ -494,7 +557,27 @@
 					setCSS(that.ui.dnd, "display", "block")
 					isEmpty = !!1
 				}
-			}
+			})
+			// var hcover = that.ui.hcover[0];
+			that.on("onPlay", function () {
+				// hcover.classList.remove("pause")
+				removeClass(that.ui.hdisk, "pause")
+				// addClass(that.ui.hcover, "show")
+			});
+
+			that.on("onPause", function () {
+				// hcover.classList.add("pause")
+				addClass(that.ui.hdisk, "pause")
+			}).on("onStop", function () {
+				// hcover.classList.add("pause")
+				addClass(that.ui.hdisk, "pause");
+				removeClass(that.ui.hcover, "show")
+				// removeClass(that.ui.hcover, "show");
+			});
+
+			that.on("onUpdateMeta", function (meta) {
+				addClass(setCSS(that.ui.hcover, "backgroundImage", "url("+(meta.cover?meta.cover:"about:blank")+")"), "show")
+			});
 
 			var isShowing = !!1;
 			onEvt(that.ui.tiggle, "click", function () {

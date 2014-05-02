@@ -34,6 +34,7 @@ onee.define(function () { "use strict";
 	var innerTEXT = onee.dom.text;
 	var removeNode = onee.dom.remove;
 	var Interface = onee.interface;
+	var EvtSys = onee.evt();
 
 	(function (uiMain, undefined) {
 
@@ -131,6 +132,7 @@ onee.define(function () { "use strict";
 		// 用于快速查询重复音频
 		// 增加/删除操作都要同步到该缓存
 		var cachePlayListName = [];
+		
 		var rSuffix = /\.\w+$/;
 		// 批量entries转换/过滤非audio格式
 		function entry2file (entries, callback) {
@@ -279,6 +281,7 @@ onee.define(function () { "use strict";
 	        	})
 			}
 		}();
+
 		// 音频效果库
 		// 扩展格式
 		// meterLibrary.meterxxx = function (ctx, sourceNode) {
@@ -376,6 +379,29 @@ onee.define(function () { "use strict";
 			    }
 			}
 		}
+		var metaCtrl = function () {
+			// 读取音频meta数据
+			var cacheMetaData = JSON.parse(localStorage.getItem("mplayer-music-meta") || "{}");
+			var metaurl = '../meta.php';
+			var getJSON = onee.getJSON;
+
+			return {
+				get : function (name, callback) {
+					var item = cacheMetaData[name];
+					if ( item ) callback(item);
+					else {
+						getJSON(metaurl+'?key='+encodeURIComponent(name), function (J) {
+							J && callback(cacheMetaData[name] = J);
+						})
+					}
+				},
+				save : function () {
+					localStorage.setItem("mplayer-music-meta", JSON.stringify(cacheMetaData))
+				}
+
+			}
+
+		}();
 
 		function mplayer(options) {
 
@@ -396,7 +422,7 @@ onee.define(function () { "use strict";
 				// 当前播放
 				currentPlay : 0,
 				// 音频仪表效果
-				meter : "default",
+				meter : "none",
 				// 播放模式(单曲循环-loopone/列表循环-loopall/随机播放-random)
 				playModel : "loopall",
 				// 音频缓冲区
@@ -405,8 +431,6 @@ onee.define(function () { "use strict";
 				gainNode : audioCtx.createGain(),
 				// 音量
 				volume : 0.8,
-				// 更新播放列表事件
-				onUpdatePlayList : function () {},
 				// 当解析音频文件事件
 				onDecodingAudio : function () {},
 				// 播放列表
@@ -576,7 +600,8 @@ onee.define(function () { "use strict";
 			});
 
 			that.pause = function () {
-				this.status = "pause"
+				this.status = "pause";
+				that.tiggle("onPause");
 				// log(audioCtx.currentTime);
 				this.sourceNode.stop(0);
 				// pause meter drawer
@@ -586,6 +611,7 @@ onee.define(function () { "use strict";
 			}
 			that.stop = function () {
 				// log("dododo")
+				that.tiggle("onStop");
 				// 清空音频视图
 				if ( this.meterDrawer ) {
 					this.meterDrawer.stop();
@@ -621,7 +647,8 @@ onee.define(function () { "use strict";
 			}, 13);
 
 		}
-
+		// 继承事件管理器
+		extend(mplayer.prototype, EvtSys);
 		extend(mplayer.prototype, {
 			add : function (files) {
 				if (files.length) {
@@ -636,9 +663,7 @@ onee.define(function () { "use strict";
 					var name;
 					var cache      = cachePlayListName;
 					var that       = this;
-					// 当前列表长度
-					// 每次成功添加都会更新
-					var currLength = orgLength;
+					var currIndex;
 					// var addList = [];
 					each(files, function (file, k) {
 						// log(file.type.indexOf("audio"))
@@ -647,8 +672,9 @@ onee.define(function () { "use strict";
 						if ( file.type.indexOf("audio") > -1 ) {
 							// 检查是否存在
 							if ( indexOf(cache, name) === -1 ) {
-								currLength = playlist.length;
-								playlist[currLength] = {
+								currIndex = playlist.length;
+								// currLength = playlist.length;
+								playlist[currIndex] = {
 				            		name : name,
 				            		file : file,
 									// 记录Entry的fullpath属性
@@ -656,19 +682,25 @@ onee.define(function () { "use strict";
 									// 本地存储均在根目录
 				            		fullpath : "/" + file.name,
 				            		// 生成/缓存节点
-				            		node : appendTo(that.ui.list, compliePlaylistNode({index : currLength, name : name}))
+				            		node : appendTo(that.ui.list, compliePlaylistNode({index : currIndex, name : name}))
 				            	}
 				            	// 同步cache
 				            	cache[cache.length] = name;
-				            	// 当仅增加1条数据时，currLength并没有改变
-				            	currLength++;
+				            	// 请求meta数据
+				            	/*metaCtrl.get(cache[cache.length] = name, function (meta){
+				            		playitem.meta = meta;
+				            		// 触发每个meta赋值回调
+				            		// 用于播放先于获取meta
+				            		playitem.metaEvt 
+				            	})*/
 							}
 						} else log( "ERROR : " + file.name + " is not an audio." )
 		            });
 		            // 去重后长度不变即数据没有改变过
-		            if (orgLength!==currLength) {
+		            if (orgLength!==playlist.length) {
 		            	// 触发ononUpdatePlayList事件
-		            	this.onUpdatePlayList();
+		            	// this.onUpdatePlayList();
+		            	this.tiggle("onUpdatePlayList")
 			           	// play if isEmpty
 			            isEmpty && this.play();
 		            }
@@ -676,17 +708,17 @@ onee.define(function () { "use strict";
 			},
 			play : function (prevIndex, index) {
 
-				var file, that = this, playlist = that.playlist;
+				var item, that = this, playlist = that.playlist;
 				// 如果播放列表为空，一律触发input[type=file]的click事件
 				if ( playlist.length === 0 ) return this.ui.add[0].click();
 				// index存在，则清空当前的，直接播放mplayer.playlist[index]
 				if ( index !== undefined ) {
-					file = playlist[that.currentPlay = index].file;
+					item = playlist[that.currentPlay = index];
 					// 确保清空上一首正在播放的
 					that.stop();
 				// 否则当status == stop时，则直接播放mplayer.playlist[currentPlay]
 				} else if ( that.status === "stop" ) {
-					file = playlist[that.currentPlay].file;
+					item = playlist[that.currentPlay];
 				// status为pause或者playing时，切换播放/暂停状态即可
 				} else {
 					// 暂停
@@ -704,14 +736,15 @@ onee.define(function () { "use strict";
 						that.sourceNode.start(0, that.offsetTime);
 						// goon meter drawer
 						that.meterDrawer && that.meterDrawer.goon(that.sourceNode);
-						that.status = "playing"
+						that.status = "playing";
+						that.tiggle("onPlay");
 						// addClass(that.ui.play, that.status = "playing");
 					}
 
 					return this
 				}
 				// log(mplayer.playlist)
-				if ( !file ) return log("Can't find the file.");
+				if ( !item ) return log("Can't find the item.");
 
 				// update item ui
 				addClass(playlist[that.currentPlay].node, "active");
@@ -720,9 +753,10 @@ onee.define(function () { "use strict";
 				// 触发decoding
 				that.onDecodingAudio();
 
-				fileReader(file, function (result) {
+				fileReader(item.file, function (result) {
 					decodeAudio(result, function (buffer) {
 						// playing
+						that.tiggle("onPlay");
 						that.status = "playing";
 						that.buffer = buffer;
 						that.onDecodingAudio.onDone();
@@ -742,6 +776,11 @@ onee.define(function () { "use strict";
 				        try{
 				        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.sourceNode);
 				        } catch(e){}
+
+						// 获取meta数据
+						metaCtrl.get(item.name, function(meta) {
+							that.tiggle("onUpdateMeta", meta)
+						});
 					})
 				});
 			},
@@ -826,7 +865,8 @@ onee.define(function () { "use strict";
 		            // 重新标示当前播放
 		            addClass(playlist[this.currentPlay].node, "active");
 		            // 触发onUpdatePlayList事件
-		            this.onUpdatePlayList();
+		            // this.onUpdatePlayList();
+		            this.tiggle("onUpdatePlayList");
 					// clear entry
 					FileSys && FileSys.rm(file.fullpath);
 					// free memory
@@ -877,10 +917,12 @@ onee.define(function () { "use strict";
 				playModel : cfg.playModel,
 				meter : cfg.meter,
 				volume : cfg.volume
-			}))
+			}));
+			// 保存meta数据
+			metaCtrl.save()
 
 		});
 
 	})(Sizzle("*[mplayer=main]")[0]);
 
-}, ["onee.dom", "sizzle", "RequestAnimationFrame", "dnd"]);
+}, ["onee.dom", "sizzle", "RequestAnimationFrame", "dnd", "onee.ajax"]);
