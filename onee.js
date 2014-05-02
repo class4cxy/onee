@@ -53,7 +53,9 @@ var
 	indexOf    = _.indexOf,
 	isEmpty    = _.isEmpty,
 	isArray    = _.isArray,
+	isString   = _.isString,
 	isFunction = _.isFunction,
+	pull       = _.pull,
 	slice      = Array.prototype.slice,
 	debug      = !!0;
 
@@ -146,6 +148,48 @@ var browser = onee.browser = (function () {
 	return _result;
 	
 })();
+
+/**
+ * event system
+ * 20140502
+ * design by J.do
+ */
+onee.evt = function () {
+	var _events = {};
+	return {
+		on : function (name, callback, ctx) {
+			if (!isString(name) || !isFunction(callback)) return this;
+			var calls = _events[name] || (_events[name] = []);
+			calls.push({callback: callback, ctx: ctx || this});
+			return this;
+		},
+		off : function (name, callback) {
+			var len = arguments.length;
+			if ( len === 0 ) {
+				_events = {}
+			} else if ( len === 1 ) {
+				_events[name] && (_events[name] = []);
+			} else {
+				var calls = _events[name];
+				if ( calls ) {
+					pull(calls, callback)
+				}
+			}
+			return this
+		},
+		tiggle : function (name, data) {
+			var calls;
+			if ( name && (calls = _events[name]) ) {
+				each(calls, function (call) {
+					call.callback.call(call.ctx, data)
+				})
+			}
+			return this
+		}
+	}
+};
+// 获取一份新的_events拷贝
+var evt = onee.evt();
 
 
 // define queue
