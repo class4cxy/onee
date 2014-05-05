@@ -17,6 +17,9 @@
 		-webkit-appearance:none;
 		background: none
 	}
+	input[type=range]:focus{
+		outline: none;
+	}
 	input[type=range]::-webkit-slider-runnable-track{
 
 	}
@@ -148,6 +151,70 @@
 		top: 12px;
 		background-color: 
 		left: 0
+	}
+	.article .eqctrl{
+		position: absolute;
+		top: -200px;
+		left: 50%;
+		width: 500px;
+		margin-left: -250px;
+		border-radius: 10px;
+		background-color: rgba(4,5,6,.9)
+	}
+	.article .eqctrl.show{
+		top: 100px
+	}
+	.article .eqctrl h3{
+		position: absolute;
+		top: -10px;
+		text-transform :uppercase;
+		left: 10px;
+		font: 18px arial;
+		opacity: .7;
+		text-shadow: 1px 1px 1px rgba(0,0,0,.9);
+		color: #797979;
+	}
+	.article .eqctrl .eqlist{
+		margin-left: 70px;
+		padding: 19px 0 10px
+	}
+	.article .eqctrl p{
+		float: left;
+		width: 40px;
+		padding-top: 116px; 
+		text-align: center;
+		color: #ccc
+	}
+	.article .eqctrl input[type=range]{
+		width: 130px;
+		height: 2px;
+		background-color: #282828;
+		-webkit-transform: rotate(-90deg) translate(61px,-44px);
+		-moz-transform: rotate(-90deg) translate(61px,-44px);
+	}/* 
+	.article .eqctrl input[type=range]::-webkit-slider-runnable-track{
+	}
+	.article .eqctrl input[type=range]::-moz-range-track{
+		background-color: #282828;
+		width: 2px;
+		box-shadow: 1px 0 1px #040506
+	} */
+	.article .eqctrl input[type=range]::-webkit-slider-thumb{
+		box-shadow:inset 0 0 0 5px rgba(51,181,229,1);
+		border-radius: 10px;
+		background-color: rgba(32,110,139,.5);
+		height: 15px;
+		width: 15px;
+	}
+	.article .eqctrl input[type=range]::-moz-range-thumb{
+		box-shadow:inset 0 0 0 5px rgba(51,181,229,1);
+		border-radius: 10px;
+		background-color: rgba(32,110,139,.5);
+		height: 15px;
+		width: 15px;
+	}
+	.article .eqctrl span{
+
 	}
 	.article .loading{
 		position: absolute;
@@ -314,9 +381,6 @@
 		height: 4px;
 		z-index: 2;
 	}
-	.ctrl .progress input:focus{
-		outline: none
-	}
 	.ctrl .progress input::-webkit-slider-thumb{
 		box-shadow: 0 0 8px rgba(255,255,255,.8);
 		border-radius: 4px;
@@ -417,6 +481,7 @@
 	.article .tools .heq{
 		background-position: left -612px
 	}
+	.article .tools .heq.on,
 	.article .tools .heq:hover{
 		background-position: left -572px
 	}
@@ -461,9 +526,6 @@
 		padding-left: 28px;
 		background: url(images/ctrl-map.png) no-repeat;
 	}
-	.article .hvolume input:focus{
-		outline: none
-	}
 	.article .hvolume input::-moz-range-thumb{
 		width: 3px;
 		height: 14px;
@@ -505,7 +567,7 @@
 							音频图
 							<p mplayer="hmeter"></p>
 						</a><!--
-					--><a href="javascript:;" class="hide-text heq" title="均衡器">均衡器</a><!--
+					--><a href="javascript:;" class="hide-text heq" title="均衡器" mplayer="heqs">均衡器</a><!--
 					--><a href="javascript:;" mplayer="playmodel" title="..." class="hide-text">...</a><!--
 					--><a href="javascript:;" class="hide-text add" mplayer="add" title="添加音乐">添加音乐</a>
 					</div>
@@ -519,6 +581,10 @@
 				</div>
 			</div>
 			<p mplayer="decoding" class="ease loading">decoding audio...</p>
+			<div class="ease eqctrl" mplayer="eqswrap">
+				<h3>equalizer</h3>
+				<div class="eqlist clearfix" mplayer="eqlist"></div>
+			</div>
 		</div>
 	</div>
 </body>
@@ -579,11 +645,24 @@
 				addClass(setCSS(that.ui.hcover, "backgroundImage", "url("+(meta.cover?meta.cover:"about:blank")+")"), "show")
 			});
 
-			var isShowing = !!1;
+			var isShowEQCtrl = !!1;
+			// 绑定EQ控件
+			onEvt(that.ui.heqs, "click", function () {
+				if ( isShowEQCtrl ) {
+					addClass(this, "on");
+					addClass(that.ui.eqswrap, "show");
+				} else {
+					removeClass(this, "on");
+					removeClass(that.ui.eqswrap, "show");
+				}
+				isShowEQCtrl = !isShowEQCtrl;
+			})
+
+			var isShowPlaylist = !!1;
 			onEvt(that.ui.tiggle, "click", function () {
-				// isShowing
-				setClass(that.ui._wrap, isShowing ? "ease wrap showing" : "ease wrap");
-				isShowing = !isShowing;
+				// isShowPlaylist
+				setClass(that.ui._wrap, isShowPlaylist ? "ease wrap showing" : "ease wrap");
+				isShowPlaylist = !isShowPlaylist;
 			});
 
 			// 当解析音频文件时触发
@@ -593,7 +672,7 @@
 				// 为解析完成建立临时回调索引
 				that.onDecodingAudio.onDone = function() {
 					removeClass(that.ui.decoding, "on");
-					// isShowing && fireEvt(that.ui.tiggle, "click")
+					// isShowPlaylist && fireEvt(that.ui.tiggle, "click")
 				}
 			}
 
