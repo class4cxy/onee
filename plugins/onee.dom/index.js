@@ -925,6 +925,36 @@ onee.define(function () {
 	
 			},
 			/**
+			 * Function 检查是否存在某CLASS
+			 * 20120817
+			 * @parma val{string} class1 class2 class3 ...
+			 */
+			hasClass : function ( selector, val ) {
+				var Selector = GG(selector)[0];
+				// 检查监听节点是否存在
+				if ( !Selector ) return;
+				var has = !!1
+				// val is undefined
+				if ( val !== undefined ) {
+					
+					var queue = val.split(' ');
+	
+					var oldClass = _attr( Selector, "class", "getAttribute" );
+							
+					if ( oldClass ) {
+						// if class had exist will not be add again
+						each( queue, function ( v, k ) {
+
+							if ( oldClass.indexOf(v) === -1 ) has = !!0;
+
+						});
+					} else has = !!0;
+	
+				} else has = !!0;
+
+				return has;
+			},
+			/**
 			 * Function 添加CLASS
 			 * 20120817
 			 * @parma val{string} class1 class2 class3 ...

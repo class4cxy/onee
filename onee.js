@@ -227,7 +227,7 @@ var evt = onee.evt();
 // For some cache cases in IE 6-8, the script executes IMMEDIATELY after
 // the end of the insert execution, so use `currentlyAddingScript` to
 // hold current node, for deriving url in `define` call
-var currentlyAddingScriptURI;
+// var currentlyAddingScriptURI;
 var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
 
 var inc = onee.inc = (function () {
@@ -326,14 +326,14 @@ var inc = onee.inc = (function () {
             }
         }
 
-        currentlyAddingScriptURI = uri;
+        // currentlyAddingScriptURI = uri;
 
         // ref: #185 & http://dev.jquery.com/ticket/2709
 		baseElement ?
 			baseHead.insertBefore(node, baseElement) :
 			baseHead.appendChild(node);
-
-		currentlyAddingScriptURI = "";
+		// log("insert")
+		// currentlyAddingScriptURI = "";
 		// log(uri + " -> fetch")
 	}
 
@@ -400,9 +400,7 @@ extend(onee, (function () {
 	}
 
 	Module.onload = function (that) {
-
-// log(that.uri+" -> loaded")
-// log(currentDefineModule)
+// log("callback")
 		currentDefineModule = tmpDefineModuleForIE69[that.uri] || currentDefineModule;
 		
 		if (currentDefineModule) {
@@ -499,12 +497,15 @@ extend(onee, (function () {
 		}
 
 		// If currentlyAddingScriptURI been define
-		// means script file had been cache in IE6-9  
-		if ( currentlyAddingScriptURI && !tmpDefineModuleForIE69[currentlyAddingScriptURI] ) {
-			tmpDefineModuleForIE69[currentlyAddingScriptURI] = currentDefineModule;
-		} else if ( interactiveScript = getInteractiveScript() ) {
+		// means script file had been cache in IE6-9
+		if ( interactiveScript = getInteractiveScript() ) {
 			tmpDefineModuleForIE69[getScriptAbsoluteUri(interactiveScript)] = currentDefineModule;
 		}
+		/*if ( currentlyAddingScriptURI && !tmpDefineModuleForIE69[currentlyAddingScriptURI] ) {
+			tmpDefineModuleForIE69[currentlyAddingScriptURI] = currentDefineModule;
+		}*//* else if ( interactiveScript = getInteractiveScript() ) {
+			tmpDefineModuleForIE69[getScriptAbsoluteUri(interactiveScript)] = currentDefineModule;
+		}*/
 
 	}
 

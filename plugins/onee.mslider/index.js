@@ -33,9 +33,11 @@ onee.define(function () {
             width : this.dom.parentNode.clientWidth,
             time : 400,
             dots : [],
-            current : 0
+            current : 0,
+            currentpos : 0
 
         });
+        // log(this.dom.parentNode)
 
         // initialize ui
         _prepareForUI(this);
@@ -44,13 +46,18 @@ onee.define(function () {
 //console.log('d')
     }
     extend(_slider.prototype, {
-        to : function ( index ) {
+        to : function ( index, noanim ) {
+            // log(index)
+            // noanim 为无动画效果
             if ( index >= 0 && index < this.frames.length ) {
+
+                var time = !noanim ? this.time : 0;
                 setCSS(this.dom, {
-                    "webkitTransitionDuration" : this.time+"ms",
+                    "webkitTransitionDuration" : time+"ms",
                     "webkitTransform" : 'translate3d(-'+(this.width*index)+'px, 0px, 0px)'
                 });
-                this.current = index;
+                setClass(delClass(this.dots, "curr")[this.current = index], "curr");
+                this.currentpos = -index * this.width
             }
         }
     })
@@ -60,7 +67,6 @@ onee.define(function () {
         var startpos,
             starttime,
             touchstartpos,
-            currentpos = 0,
             speed = .4,
             framesLen = that.frames.length,
             max = that.width*(framesLen-1);
@@ -84,11 +90,11 @@ onee.define(function () {
             var e = evt.touches[0];
             evt.preventDefault();
 //console.log(currentpos)
-            currentpos += (e.pageX - startpos)/(currentpos > 0 || currentpos < -max ? 3 : 1);
+            that.currentpos += (e.pageX - startpos)/(that.currentpos > 0 || that.currentpos < -max ? 3 : 1);
             startpos = e.pageX;
-//console.log(currentpos)
+// log(currentpos)
             setCSS(that.dom, {
-                "webkitTransform" : 'translate3d('+currentpos+'px, 0px, 0px)'
+                "webkitTransform" : 'translate3d('+that.currentpos+'px, 0px, 0px)'
             });
 //            _setPosi(currentpos);
 
@@ -110,11 +116,13 @@ onee.define(function () {
             // 手指滑动速度
             var ss = absdistance / (+new Date-starttime);
 
-//            log(isHalf)
+           // log(that.width)
+           // log(ss)
 //            console.log(distance)
             that.to(function(){
                 var index = that.current - ((speed < ss || isHalf) && isInRange ? diration : 0);
-                currentpos = -index * that.width;
+                // console.log(index)
+                // that.currentpos = -index * that.width;
                 return index
             }());
             //console.log(currentpos)
@@ -124,8 +132,9 @@ onee.define(function () {
 
             evt.stopPropagation();
             setCSS(that.dom, {"webkitTransitionDuration" : '0'});
+            // currentpos = that.width*tha.current
             // change navigator style
-            setClass(delClass(that.dots, "curr")[that.current], "curr");
+            // setClass(delClass(that.dots, "curr")[that.current], "curr");
 
         }, !!1);
 
