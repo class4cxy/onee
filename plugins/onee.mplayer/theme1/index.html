@@ -165,10 +165,12 @@
 		top: 100px
 	}
 	.article .eqctrl h3{
+		-webkit-transform: rotate(-45deg);
+		-moz-transform: rotate(-45deg);
 		position: absolute;
-		top: -10px;
+		top: 31px;
 		text-transform :uppercase;
-		left: 10px;
+		left: -11px;
 		font: 18px arial;
 		opacity: .7;
 		text-shadow: 1px 1px 1px rgba(0,0,0,.9);
@@ -576,7 +578,7 @@
 					--><a href="javascript:;" class="hide-text play" mplayer="play" title="播放/暂停">播放/暂停</a><!--
 					--><a href="javascript:;" class="hide-text next" mplayer="next" title="下一首">下一首</a><!--
 					--><a href="javascript:;" class="hvolume">
-						<input type="range" min="0" max="100" class="leve1" mplayer="volume">
+						<input type="range" min="0" max="100" class="leve1" mplayer="volume" onwheel="1">
 					</a>
 				</div>
 			</div>
@@ -603,6 +605,9 @@
 		var innerText = onee.dom.text;
 		var each = _.each;
 		var find = onee.dom.find;
+		var stopDefault = onee.dom.stopDefault;
+		var getAttr = onee.dom.getAttr;
+		var fireEvt = onee.dom.fire;
 
 		// 播放器UI层控制逻辑
 		onee.mplayer.ready(function () {
@@ -699,7 +704,23 @@
 					// setCSS(that.ui.hmeter, "display", "none")
 				},
 				"span"
-			)
+			);
+
+
+			// 增加`mousewheel`动作改变input
+			// 针对`音量控件`, `均衡器控件`
+			onee.dom.on(document, "mousewheel", function (e) {
+				// log("do")
+				stopDefault(e);
+
+				var wheelDelta = e.wheelDelta || -e.detail;
+				// value storage `string`
+				// replace with valueAsNumber
+				this.valueAsNumber += parseFloat(getAttr(this, "onwheel")||1) * (wheelDelta/Math.abs(wheelDelta));
+				// 触发oninput事件驱动播放器内部改变数据模型
+				fireEvt(this, "input");
+
+			}, "input[type=range][onwheel]");
 
 		})
 	});

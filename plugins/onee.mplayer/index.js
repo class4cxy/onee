@@ -56,7 +56,7 @@ onee.define(function () { "use strict";
 		var rSuffix = /\.\w+$/;
 		var rtpl = /\{(.*?)\}/g;
 		var TPL_ITEM = '<li><i>{num}</i><a href="javascript:;" mplayer="play" rel={index}>{name}</a><em mplayer="remove" rel={index} title="删除 {name}">X</em></li>';
-		var TPL_EQITEM = '<p><input type="range" min="-30" max="30" value="{gain}"><span>{key}</span></p>';
+		var TPL_EQITEM = '<p><input type="range" min="-30" max="30" value="{gain}" onwheel="1"><span>{key}</span></p>';
 
 		// File System API
 		// only support chrome
@@ -364,7 +364,7 @@ onee.define(function () { "use strict";
 		}();
 
 		// 公共EQ对应表
-		window.COMEQ = [
+		var COMEQ = [
 			{key : "31hz", frequency : 31},
 			{key : "62hz", frequency : 62},
 			{key : "125hz", frequency : 125},
@@ -381,6 +381,8 @@ onee.define(function () { "use strict";
 		function reConnectSourceNode () {
 			// 不知道新建会不会之前造成什么不良反应
 			// 手动清掉
+			if (this.sourceNode) this.sourceNode = null;
+			if (this.BassSourceNode) this.sourceNode = null;
 			if (this.sourceNode) this.sourceNode = null;
 
 			// 新建BufferSource节点
@@ -583,6 +585,13 @@ onee.define(function () { "use strict";
 				}
 			);
 
+			/*this.setVolume = function () {
+				// log(this)
+				var volume = parseInt(this.value) / parseInt(this.max);
+				// Let's use an x*x curve (x-squared) since simple linear (x) does not
+				// sound as good.
+				that.volume = gain.value = volume * volume;
+			}*/
 			// 监听音量控件/初始化
 			var UIvolume = ui.volume[0];
 			if ( UIvolume ) {
@@ -592,6 +601,7 @@ onee.define(function () { "use strict";
 					UIvolume,
 					"input",
 					function () {
+						// log(this)
 						var volume = parseInt(this.value) / parseInt(this.max);
 						// Let's use an x*x curve (x-squared) since simple linear (x) does not
 						// sound as good.
@@ -639,6 +649,7 @@ onee.define(function () { "use strict";
 					proxy(that[fn], that)
 				)
 			});
+
 
 			that.pause = function () {
 				this.status = "pause";
