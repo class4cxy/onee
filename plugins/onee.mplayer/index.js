@@ -36,6 +36,7 @@ onee.define(function () { "use strict";
 	var Interface = onee.interface;
 	var EvtSys = onee.evt();
 	var GG = onee.dom.find;
+	var onKey = onee.dom.key.on;
 
 	(function (uiMain, undefined) {
 
@@ -698,6 +699,13 @@ onee.define(function () { "use strict";
 
 			}, 13);
 
+			// 绑定按键功能（播放/暂停/上一首/下一首）
+			each({"SPACE" : "play", "LEFT" : "prev", "RIGHT" : "next"}, function (fn, key) {
+				onKey(key, function (){
+					(that.status === "pause" || that.status === "playing") && that[fn]()
+				});
+			});
+			
 		}
 		// 继承事件管理器
 		extend(mplayer.prototype, EvtSys);
