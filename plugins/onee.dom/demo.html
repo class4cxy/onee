@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>onee.dom - demo</title>
+    <link rel="stylesheet" href="/git/onee/Style/api.css">
+</head>
+<style></style>
+<body>
+	<ul class="chen jdoi">
+		<li>node 1</li>
+		<li>node 2</li>
+		<li>node 3</li>
+		<li>node 4</li>
+		<li>node 5</li>
+		<li>node 6</li>
+		<li>node 7</li>
+		<li>node 8</li>
+		<li>node 9</li>
+		<li>node 10</li>
+	</ul>
+</body>
+</html>
+<script src="/git/onee/Lodash/Lodash.min.js"></script>
+<script src="/git/onee/onee.js"></script>
+<script>
+	onee.use("onee.dom", function ($dom) {
+		$dom.delClass("ul", "chen jdoi")
+	})
+</script>

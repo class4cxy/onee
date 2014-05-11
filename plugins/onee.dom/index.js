@@ -49,7 +49,7 @@ onee.define(function () {
 			"innerText"  : isIe ? "innerText" : "textContent",
 			"mouseenter" : isIe ? "mouseenter" : "mouseover",
 			"mouseleave" : isIe ? "mouseleave" : "mouseout",
-			"MouseWheel" : isFx ? 'DOMMouseScroll' : 'mousewheel',
+			"mousewheel" : isFx ? 'DOMMouseScroll' : 'mousewheel',
             "float"       : isIe ? "styleFloat" : "cssFloat"
 		}
 	
@@ -848,6 +848,8 @@ onee.define(function () {
 				
 			}
 		}
+
+		var isSupportClassList = document.body.classList;
 		
 		return {
 		
@@ -971,8 +973,17 @@ onee.define(function () {
 					var oldClass,
 						queue = val.split(' '),
 						cReg;
-	
-					each( Selector, function ( element, key ) {
+
+					// W3C support `classList`
+					if ( isSupportClassList ) {
+
+						each(Selector, function ( element, key ) {
+							// log(element)
+							element.classList.add.apply(element.classList, queue)
+						})
+
+					// IE6-9
+					} else each( Selector, function ( element, key ) {
 	
 						oldClass = _attr( element, "class", "getAttribute" );
 							
@@ -1028,8 +1039,14 @@ onee.define(function () {
 				var oldClass,
 					newQueue = val.split(' '),
 					cReg;
-	
-				if ( val !== undefined ) {
+
+				// W3C support `classList`
+				if ( isSupportClassList ) {
+					each(Selector, function ( element, key ) {
+						element.classList.remove.apply(element.classList, newQueue)
+					})
+				// IE6-9
+				} else if ( val !== undefined ) {
 	
 					each( Selector, function ( element, index ) {
 		
@@ -1065,4 +1082,6 @@ onee.define(function () {
 		}
 	
 	})());
+	// export
+	return onee.dom;
 }, ["sizzle"]);
