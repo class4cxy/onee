@@ -1,5 +1,6 @@
 <h1>onee - on need 当需要时</h1>
 <ol>
+	<li><strong>减少全局变量的使用；</strong></li>
 	<li><strong>提倡功能粒化，按需加载执行；</strong></li>
 	<li><strong>提供组件管理/定义、依赖管理。</strong></li>
 </ol>
@@ -17,22 +18,23 @@ onee.use(module1[, module2[, module3...]], callback);
 
 <p>
 	<pre>
-onee.use("onee.powin", function () {
-	console.log("do")
+onee.use("onee.powin", function (powin) {
+	console.log(powin)
 });
 	</pre>
 </p>
 <p>
 	<pre>
-onee.use("./module.js", function () {
-	console.log("do")
+onee.use("./module.js", function (module) {
+	console.log(module)
 });
 	</pre>
 </p>
 <p>
 	<pre>
-onee.use("onee.powin", "./module1.js", function () {
-	console.log("do")
+onee.use("onee.powin", "./module1.js", function (powin, module) {
+	console.log(powin)
+	console.log(module)
 });		
 	</pre>
 </p>
@@ -49,22 +51,25 @@ onee.define(factory, [module1[, module2[, module3...]]);
 
 <p>
 	<pre>
-onee.define(function () {
+onee.define(function (powin) {
 	// Your code
+	return your object
 }, ["onee.powin"]);
 	</pre>
 </p>
 <p>
 	<pre>
-onee.define(function () {
+onee.define(function (module) {
 	// Your code
+	return your object
 }, ["./module1.js"]);
 	</pre>
 </p>
 <p>
 	<pre>
-onee.define(function () {
+onee.define(function (powin, module) {
 	// Your code
+	return your object
 }, ["onee.powin", "./module1.js"]);
 	</pre>
 </p>
@@ -80,7 +85,7 @@ onee.inc(fileurl, callback);
 
 <ol>
 	<li>onee 基于 lodash.js；</li>
-	<li>onee 不约束全局变量，所有组件加载后均按原有变量执行；</li>
+	<li>onee 模块内部引用输出仅需return即可；</li>
 	<li>onee 支持深层依赖，但不解决循环依赖。</li>
 </ol>
 

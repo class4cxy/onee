@@ -417,10 +417,13 @@ extend(onee, (function () {
 				that.status = STATUS.EXECUTED;
 
 				if (!waitting || !--waitting) {
+					// collect inject module
+					var uri, injects = [];
+					while(uri=deps.shift()) injects[injects.length] = moduleCache[uri].export;
 					// exec self factory
-					factory();
-					var tops = that.tops||[], m;
+					that.export = factory.apply(null, injects);
 					// exec top's factory
+					var tops = that.tops||[], m;
 					while((m=tops.shift())) m();
 				}
 
