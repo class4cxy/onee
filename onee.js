@@ -223,11 +223,6 @@ var evt = onee.evt();
  * @method done(callback)
  */
 
-// ref seajs
-// For some cache cases in IE 6-8, the script executes IMMEDIATELY after
-// the end of the insert execution, so use `currentlyAddingScript` to
-// hold current node, for deriving url in `define` call
-// var currentlyAddingScriptURI;
 var baseHead = document.getElementsByTagName("head")[0] || document.documentElement;
 
 var inc = onee.inc = (function () {
@@ -326,15 +321,10 @@ var inc = onee.inc = (function () {
             }
         }
 
-        // currentlyAddingScriptURI = uri;
-
         // ref: #185 & http://dev.jquery.com/ticket/2709
 		baseElement ?
 			baseHead.insertBefore(node, baseElement) :
 			baseHead.appendChild(node);
-		// log("insert")
-		// currentlyAddingScriptURI = "";
-		// log(uri + " -> fetch")
 	}
 
 })();
@@ -488,8 +478,7 @@ extend(onee, (function () {
 	}
 
 	function define ( factory, deps ) {
-// log("execute")
-// log(currentlyAddingScriptURI)
+		
 		var interactiveScript;
 		currentDefineModule = {
 			status : STATUS.SAVED,
@@ -504,12 +493,6 @@ extend(onee, (function () {
 		if ( interactiveScript = getInteractiveScript() ) {
 			tmpDefineModuleForIE69[getScriptAbsoluteUri(interactiveScript)] = currentDefineModule;
 		}
-		/*if ( currentlyAddingScriptURI && !tmpDefineModuleForIE69[currentlyAddingScriptURI] ) {
-			tmpDefineModuleForIE69[currentlyAddingScriptURI] = currentDefineModule;
-		}*//* else if ( interactiveScript = getInteractiveScript() ) {
-			tmpDefineModuleForIE69[getScriptAbsoluteUri(interactiveScript)] = currentDefineModule;
-		}*/
-
 	}
 
 	// 外部文件
