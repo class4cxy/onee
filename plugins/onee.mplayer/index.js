@@ -120,7 +120,7 @@ onee.define(function () { "use strict";
 
 			this.init = function (callback) {
 				// initialize
-				fs(TEMPORARY, 1024 * 1204, function(fileSystem) {
+				fs(TEMPORARY, 5 * 1024 * 1204, function(fileSystem) {
 					filer = fileSystem;
 					cwd = fileSystem.root;
 					callback && callback();
@@ -352,7 +352,9 @@ onee.define(function () { "use strict";
 					if ( item ) callback(item);
 					else {
 						getJSON(metaurl+'?key='+encodeURIComponent(name), function (J) {
-							J && callback(cacheMetaData[name] = J);
+							if ( J.data.trackList.length ) {
+								callback(cacheMetaData[name] = J.data.trackList[0]);
+							}
 						})
 					}
 				},
@@ -654,7 +656,7 @@ onee.define(function () { "use strict";
 
 			that.pause = function () {
 				this.status = "pause";
-				that.tiggle("onPause");
+				that.tiggle("onpause");
 				// log(audioCtx.currentTime);
 				this.sourceNode.stop(0);
 				// pause meter drawer
@@ -664,7 +666,7 @@ onee.define(function () { "use strict";
 			}
 			that.stop = function () {
 				// log("dododo")
-				that.tiggle("onStop");
+				that.tiggle("onstop");
 				// 清空音频视图
 				if ( this.meterDrawer ) {
 					this.meterDrawer.stop();
@@ -693,7 +695,7 @@ onee.define(function () { "use strict";
 				// 暂停追随播放进度，changing是自定义一属性
 				if ( !UIprogress.isChanging && that.status === "playing" ) {
 					that.offsetTime = offsetTime+audioCtx.currentTime-startTime;
-					UIprogressbg.value = UIprogress.value = 0|that.offsetTime
+					that.tiggle("onplaying", UIprogressbg.value = UIprogress.value = 0|that.offsetTime)
 					// that.offsetTime
 				} else startTime = 0|audioCtx.currentTime;
 
@@ -708,8 +710,7 @@ onee.define(function () { "use strict";
 			
 		}
 		// 继承事件管理器
-		extend(mplayer.prototype, EvtSys);
-		extend(mplayer.prototype, {
+		extend(mplayer.prototype, EvtSys, {
 			add : function (files) {
 				if (files.length) {
 					// log(files)
@@ -758,11 +759,11 @@ onee.define(function () { "use strict";
 		            });
 		            // 去重后长度不变即数据没有改变过
 		            if (orgLength!==playlist.length) {
-		            	// 触发ononUpdatePlayList事件
-		            	// this.onUpdatePlayList();
-		            	this.tiggle("onUpdatePlayList")
+		            	// 触发ononlistchange事件
+		            	// this.onlistchange();
+		            	this.tiggle("onlistchange")
 			           	// play if isEmpty
-			            // isEmpty && this.play();
+			            isEmpty && this.play();
 		            }
 				}
 			},
@@ -797,7 +798,7 @@ onee.define(function () { "use strict";
 						// goon meter drawer
 						that.meterDrawer && that.meterDrawer.goon();
 						that.status = "playing";
-						that.tiggle("onPlay");
+						that.tiggle("onstart");
 						// addClass(that.ui.play, that.status = "playing");
 					}
 
@@ -816,7 +817,7 @@ onee.define(function () { "use strict";
 				fileReader(item.file, function (result) {
 					decodeAudio(result, function (buffer) {
 						// playing
-						that.tiggle("onPlay");
+						that.tiggle("onstart");
 						that.status = "playing";
 						that.buffer = buffer;
 						that.onDecodingAudio.onDone();
@@ -839,7 +840,7 @@ onee.define(function () { "use strict";
 
 						// 获取meta数据
 						metaCtrl.get(item.name, function(meta) {
-							that.tiggle("onUpdateMeta", meta)
+							that.tiggle("onmetacoming", meta)
 						});
 					})
 				});
@@ -924,9 +925,9 @@ onee.define(function () { "use strict";
 		            });
 		            // 重新标示当前播放
 		            addClass(playlist[this.currentPlay].node, "active");
-		            // 触发onUpdatePlayList事件
-		            // this.onUpdatePlayList();
-		            this.tiggle("onUpdatePlayList");
+		            // 触发onlistchange事件
+		            // this.onlistchange();
+		            this.tiggle("onlistchange");
 					// clear entry
 					FileSys && FileSys.rm(file.fullpath);
 					// free memory
@@ -964,6 +965,72 @@ onee.define(function () { "use strict";
 					})
 				}) : callback && callback.call(that);
 			},
+			// 解析歌词文件，有UI层根据需要自行调用
+			// 
+			// [00:13.17]朋友已走
+			// [00:15.53]刚升职的你举杯到凌晨还未够
+			// [00:21.67]用尽心机拉我手
+			// [00:25.84]缠在我颈背后
+			// ==>
+			// [
+			//    {s : "13.17", tx : "朋友已走"},
+			//    {s : "15.53", tx : "刚升职的你举杯到凌晨还未够"},
+			//    {s : "21.67", tx : "用尽心机拉我手"},
+			//    {s : "25.84", tx : "缠在我颈背后"}
+			// ]
+			parseLyric : function () {
+				var rLine = /\[\d\d:\d\d\.\d\d\][^\r\n]+/g;
+				var rFormatTime = /\[(\d\d):([\d\.]+)/;
+				var sortBy = _.sortBy;
+				var getFile = onee.get;
+				// [01:12.85 => 72.85
+				function t2second (t) {
+					return t.replace(rFormatTime, function (all,m,s) {
+						return parseInt(m)*60+parseFloat(s)
+					})
+				}
+				function cmcall (callback, lrcs) {
+					callback && callback(lrcs)
+				}
+				return function (meta, callback) {
+					// 如果meta存在parsedLrc字段
+					// 则该歌词已被解析过，直接使用即可
+					if (meta.parsedLrc) {
+						cmcall(callback, meta.parsedLrc);
+					// 如果不存在
+					// 先异步加载原始`.lrc`文件
+					// 再按照要求的格式解析完成
+					// 最后缓存到本地
+					} else {
+						var lrcs = [];
+						getFile('../lyric.php?file='+meta.lyric, function (lrc) {
+							
+							lrc.replace(rLine, function (line) {
+								// console.log(line)
+								if (line) {
+									var splitIndex = line.lastIndexOf("]")+1;
+									// 分割时间
+									var times = line.substring(0,splitIndex).split(']');
+									// 分割歌词
+									var text = line.substring(splitIndex);
+									// console.log(times)
+									each(times, function (time, k) {
+										// console.log(time)
+										if ( time ) {
+											lrcs[lrcs.length] = {
+												s : parseInt(t2second(time)),
+												tx: text
+											}
+										}
+									})
+								}
+							});
+							// 根据时间`s`重排
+							cmcall(callback, meta.parsedLrc = sortBy(lrcs, 's'));
+						})
+					}
+				}
+			} (),
 			meters : ["default", "none"]
 		});
 

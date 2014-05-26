@@ -614,7 +614,7 @@
 			// console.log(that)
 			var that = this;
 			// 当更新播放列表事件逻辑
-			that.on("onUpdatePlayList", function () {
+			that.on("onlistchange", function () {
 				// isEmpty用于判断当前状态，避免重复执行
 				var playlist = that.playlist;
 				var isEmpty = !!1;
@@ -630,24 +630,30 @@
 				}
 			})
 			// var hcover = that.ui.hcover[0];
-			that.on("onPlay", function () {
+			that.on("onstart", function () {
 				// hcover.classList.remove("pause")
 				removeClass(that.ui.hdisk, "pause")
 				// addClass(that.ui.hcover, "show")
 			});
 
-			that.on("onPause", function () {
+			that.on("onpause", function () {
 				// hcover.classList.add("pause")
 				addClass(that.ui.hdisk, "pause")
-			}).on("onStop", function () {
+			}).on("onstop", function () {
 				// hcover.classList.add("pause")
 				addClass(that.ui.hdisk, "pause");
 				removeClass(that.ui.hcover, "show")
 				// removeClass(that.ui.hcover, "show");
 			});
 
-			that.on("onUpdateMeta", function (meta) {
-				addClass(setCSS(that.ui.hcover, "backgroundImage", "url("+(meta.cover?meta.cover:"about:blank")+")"), "show")
+			// var rCoverSize = /(_1)\.jpg$/i;
+			that.on("onmetacoming", function (meta) {
+				var coverURL = meta.pic;
+				addClass(setCSS(that.ui.hcover, "backgroundImage", "url("+(coverURL?coverURL.slice(0, coverURL.length-6)+'.jpg':"about:blank")+")"), "show");
+				// 获取歌词文件，并解析好
+				onee.mplayer.parseLyric(meta, function (lrcs) {
+					// console.log(lrcs)
+				});
 			});
 
 			var isShowEQCtrl = !!1;
@@ -722,7 +728,8 @@
 
 			}, "input[type=range][onwheel]");
 
-		})
+		});
+
 	});
 </script>
 </html>
