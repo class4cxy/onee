@@ -44,6 +44,19 @@
 	    -moz-transition-duration:.6s;
 	    -moz-transition-timing-function:ease-in-out;
 	}
+	.cm-scrollbar::-webkit-scrollbar {
+		width: 5px;
+	}
+
+	.cm-scrollbar::-webkit-scrollbar-track {
+		background-color: #747474;
+		border-radius: 2px;
+	}
+
+	.cm-scrollbar::-webkit-scrollbar-thumb {
+		border-radius: 2px;
+		background-color: #007fd5
+	}
 	.musicbox{
 		height: 560px;
 		width: 590px;
@@ -152,7 +165,8 @@
 		background-color: 
 		left: 0
 	}
-	.article .eqctrl{
+	.article .eqctrl,
+	.article .lyric{
 		position: absolute;
 		top: -200px;
 		left: 50%;
@@ -161,10 +175,35 @@
 		border-radius: 10px;
 		background-color: rgba(4,5,6,.9)
 	}
-	.article .eqctrl.show{
+	.article .eqctrl.show,
+	.article .lyric.show{
 		top: 100px
 	}
-	.article .eqctrl h3{
+	.article .eqctrl .c,
+	.article .lyric .c{
+		height: 20px;
+		display: none;
+		width: 20px;
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		border-radius: 10px;
+		line-height: 20px;
+		font-weight: bold;
+		color: #fff;
+		text-align: center;
+		font-style: normal;
+		background-color: #777;
+		cursor: pointer;
+		z-index: 10
+	}
+	.article .eqctrl .c:hover,
+	.article .lyric .c:hover{
+		background-color: #fff;
+		color: #007fd5
+	}
+	.article .eqctrl h3,
+	.article .lyric h3{
 		-webkit-transform: rotate(-45deg);
 		-moz-transform: rotate(-45deg);
 		position: absolute;
@@ -174,7 +213,7 @@
 		font: 18px arial;
 		opacity: .7;
 		text-shadow: 1px 1px 1px rgba(0,0,0,.9);
-		color: #797979;
+		color: #ccc;
 	}
 	.article .eqctrl .eqlist{
 		margin-left: 70px;
@@ -217,6 +256,32 @@
 	}
 	.article .eqctrl span{
 
+	}
+	.article .lyric{
+		height: 250px;
+		top: -250px;
+		overflow: hidden;
+		text-align: center;
+	}
+	.article .lyric h3{
+		top: 19px;
+		left: 4px
+	}
+	.article .lyric ul{
+		position: relative;
+		font-size:20px;
+		line-height:250px;
+	}
+	.article .lyric li{
+		line-height: 28px;
+		height: 28px;
+		font-size: 12px;
+		overflow: hidden;
+	}
+	.article .lyric li.curr{
+		font-size: 14px;
+		color: #fff;
+		font-weight: bold;
 	}
 	.article .loading{
 		position: absolute;
@@ -289,19 +354,6 @@
 		box-shadow: 0 -1px 1px #000;
 		height: 323px;
 		overflow: auto
-	}
-	.article .playlist::-webkit-scrollbar {
-		width: 5px;
-	}
-
-	.article .playlist::-webkit-scrollbar-track {
-		background-color: #747474;
-		border-radius: 2px;
-	}
-
-	.article .playlist::-webkit-scrollbar-thumb {
-		border-radius: 2px;
-		background-color: #007fd5
 	}
 	.article .playlist li{
 		height: 32px;
@@ -496,10 +548,11 @@
 	.article .tools .random{
 		background-position: left -835px
 	}
-	.article .tools .add{
+	.article .tools .hlyric{
 		background-position: 3px -871px
 	}
-	.article .tools .add:hover{
+	.article .tools .hlyric:hover,
+	.article .tools .hlyric.on{
 		background-position: 3px -907px
 	}
 	.article .btn .hvolume{
@@ -556,8 +609,9 @@
 			<a href="javascript:;" class="tiggle" mplayer="tiggle"></a>
 			<div class="ease wrap" mplayer="_wrap">
 				<p mplayer="dnd" class="ease dnd">You can drag and drop the audio file here or <button mplayer="add">click me</button></p>
-				<ul class="playlist" mplayer="list"></ul>
+				<ul class="cm-scrollbar playlist" mplayer="list"></ul>
 			</div>
+			<!-- 控制面板 -->
 			<div class="ctrl" mplayer="userctrl">
 				<p class="progress">
 					<progress max="0" value="0" mplayer="progressbg"></progress>
@@ -571,7 +625,7 @@
 						</a><!--
 					--><a href="javascript:;" class="hide-text heq" title="均衡器" mplayer="heqs">均衡器</a><!--
 					--><a href="javascript:;" mplayer="playmodel" title="..." class="hide-text">...</a><!--
-					--><a href="javascript:;" class="hide-text add" mplayer="add" title="添加音乐">添加音乐</a>
+					--><a href="javascript:;" class="hide-text hlyric" mplayer="hlyric" title="歌词">歌词</a>
 					</div>
 					
 					<a href="javascript:;" class="hide-text prev" mplayer="prev" title="上一首">上一首</a><!--
@@ -582,10 +636,19 @@
 					</a>
 				</div>
 			</div>
+			<!-- 解析音源loading -->
 			<p mplayer="decoding" class="ease loading">decoding audio...</p>
+			<!-- 均衡器控件 -->
 			<div class="ease eqctrl" mplayer="eqswrap">
 				<h3>equalizer</h3>
+				<em class="c">X</em>
 				<div class="eqlist clearfix" mplayer="eqlist"></div>
+			</div>
+			<!-- 歌词控件 -->
+			<div class="ease lyric" mplayer="lyricwrap">
+				<h3>lyric</h3>
+				<em class="c">X</em>
+				<ul mplayer="lyric" class="ease">Loading...</ul>
 			</div>
 		</div>
 	</div>
@@ -604,6 +667,7 @@
 		var fireEvt = onee.dom.fire;
 		var innerText = onee.dom.text;
 		var each = _.each;
+		var map = _.map;
 		var find = onee.dom.find;
 		var stopDefault = onee.dom.stopDefault;
 		var getAttr = onee.dom.getAttr;
@@ -646,16 +710,64 @@
 				// removeClass(that.ui.hcover, "show");
 			});
 
-			// var rCoverSize = /(_1)\.jpg$/i;
-			that.on("onmetacoming", function (meta) {
-				var coverURL = meta.pic;
-				addClass(setCSS(that.ui.hcover, "backgroundImage", "url("+(coverURL?coverURL.slice(0, coverURL.length-6)+'.jpg':"about:blank")+")"), "show");
-				// 获取歌词文件，并解析好
-				onee.mplayer.parseLyric(meta, function (lrcs) {
-					// console.log(lrcs)
-				});
-			});
+			(function(){
 
+				var tmpLRC;
+				// 当前歌词索引
+				var pointer = 1;
+				var UIlyric = that.ui.lyric[0];
+				// 歌词节点列表
+				var LRCitems;
+				that.on("onmetacoming", function (meta) {
+					var coverURL = meta.pic;
+					addClass(setCSS(that.ui.hcover, "backgroundImage", "url("+(coverURL?coverURL.slice(0, coverURL.length-6)+'.jpg':"about:blank")+")"), "show");
+					// 获取歌词文件，并解析好
+					onee.mplayer.parseLyric(meta, function (lrcs) {
+						// build lyric html
+						innerHTML(UIlyric, map(lrcs, function(item) {
+							return "<li>"+item.tx+"</li>";
+						}).join(''));
+						LRCitems = find("li", UIlyric);
+						pointer = 1;
+						// 初始化样式
+						addClass(LRCitems[0], "curr")
+						setCSS(UIlyric, "top", '111px');
+						// 引用到局部变量
+						tmpLRC = lrcs.length && lrcs;
+
+					});
+				});
+				that.on("onplaying", function (processing) {
+					if (tmpLRC) {
+						// console.log("d")
+						if ( processing > tmpLRC[pointer].s ) {
+							// 移除上一行样式
+							removeClass(LRCitems[pointer-1], "curr")
+							// 添加当前行样式
+							addClass(LRCitems[pointer], "curr")
+							// 设置居中
+							UIlyric.style.top = (111-28*pointer++)+'px';
+							// 结束操作
+							pointer === tmpLRC.length && (tmpLRC = null);
+						}
+					}
+				});
+
+				var isShowLyric = !!1;
+				// 绑定EQ控件
+				onEvt(that.ui.hlyric, "click", function () {
+					if ( isShowLyric ) {
+						addClass(this, "on");
+						addClass(that.ui.lyricwrap, "show");
+					} else {
+						removeClass(this, "on");
+						removeClass(that.ui.lyricwrap, "show");
+					}
+					isShowLyric = !isShowLyric;
+				})
+
+			}());
+			// var rCoverSize = /(_1)\.jpg$/i;
 			var isShowEQCtrl = !!1;
 			// 绑定EQ控件
 			onEvt(that.ui.heqs, "click", function () {

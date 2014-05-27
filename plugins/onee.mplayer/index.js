@@ -352,9 +352,7 @@ onee.define(function () { "use strict";
 					if ( item ) callback(item);
 					else {
 						getJSON(metaurl+'?key='+encodeURIComponent(name), function (J) {
-							if ( J.data.trackList.length ) {
-								callback(cacheMetaData[name] = J.data.trackList[0]);
-							}
+							callback(J.data.trackList ? cacheMetaData[name] = J.data.trackList[0] : {});
 						})
 					}
 				},
@@ -763,7 +761,7 @@ onee.define(function () { "use strict";
 		            	// this.onlistchange();
 		            	this.tiggle("onlistchange")
 			           	// play if isEmpty
-			            isEmpty && this.play();
+			            // isEmpty && this.play();
 		            }
 				}
 			},
