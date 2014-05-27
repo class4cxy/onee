@@ -343,7 +343,7 @@ onee.define(function () { "use strict";
 		var metaCtrl = function () {
 			// 读取音频meta数据
 			var cacheMetaData = JSON.parse(localStorage.getItem("mplayer-music-meta") || "{}");
-			var metaurl = '../meta.php';
+			var metaurl = './meta.php';
 			var getJSON = onee.getJSON;
 
 			return {
@@ -761,7 +761,7 @@ onee.define(function () { "use strict";
 		            	// this.onlistchange();
 		            	this.tiggle("onlistchange")
 			           	// play if isEmpty
-			            // isEmpty && this.play();
+			            isEmpty && this.play();
 		            }
 				}
 			},
@@ -1001,7 +1001,7 @@ onee.define(function () { "use strict";
 					// 最后缓存到本地
 					} else {
 						var lrcs = [];
-						getFile('../lyric.php?file='+meta.lyric, function (lrc) {
+						getFile('./lyric.php?file='+meta.lyric, function (lrc) {
 							
 							lrc.replace(rLine, function (line) {
 								// console.log(line)
