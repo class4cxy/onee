@@ -1,0 +1,6 @@
+AudioContext.createGain()
+音频增益节点
+
+音频节点（bufferSource） -> 增益节点 -> 终端（AudioContext.destination）
+
+AudioContext.listener
