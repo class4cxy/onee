@@ -8,9 +8,9 @@
 </head>
 <style>
 	html,body{
-		background-color: #0d0f0d;
 		height: 100%;
-		width: 100%
+		width: 100%;
+		background: #ccc url(images/bg.png) repeat;
 	}
 	*{
 		margin: 0;
@@ -73,6 +73,15 @@
 	.mb-article{
 		height: 400px;
 		position: relative;
+		letter-spacing: -4px;
+	}
+	.mb-article:before{
+		content: "";
+		height: 100%;
+		display: inline-block;
+		vertical-align: middle;
+		width: 0;
+		overflow: hidden;
 	}
 	.mb-logo{
 		position: absolute;
@@ -88,6 +97,14 @@
 		left: 0
 	}
 
+	.mb-hack-vmiddle{
+		position: relative;
+		z-index: 1;
+		display: inline-block;
+		vertical-align: middle;
+		width: 100%;
+		height: 300px;
+	}
 	.mb-disk,
 	.mb-meter{
 		position: absolute;
@@ -98,7 +115,6 @@
 		z-index: 1
 	}
 	.mb-disk{
-		display: -webkit-box;
 		background: url(images/disk.png) center no-repeat;
 		background-size: 100%;
 		animation: rotate 15s linear infinite;
@@ -130,14 +146,14 @@
 	}
 	.mb-disk-cover{
 		width: 93.75%;
-		height: 300px;
+		height: 100%;
 		position: absolute;
 		background: url('cover.jpg') center no-repeat;
 		background-size: cover;
 		border-radius: 500px;
 		top: 50%;
 		left: 50%;
-		margin: -150px 0 0 -150px;
+		margin: -151px 0 0 -149px;
 		opacity: 0;
 		z-index: 1
 	}
@@ -168,12 +184,25 @@
 	} */
 	.mb-meter{
 		opacity: .4;
-		z-index: 3;
-		text-align: center;
+		z-index: 2;
 	}
-	.mb-meter canvas{
-		margin: auto
+	.mb-music{
+		position: absolute;
+		z-index: 5;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		overflow: hidden;
 	}
+	.mb-music-wrap{
+		height: 100%
+	}
+	.mb-music-item{
+		width: 100%;
+		height: 100%;
+	}
+
 	.article .eqctrl,
 	.article .lyric{
 		position: absolute;
@@ -407,18 +436,20 @@
 	}
 
 	.mb-ctrl{
-		border-top: 1px solid #424242;
-		background: url(images/bg.png) repeat;
+		/*border-top: 1px solid #424242;
+		background: url(images/bg.png) repeat;*/
 		position: absolute;
 		bottom: 0;
 		left: 0;
-		width: 96%;
-		padding: 0 2%;
+		width: 100%;
+		/*padding: 0 2%;*/
 		text-align: center;
-		z-index: 2
+		z-index: 2;
+		background: rgba(0,0,0,.2)
 	}
 	.mb-ctrl-progress{
 		position: relative;
+		margin: 0 10px;
 	}
 	.mb-ctrl-progress progress,
 	.mb-ctrl-progress input{
@@ -454,7 +485,7 @@
 	} */
 	.mb-ctrl-btn{
 		letter-spacing: -3px;
-		margin: 10px 0;
+		margin: 8px 0;
 		text-align: center;
 	}
 	.mb-ctrl-btns{
@@ -597,31 +628,39 @@
 	} */
 
 	.mb-currinfo{
-		padding: 5px 0
+		padding: 5px 10px;
+		line-height: 18px;
+		color: #fff;
+		text-align: left;
+	}
+	.mb-currinfo-tit{
+		font-size: 15px
 	}
 </style>
 <body>
 	<div class="musicbox" mplayer="main">
-		<h1 class="mb-logo">JMplayer</h1>
+		<!-- <h1 class="mb-logo">J.Player</h1> -->
 		<!-- <a href="javascript:;" class="tiggle" mplayer="tiggle"></a> -->
 		<div class="mb-article">
-			<!-- 磁碟盘 -->
-			<div class="mb-disk mb-disk-pause" mplayer="hdisk">
-				<p class="ease mb-disk-cover mb-disk-cover-show" mplayer="hcover"></p>
-				<p class="mb-disk-axis"></p>
-			</div>
-			<!-- 频谱动画 -->
-			<div class="mb-meter">
-				<canvas mplayer="meter" height="100%" width="100%"></canvas>
+			<div class="mb-hack-vmiddle">
+				<!-- 磁碟盘 -->
+				<div class="mb-disk mb-disk-pause" mplayer="hdisk">
+					<p class="ease mb-disk-cover mb-disk-cover-show" mplayer="hcover"></p>
+					<p class="mb-disk-axis"></p>
+				</div>
+				<!-- 频谱动画 -->
+				<div class="mb-meter">
+					<canvas mplayer="meter" height="100%" width="100%"></canvas>
+				</div>
 			</div>
 			<div class="mb-music">
 				<div class="mb-music-wrap">
-					列表
+					<!-- 列表 -->
 					<div class="mb-music-item">
 						<ul class="cm-scrollbar mb-music-list" mplayer="list"></ul>
 					</div>
 					<div class="mb-music-item"></div>
-					歌词
+					<!-- 歌词 -->
 					<div class="mb-music-item mb-music-lyric"></div>
 				</div>
 			</div>
@@ -671,5 +710,7 @@
 </body>
 <script src="http://jdoi.net/git/onee/Lodash/lodash.min.js"></script>
 <script src="http://jdoi.net/git/onee/onee.js"></script>
-
+<script type="text/javascript">
+	
+</script>
 </html>
