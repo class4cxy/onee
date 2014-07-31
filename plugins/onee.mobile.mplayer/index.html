@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>personal music box</title>
+<title>J.Player</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="http://jdoi.net/git/onee/style/initialize.css">
 </head>
@@ -10,6 +10,7 @@
 	html,body{
 		height: 100%;
 		width: 100%;
+		font-size: 15px;
 		background: #ccc url(images/bg.png) repeat;
 	}
 	*{
@@ -39,6 +40,25 @@
 		cursor: pointer;
 		border:none;
 	}
+	.ui-border-1px{
+	    position: relative;
+	}
+
+	.ui-border-1px:after{
+	    content: "";
+
+	    display: block;
+	    position: absolute;
+	    top: 0;
+	    left: 0;
+	    right: -100%;
+	    bottom: -100%;
+
+	    -webkit-transform-origin: 0 0;
+	    -webkit-transform: scale(0.5);
+
+	    pointer-events: none;
+	}
 	.ease{
 		-webkit-transition-property:all;
 	    -webkit-transition-duration:.6s;
@@ -52,7 +72,6 @@
 	}
 
 	.cm-scrollbar::-webkit-scrollbar-track {
-		background-color: #747474;
 		border-radius: 2px;
 	}
 
@@ -65,15 +84,14 @@
 		width: 100%;
 		height: 100%;
 		/*margin: auto;*/
-		color: #007fd5;
+		color: #fff;
 		position: relative;
 		overflow: hidden;
 	}
 
 	.mb-article{
-		height: 400px;
 		position: relative;
-		letter-spacing: -4px;
+		letter-spacing: -5px;
 	}
 	.mb-article:before{
 		content: "";
@@ -103,7 +121,9 @@
 		display: inline-block;
 		vertical-align: middle;
 		width: 100%;
-		height: 300px;
+	}
+	.mb-hack-blur{
+		-webkit-filter: blur(5px);
 	}
 	.mb-disk,
 	.mb-meter{
@@ -115,6 +135,7 @@
 		z-index: 1
 	}
 	.mb-disk{
+		position: relative;
 		background: url(images/disk.png) center no-repeat;
 		background-size: 100%;
 		animation: rotate 15s linear infinite;
@@ -151,9 +172,12 @@
 		background: url('cover.jpg') center no-repeat;
 		background-size: cover;
 		border-radius: 500px;
-		top: 50%;
-		left: 50%;
-		margin: -151px 0 0 -149px;
+		top: 0;
+		left: 0;
+		/* top: 50%;
+		left: 50%; */
+		/*margin: -151px 0 0 -149px;*/
+		margin:-.5% 0 0 3.7%;
 		opacity: 0;
 		z-index: 1
 	}
@@ -174,14 +198,7 @@
 					0 0 0 32px rgba(21,24,21,.4);
 		border-radius: 100px;
 	}
-	/* .musicbox .cover{
-		z-index: 2;
-		background: url(images/bg.png) repeat;
-	}
-	.musicbox .cover img{
-		width: 100%;
-		height: 100%
-	} */
+
 	.mb-meter{
 		opacity: .4;
 		z-index: 2;
@@ -201,240 +218,25 @@
 	.mb-music-item{
 		width: 100%;
 		height: 100%;
+		background: rgba(0,0,0,.7);
+		letter-spacing: 0
 	}
-
-	.article .eqctrl,
-	.article .lyric{
-		position: absolute;
-		top: -200px;
-		left: 50%;
-		width: 500px;
-		margin-left: -250px;
-		border-radius: 10px;
-		background-color: rgba(4,5,6,.9)
+	.mb-music-list{
+		-webkit-overflow-scrolling: touch;
+		overflow: auto;
 	}
-	.article .eqctrl.show,
-	.article .lyric.show{
-		top: 100px
+	.mb-music-list-item{
+		height: 50px;
+		line-height: 50px;
+		margin-left: 10px;
 	}
-	.article .eqctrl .c,
-	.article .lyric .c{
-		height: 20px;
-		display: none;
-		width: 20px;
-		position: absolute;
-		top: 10px;
-		right: 10px;
-		border-radius: 10px;
-		line-height: 20px;
-		font-weight: bold;
-		color: #fff;
-		text-align: center;
-		font-style: normal;
-		background-color: #777;
-		cursor: pointer;
-		z-index: 10
+	.mb-music-list-item:after{
+		border-bottom: 1px solid #848484;
 	}
-	.article .eqctrl .c:hover,
-	.article .lyric .c:hover{
-		background-color: #fff;
+	.mb-music-list-item-active{
+		background-color: rgba(35,35,35,.8);
 		color: #007fd5
 	}
-	.article .eqctrl h3,
-	.article .lyric h3{
-		-webkit-transform: rotate(-45deg);
-		-moz-transform: rotate(-45deg);
-		position: absolute;
-		top: 31px;
-		text-transform :uppercase;
-		left: -11px;
-		font: 18px arial;
-		opacity: .7;
-		text-shadow: 1px 1px 1px rgba(0,0,0,.9);
-		color: #ccc;
-	}
-	.article .eqctrl .eqlist{
-		margin-left: 70px;
-		padding: 19px 0 10px
-	}
-	.article .eqctrl p{
-		float: left;
-		width: 40px;
-		padding-top: 116px; 
-		text-align: center;
-		color: #ccc
-	}
-	.article .eqctrl input[type=range]{
-		width: 130px;
-		height: 2px;
-		background-color: #282828;
-		-webkit-transform: rotate(-90deg) translate(61px,-44px);
-		-moz-transform: rotate(-90deg) translate(61px,-44px);
-	}/* 
-	.article .eqctrl input[type=range]::-webkit-slider-runnable-track{
-	}
-	.article .eqctrl input[type=range]::-moz-range-track{
-		background-color: #282828;
-		width: 2px;
-		box-shadow: 1px 0 1px #040506
-	} */
-	.article .eqctrl input[type=range]::-webkit-slider-thumb{
-		box-shadow:inset 0 0 0 5px rgba(51,181,229,1);
-		border-radius: 10px;
-		background-color: rgba(32,110,139,.5);
-		height: 15px;
-		width: 15px;
-	}
-	.article .eqctrl input[type=range]::-moz-range-thumb{
-		box-shadow:inset 0 0 0 5px rgba(51,181,229,1);
-		border-radius: 10px;
-		background-color: rgba(32,110,139,.5);
-		height: 15px;
-		width: 15px;
-	}
-	.article .eqctrl span{
-
-	}
-	.article .lyric{
-		height: 250px;
-		top: -250px;
-		overflow: hidden;
-		text-align: center;
-	}
-	.article .lyric h3{
-		top: 19px;
-		left: 4px
-	}
-	.article .lyric ul{
-		position: relative;
-		font-size:20px;
-		line-height:250px;
-	}
-	.article .lyric li{
-		line-height: 28px;
-		height: 28px;
-		font-size: 12px;
-		overflow: hidden;
-	}
-	.article .lyric li.curr{
-		font-size: 14px;
-		color: #fff;
-		font-weight: bold;
-	}
-	.article .loading{
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: 100%;
-		width: 100%;
-		z-index: 1000;
-		background-color: rgba(0,0,0,.5);
-		text-align: center;
-		color: #fff;
-		font: bold 16px/500px arial;
-	    -webkit-transition-duration:.4s;
-	    -moz-transition-duration:.4s;
-		-webkit-transform:translate(0, -590px);
-		-moz-transform:translate(0, -590px);
-	}
-	.article .loading.on{
-		-webkit-transform:translate(0, 0);
-		-moz-transform:translate(0, 0);
-	}
-	/* .article .tiggle{
-		position: absolute;
-		height: 37px;
-		line-height: 75px;
-		z-index: 2;
-		width: 47px;
-		top: 24px;
-		right: 27px;
-		background: url(images/tiggle.png);
-		display: block;
-	} */
-	.article .wrap{
-		overflow: hidden;
-		position: relative;
-		background: url(images/bg.png) repeat;
-		-webkit-transform:translate(0, 0);
-		-moz-transform:translate(0, 0);
-	}
-	.article .wrap.showing{
-		-webkit-transform:translate(0, -408px);
-		-moz-transform:translate(0, -408px);
-		/*top: -408px;*/
-	}
-/*	.article .wrap .dnd{
-		text-align: center;
-		width: 100%;
-		height: 308px;
-		position: absolute;
-		top: 84px;
-		z-index: 3;
-		left: 0;
-	    -webkit-transition-duration:.4s;
-	    -moz-transition-duration:.4s;
-		-webkit-transform:scale(1);
-		-moz-transform:scale(1);
-		font: bold 18px/308px arial;
-	}
-	.article .wrap .dnd.dropping{
-		-webkit-transform:scale(0.8);
-		-moz-transform:scale(0.8);
-		background-color: rgba(0,127,213,.3)
-	}*/
-	.mb-playlist{
-		position: relative;
-		z-index: 2;
-		height: 100%;
-		overflow: auto
-	}
-	.mb-playlist li{
-		height: 32px;
-		line-height: 32px;
-		color: #a6a6a6
-	}
-	.mb-playlist li *{
-		display: inline-block;
-	}
-	.mb-playlist li i{
-		width: 7%;
-		text-align: center;
-	}
-	.mb-playlist li a[mplayer=play]{
-		width: 85%
-	}
-	.mb-playlist li em[mplayer=remove]{
-		font-style: normal;
-		padding: 4px 5px;
-		border-radius: 5px;
-		cursor: pointer;
-		background-color: #ccc;
-		font-weight: bold;
-		line-height: 10px;
-		display: none
-	}
-	.mb-playlist li:nth-child(even){
-		background-color: rgba(35,35,35,.5)
-	}
-	.mb-playlist li a{
-		color: #a6a6a6
-	}
-	.mb-playlist .playing,
-	.mb-playlist .playing a,
-	.mb-playlist li:hover,
-	.mb-playlist li:hover a,
-	.mb-playlist .active,
-	.mb-playlist .active a{
-		color: #007fd5
-	}
-	.mb-playlist li:hover{
-		background-color: rgba(35,35,35,.8)
-	}
-	.mb-playlist li:hover em[mplayer=remove]{
-		display: inline-block;
-	}
-
 	.mb-ctrl{
 		/*border-top: 1px solid #424242;
 		background: url(images/bg.png) repeat;*/
@@ -449,7 +251,6 @@
 	}
 	.mb-ctrl-progress{
 		position: relative;
-		margin: 0 10px;
 	}
 	.mb-ctrl-progress progress,
 	.mb-ctrl-progress input{
@@ -515,161 +316,50 @@
 		width: 65px;
 		background-position: center -137px
 	}
-	/*.article .btn .prev:hover{
-		background-position: center -423px
-	}*/
-	/* .article .ctrl .tools{
-		position: absolute;
-		top: 60px;
-		left: 0;
-		width: 170px;
-		-webkit-transform:scale(0.75);
-		-moz-transform:scale(0.75);
-		box-shadow:inset 0 0 10px rgba(1,1,1,1)
-	}
-	.article .tools a{
-		height: 31px;
-		width: 31px;
-		margin: 5px;
-	}
-	.article .tools .hmeter{
-		background-position: left -536px;
-		position: relative;
-	}
-	.article .tools .hmeter:hover{
-		background-position: left -500px
-	}
-	.article .tools .hmeter:hover p{
-		display: block;
-	}
-	.article .tools .hmeter p{
-		position: absolute;
-		bottom: 32px;
-		left: 50%;
-		margin-left: -35px;
-		width: 70px;
-		display: none;
-		background-color: rgba(0,0,0,.5);
-		border: 1px solid #a6a6a6;
-		border-radius: 10px;
-		color: #a6a6a6;
-		font: 12px/24px arial;
-		box-shadow: 2px 2px 5px rgba(0,0,0,.8);
-		padding: 10px 0
-	}
-	.article .tools .hmeter span{
-		display: block;
-		text-align: center;
-		margin-bottom: 1px
-	}
-	.article .tools .hmeter span:hover,
-	.article .tools .hmeter span.on{
-		color: #007FD5;
-		background-color: #9f9f9f
-	}
-	.article .tools .heq{
-		background-position: left -612px
-	}
-	.article .tools .heq.on,
-	.article .tools .heq:hover{
-		background-position: left -572px
-	}
-	.article .tools .loopone{
-		background-position: left -795px
-	}
-	.article .tools .loopall{
-		background-position: left -756px
-	}
-	.article .tools .random{
-		background-position: left -835px
-	}
-	.article .tools .hlyric{
-		background-position: 3px -871px
-	}
-	.article .tools .hlyric:hover,
-	.article .tools .hlyric.on{
-		background-position: 3px -907px
-	} */
-	/* .article .btn .hvolume{
-		position: absolute;
-		top: 66px;
-		right: 30px;
-		width: 92px;
-		background-position: right -935px;
-		height: 26px
-	}
-	.article .hvolume .leve0{
-		background-position: 0 -725px
-	}
-	.article .hvolume .leve1{
-		background-position: 0 -702px
-	}
-	.article .hvolume .leve2{
-		background-position: 0 -669px
-	}
-	.article .hvolume .leve3{
-		background-position: 0 -646px
-	}
-	.article .hvolume input{
-		width: 64px;
-		height: 28px;
-		padding-left: 28px;
-		background: url(images/ctrl-map.png) no-repeat;
-	}
-	.article .hvolume input::-moz-range-thumb{
-		width: 3px;
-		height: 14px;
-		background-color: #007ed2;
-	}
-	.article .hvolume input::-webkit-slider-thumb{
-		width: 3px;
-		height: 14px;
-		background-color: #007ed2;
-	} */
-
 	.mb-currinfo{
 		padding: 5px 10px;
 		line-height: 18px;
-		color: #fff;
 		text-align: left;
 	}
-	.mb-currinfo-tit{
-		font-size: 15px
+	.mb-currinfo-title{
+	}
+	.mb-currinfo-album{
+		font-size: 12px
 	}
 </style>
 <body>
-	<div class="musicbox" mplayer="main">
+	<div class="musicbox" data-player="body">
 		<!-- <h1 class="mb-logo">J.Player</h1> -->
 		<!-- <a href="javascript:;" class="tiggle" mplayer="tiggle"></a> -->
-		<div class="mb-article">
-			<div class="mb-hack-vmiddle">
+		<div class="mb-article" data-player="article">
+			<div class="mb-hack-vmiddle mb-hack-blur">
 				<!-- 磁碟盘 -->
-				<div class="mb-disk mb-disk-pause" mplayer="hdisk">
-					<p class="ease mb-disk-cover mb-disk-cover-show" mplayer="hcover"></p>
+				<div class="mb-disk mb-disk-pause" data-player="hdisk">
+					<p class="ease mb-disk-cover mb-disk-cover-show" data-player="hcover"></p>
 					<p class="mb-disk-axis"></p>
 				</div>
 				<!-- 频谱动画 -->
 				<div class="mb-meter">
-					<canvas mplayer="meter" height="100%" width="100%"></canvas>
+					<canvas data-player="meter" height="100%" width="100%"></canvas>
 				</div>
 			</div>
 			<div class="mb-music">
 				<div class="mb-music-wrap">
 					<!-- 列表 -->
-					<div class="mb-music-item">
-						<ul class="cm-scrollbar mb-music-list" mplayer="list"></ul>
+					<div class="cm-scrollbar mb-music-item mb-music-list ui-page">
+						<ul data-player="list" class="ui-page-content" style="-webkit-overflow-scrolling: touch"></ul>
 					</div>
-					<div class="mb-music-item"></div>
+					<div class="mb-music-item mb-music-empty"></div>
 					<!-- 歌词 -->
 					<div class="mb-music-item mb-music-lyric"></div>
 				</div>
 			</div>
 		</div>
 		<!-- 控制面板 -->
-		<div class="mb-ctrl" mplayer="userctrl">
+		<div class="mb-ctrl" data-player="userctrl">
 			<div class="mb-currinfo">
-				<p class="mb-currinfo-tit">王菲 - 执迷不悔</p>
-				<p>王菲</p>
+				<p class="mb-currinfo-title">王菲 - 执迷不悔</p>
+				<p class="mb-currinfo-album">王菲</p>
 			</div>
 			<p class="mb-ctrl-progress">
 				<progress max="0" value="0" mplayer="progressbg"></progress>
@@ -684,9 +374,9 @@
 					</a><a href="javascript:;" class="hide-text heq" title="均衡器" mplayer="heqs">均衡器</a><a href="javascript:;" mplayer="playmodel" title="..." class="hide-text">...</a><a href="javascript:;" class="hide-text hlyric" mplayer="hlyric" title="歌词">歌词</a>
 				</div> -->
 				
-				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-prev" mplayer="prev" title="上一首">上一首</a>
-				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-play" mplayer="play" title="播放/暂停">播放/暂停</a>
-				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-next" mplayer="next" title="下一首">下一首</a>
+				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-prev" data-player="prev" title="上一首">上一首</a>
+				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-play" data-player="play" title="播放/暂停">播放/暂停</a>
+				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-next" data-player="next" title="下一首">下一首</a>
 				<!-- <a href="javascript:;" class="hvolume">
 					<input type="range" min="0" max="100" class="leve1" mplayer="volume" onwheel="1">
 				</a> -->
@@ -707,10 +397,108 @@
 			<ul mplayer="lyric" class="ease">Loading...</ul>
 		</div> -->
 	</div>
+	<!-- <audio id="in2"></audio> -->
 </body>
-<script src="http://jdoi.net/git/onee/Lodash/lodash.min.js"></script>
-<script src="http://jdoi.net/git/onee/onee.js"></script>
+<!-- <script src="http://jdoi.net/git/onee/Lodash/lodash.min.js"></script>
+<script src="http://jdoi.net/git/onee/onee.js"></script> -->
+<script src="/onee/Lodash/lodash.min.js"></script>
+<script src="/onee/onee.js"></script>
+<script src="/onee/Zepto/zepto.js"></script>
+<script src="/onee/Zepto/event.js"></script>
+<script src="/onee/Zepto/touch.js"></script>
+<script src="/onee/Zepto/ajax.js"></script>
 <script type="text/javascript">
-	
+	onee.use("onee.mobile.mplayer", function () {
+
+		/*var setCSS = onee.dom.css;
+		var setClass = onee.dom.setClass;
+		var innerHTML = onee.dom.html;
+		var addClass = onee.dom.addClass;
+		var removeClass = onee.dom.delClass;
+		var onEvt = onee.dom.on;
+		var fireEvt = onee.dom.fire;
+		var innerText = onee.dom.text;
+		var each = _.each;
+		var map = _.map;
+		var find = onee.dom.find;
+		var stopDefault = onee.dom.stopDefault;
+		var getAttr = onee.dom.getAttr;
+		var fireEvt = onee.dom.fire;*/
+
+		// 播放器UI层控制逻辑
+		var player = onee.mplayer;
+
+		// init ui
+		player.$article.css("height", window.innerHeight - player.UIuserctrl.clientHeight);
+		player.$hdisk.parent().css("height", window.innerWidth * .9375);
+		// player.$list.css("min-height", window.innerHeight - player.UIuserctrl.clientHeight + 10)
+		$('.mb-ctrl').on('touchmove', function(e){
+            e.preventDefault();
+        });
+
+        // Handle the start of interactions
+        $(document).on('touchstart', '.ui-page', function(e){
+            var page = e.currentTarget;
+            var startTopScroll = page.scrollTop;
+            if(startTopScroll <= 0)
+                page.scrollTop = 1;
+
+            if(startTopScroll + page.offsetHeight >= page.scrollHeight)
+                page.scrollTop = page.scrollHeight - page.offsetHeight - 1;
+
+        }).on('touchmove', '.ui-page', function(e){
+                var page = e.currentTarget;
+                // alert(page.className)
+                // TODO cache element select
+                var content = page.querySelector('.ui-page-content');
+                // Offset value have include content and border
+                if( content.offsetHeight <= parseInt(getComputedStyle(page).height) ){
+                    // your element have overflow
+                    return e.preventDefault();
+                }
+            })
+
+		// alert(window.innerWidth * .9375)
+
+		player.add([
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" }
+		])
+		/*.on("onstart", function () {
+
+			removeClass(that.ui.hdisk, "pause")
+
+		}).on("onpause", function () {
+
+			addClass(that.ui.hdisk, "pause")
+
+		}).on("onstop", function () {
+
+			addClass(that.ui.hdisk, "pause")
+			removeClass(that.ui.hcover, "show")
+
+		});*/
+	});
 </script>
 </html>
