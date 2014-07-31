@@ -67,18 +67,6 @@
 	    -moz-transition-duration:.6s;
 	    -moz-transition-timing-function:ease-in-out;
 	}
-	.cm-scrollbar::-webkit-scrollbar {
-		width: 5px;
-	}
-
-	.cm-scrollbar::-webkit-scrollbar-track {
-		border-radius: 2px;
-	}
-
-	.cm-scrollbar::-webkit-scrollbar-thumb {
-		border-radius: 2px;
-		background-color: #007fd5
-	}
 	.musicbox{
 		/*height: 560px;*/
 		width: 100%;
@@ -219,10 +207,10 @@
 		width: 100%;
 		height: 100%;
 		background: rgba(0,0,0,.7);
-		letter-spacing: 0
+		letter-spacing: 0;
+		-webkit-overflow-scrolling: touch;
 	}
 	.mb-music-list{
-		-webkit-overflow-scrolling: touch;
 		overflow: auto;
 	}
 	.mb-music-list-item{
@@ -232,6 +220,9 @@
 	}
 	.mb-music-list-item:after{
 		border-bottom: 1px solid #848484;
+	}
+	.mb-music-list-item:last-child:after{
+		border: none;
 	}
 	.mb-music-list-item-active{
 		background-color: rgba(35,35,35,.8);
@@ -346,8 +337,8 @@
 			<div class="mb-music">
 				<div class="mb-music-wrap">
 					<!-- 列表 -->
-					<div class="cm-scrollbar mb-music-item mb-music-list ui-page">
-						<ul data-player="list" class="ui-page-content" style="-webkit-overflow-scrolling: touch"></ul>
+					<div class="mb-music-item mb-music-list">
+						<ul data-player="list" class="ui-page-content"></ul>
 					</div>
 					<div class="mb-music-item mb-music-empty"></div>
 					<!-- 歌词 -->
@@ -437,7 +428,7 @@
         });
 
         // Handle the start of interactions
-        $(document).on('touchstart', '.ui-page', function(e){
+        $(document).on('touchstart', '.mb-music-item', function(e){
             var page = e.currentTarget;
             var startTopScroll = page.scrollTop;
             if(startTopScroll <= 0)
@@ -446,13 +437,13 @@
             if(startTopScroll + page.offsetHeight >= page.scrollHeight)
                 page.scrollTop = page.scrollHeight - page.offsetHeight - 1;
 
-        }).on('touchmove', '.ui-page', function(e){
+        }).on('touchmove', '.mb-music-item', function(e){
                 var page = e.currentTarget;
                 // alert(page.className)
                 // TODO cache element select
                 var content = page.querySelector('.ui-page-content');
                 // Offset value have include content and border
-                if( content.offsetHeight <= parseInt(getComputedStyle(page).height) ){
+                if( !content || content.offsetHeight <= parseInt(getComputedStyle(page).height) ){
                     // your element have overflow
                     return e.preventDefault();
                 }
@@ -461,6 +452,8 @@
 		// alert(window.innerWidth * .9375)
 
 		player.add([
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
 			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
 			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
 			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
