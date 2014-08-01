@@ -399,6 +399,17 @@
 <script src="/onee/Zepto/touch.js"></script>
 <script src="/onee/Zepto/ajax.js"></script>
 <script type="text/javascript">
+
+	/*var request = new XMLHttpRequest();
+	request.open('GET', "./sources/beihai.mp3", true);
+	request.responseType = 'arraybuffer';
+
+	// Decode asynchronously
+	request.onload = function() {
+
+		console.log(request)
+	}
+	request.send();*/
 	onee.use("onee.mobile.mplayer", function () {
 
 		/*var setCSS = onee.dom.css;
@@ -422,7 +433,7 @@
 		// init ui
 		player.$article.css("height", window.innerHeight - player.UIuserctrl.clientHeight);
 		player.$hdisk.parent().css("height", window.innerWidth * .9375);
-		// player.$list.css("min-height", window.innerHeight - player.UIuserctrl.clientHeight + 10)
+		
 		$('.mb-ctrl').on('touchmove', function(e){
             e.preventDefault();
         });
@@ -438,60 +449,41 @@
                 page.scrollTop = page.scrollHeight - page.offsetHeight - 1;
 
         }).on('touchmove', '.mb-music-item', function(e){
-                var page = e.currentTarget;
-                // alert(page.className)
-                // TODO cache element select
-                var content = page.querySelector('.ui-page-content');
-                // Offset value have include content and border
-                if( !content || content.offsetHeight <= parseInt(getComputedStyle(page).height) ){
-                    // your element have overflow
-                    return e.preventDefault();
-                }
-            })
+            var page = e.currentTarget;
+            // TODO cache element select
+            var content = page.querySelector('.ui-page-content');
+            // Offset value have include content and border
+            if( !content || content.offsetHeight <= parseInt(getComputedStyle(page).height) ){
+                // your element have overflow
+                return e.preventDefault();
+            }
+        })
 
 		// alert(window.innerWidth * .9375)
 
 		player.add([
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" },
-			{ name : "永动机 - 北海", link : "./sources/beihai.mp3" }
+			{ name : "永动机 - 北海", url : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", url : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", url : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", url : "./sources/beihai.mp3" },
+			{ name : "永动机 - 北海", url : "./sources/beihai.mp3" }
 		])
-		/*.on("onstart", function () {
+		.on("start", function () {
 
-			removeClass(that.ui.hdisk, "pause")
+			player.$hdisk.removeClass("pause")
+			// removeClass(that.ui.hdisk, "pause")
 
-		}).on("onpause", function () {
+		}).on("pause", function () {
 
-			addClass(that.ui.hdisk, "pause")
+			player.$hdisk.addClass("pause")
+			// addClass(that.ui.hdisk, "pause")
 
-		}).on("onstop", function () {
+		}).on("stop", function () {
 
-			addClass(that.ui.hdisk, "pause")
-			removeClass(that.ui.hcover, "show")
+			player.$hdisk.addClass("pause")
+			player.$hcover.removeClass("show")
 
-		});*/
+		});
 	});
 </script>
 </html>
