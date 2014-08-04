@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html data-url-prepend="http://pub.idqqimg.com/qqmpmobile/coupon/">
+<head>
+    <title>fix scroll</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <style>
+	*{
+		margin:0;
+		padding:0 
+	}
+	.body{
+		height: 100%;
+		position: absolute;
+		-webkit-overflow-scrolling: touch;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		overflow-x: hidden;
+		right: 0;
+	}
+	.content{
+		position: relative;
+		-webkit-box-sizing: border-box;
+	}
+	.content p{
+		height: 500px
+	}
+	.p1{
+		background-color: #ff0
+	}
+	.p2{
+		background-color: #fff
+	}
+	.p3{
+		background-color: #000
+	}
+	.p4{
+		background-color: #f0f
+	}
+	.p5{
+		background-color: #0ff
+	}
+	.fix{
+		position: fixed;
+		height: 50px;
+		width: 100%;
+		bottom: 0;
+		left: 0;
+		background-color: #f00
+	}
+    </style>
+</head>
+<body>
+	<div class="body">
+		<div class="content">
+			<p class="p1"></p>
+			<p class="p2"></p>
+		</div>
+	</div>
+	<p class="fix js-no-bounce"></p>
+</body>
+</html>
+
+<script src="/onee/Zepto/zepto.js"></script>
+<script src="/onee/Zepto/event.js"></script>
+<script src="/onee/Zepto/touch.js"></script>
+<script>
+	$('.js-no-bounce').on('touchmove', function(e){
+        e.preventDefault();
+    });
+    // Variables to track inputs
+    var startTopScroll;
+
+    // Handle the start of interactions
+    $(document).on('touchstart', '.body', function(e){
+        var page = e.currentTarget;
+        startTopScroll = page.scrollTop;
+        if(startTopScroll <= 0)
+            page.scrollTop = 1;
+
+        if(startTopScroll + page.offsetHeight >= page.scrollHeight)
+            page.scrollTop = page.scrollHeight - page.offsetHeight - 1;
+
+    }).on('touchmove', '.body', function(e){
+            var page = e.currentTarget;
+            // alert(page.className)
+            // TODO cache element select
+            var content = page.querySelector('.content');
+            // Offset value have include content and border
+            if( content.offsetHeight <= parseInt(getComputedStyle(page).height) ){
+                // your element have overflow
+                return e.preventDefault();
+            }
+        })
+</script>
