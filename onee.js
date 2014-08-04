@@ -340,15 +340,20 @@ var plugins = onee.plugins = {};
 _.extend(plugins, {
 	"sizzle" : workspace + "Sizzle/sizzle.js",
 	"jquery" : workspace + "jquery/jquery.js",
+	"zepto" : workspace + "Zepto/zepto.js",
 	"dnd" : workspace + "dnd/index.js",
 	"RequestAnimationFrame" : workspace + "Tween/RequestAnimationFrame.js",
 	"Tween" : workspace + "Tween/Tween.js"
+});
+// create zepto plugins for mobile
+_.each("ajax data event fixed os touch transition debounce".split(" "), function (index, k) {
+	plugins["zepto."+index] = workspace + "Zepto/"+ index +".js"
 });
 
 _.each(("onee.dom onee.ajax onee.tplm "+
 	"onee.form onee.powin onee.swf "+
 	"onee.scroller onee.layerscroller "+
-	"onee.mslider onee.mplayer").split(" "), function (index, k) {
+	"onee.mslider onee.mplayer onee.mobile.mplayer").split(" "), function (index, k) {
 		plugins[index] = plu + index + "/index.js"
 	});
 
