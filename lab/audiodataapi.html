@@ -1,0 +1,23 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>JavaScript Spectrum Example</title>
+  </head>
+  <body>
+    <!-- <audio id="audio-element"
+           src="zhimibuhui.mp3"
+           controls="true"
+           style="width: 512px;">
+    </audio> -->
+    <div><canvas id="fft" width="512" height="200"></canvas></div>
+
+    <script>
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var audio = new Audio();
+    audio.src = "zhimibuhui.mp3";
+    var source = audioCtx.createMediaElementSource(audio);
+    source.connect(audioCtx.destination);
+    audio.play()
+    </script>
+  </body>
+</html>

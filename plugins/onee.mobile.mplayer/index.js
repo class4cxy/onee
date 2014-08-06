@@ -253,37 +253,37 @@ onee.define(function () { "use strict";
 	function reConnectSourceNode () {
 		// 不知道新建会不会之前造成什么不良反应
 		// 手动清掉
-		if (this.sourceNode) this.sourceNode = null;
-		if (this.BassSourceNode) this.sourceNode = null;
-		if (this.sourceNode) this.sourceNode = null;
+		if (this.source) this.source = null;
+		if (this.BassSourceNode) this.source = null;
+		if (this.source) this.source = null;
 
 		// 新建BufferSource节点
-		this.sourceNode = audioCtx.createBufferSource();
+		this.source = audioCtx.createBufferSource();
 		//then assign the buffer to the buffer source node
-		this.sourceNode.buffer = this.buffer;
+		this.source.buffer = this.buffer;
 		// fix in old browsers
-        if (!this.sourceNode.start) {
-            this.sourceNode.start = this.sourceNode.noteOn;
-            this.sourceNode.stop = this.sourceNode.noteOff;
+        if (!this.source.start) {
+            this.source.start = this.source.noteOn;
+            this.source.stop = this.source.noteOff;
         }
 
         // on end
-        this.sourceNode.onended = proxy(onPlayEnd, this);
+        this.source.onended = proxy(onPlayEnd, this);
 
         var len = 10, nex;
         // 重新连接EQ均衡器
-		this.sourceNode.connect(COMEQ[len-1].biquadFilter);
+		this.source.connect(COMEQ[len-1].biquadFilter);
 		while(len--) {
 			nex = len-1;
 			nex > -1 && COMEQ[len].biquadFilter.connect(COMEQ[nex].biquadFilter)
 		}
 		// 连接音频分析节点
-		COMEQ[0].biquadFilter.connect(this.analyserNode);
+		COMEQ[0].biquadFilter.connect(this.analyser);
 
 		// 重新连接音频分析节点
-        // this.sourceNode.connect(this.analyserNode);
+        // this.source.connect(this.analyser);
 		// 重新连接音频增益节点
-        this.analyserNode.connect(this.gainNode);
+        this.analyser.connect(this.gainNode);
         // 重新连接到终端
         this.gainNode.connect(audioCtx.destination);
 
@@ -303,6 +303,8 @@ onee.define(function () { "use strict";
 
 		if ( !that.UIbody ) return log("Can not match player `body`");
 
+		var audio = this.audio = new Audio();
+
 		Interface(this, options, {
 			ctx : this.UImeter.getContext('2d'),
 			// 状态
@@ -318,13 +320,16 @@ onee.define(function () { "use strict";
 			// 音频缓冲区
 			buffer : null,
 			// 音频增益控制节点/控制音量
-			gainNode : audioCtx.createGain(),
+			// gainNode : audioCtx.createGain(),
 			// 音频分析节点
-			analyserNode : audioCtx.createAnalyser(),
+			analyser : audioCtx.createAnalyser(),
+			// 音源节点
+			source : audioCtx.createMediaElementSource(audio),
+			// audio : new Audio(),
 			// 音量
 			volume : 0.8,
 			// 当解析音频文件事件
-			onDecodingAudio : function () {},
+			// onDecodingAudio : function () {},
 			// 均衡器列表
 			EQ : [0,0,0,0,0,0,0,0,0,0],
 			// 播放列表
@@ -332,6 +337,8 @@ onee.define(function () { "use strict";
 		});
 
 		// 初始化EQ控件
+		var eql = COMEQ.length-1;
+
 		each(COMEQ, function (item, k) {
 			// 初始化滤波器节点
 			var biquadFilter = item.biquadFilter = audioCtx.createBiquadFilter();
@@ -339,7 +346,18 @@ onee.define(function () { "use strict";
 			biquadFilter.type = "peaking";
 			biquadFilter.frequency.value=item.frequency;
 
-			/*onEvt(
+			// connect first filter
+			if ( !k ) that.source.connect(biquadFilter)
+			// prev connect to curr filter
+			else COMEQ[k-1].biquadFilter.connect(biquadFilter);
+			// last filter connect to analyser
+			// analyser connect to destination
+			// console.log(typeof k)
+			if ( k === eql ) {
+				biquadFilter.connect(that.analyser)
+				that.analyser.connect(audioCtx.destination)
+			}
+ 			/*onEvt(
 				appendTo(ui.eqlist, TPL_EQITEM.replace(rtpl, function (a, b) {
 					if (b === 'gain') return gain;
 					return item[b];
@@ -351,7 +369,7 @@ onee.define(function () { "use strict";
 					biquadFilter.gain.value = that.EQ[k] = parseFloat(input.value)
 				}
 			)*/
-		})
+		});
 
 		// 监听列表播放操作
 		that.$body.on("tap", "li[data-player=play]", function () {
@@ -390,7 +408,7 @@ onee.define(function () { "use strict";
 
 		that.pause = function () {
 
-			this.sourceNode.stop(0);
+			this.source.stop(0);
 			// pause meter drawer
 			this.meterDrawer && this.meterDrawer.pause();
 			// 记录当前播放时间
@@ -400,16 +418,17 @@ onee.define(function () { "use strict";
 		}
 		that.stop = function () {
 			// 清空音频视图
-			if ( this.meterDrawer ) {
+			/*if ( this.meterDrawer ) {
 				this.meterDrawer.stop();
 				delete this.meterDrawer;
-			}
+			}*/
 			// 清空正在播放的音源
-			if ( this.sourceNode ) {
-				this.sourceNode.stop();
-				delete this.sourceNode;
+			/*if ( this.source ) {
+				this.source.stop();
+				delete this.source;
 				this.status = "stop"
-			}
+			}*/
+			this.audio.pause()
 			// uodate status and triggle event
 			that.triggle(this.status = "stop");
 			// 重置播放进度条 重置播放时间
@@ -417,6 +436,9 @@ onee.define(function () { "use strict";
 			// that.UIprogressbg.value = that.UIprogress.value = offsetTime = this.offsetTime = 0;
 		}
 
+
+        // 重新连接到终端
+        // this.gainNode.connect(audioCtx.destination);
 		// 更新播放进度
 		// var duration;
 		// var startTime = 0;
@@ -435,28 +457,6 @@ onee.define(function () { "use strict";
 			} else startTime = 0|audioCtx.currentTime;
 
 		}, 13);*/
-	}
-	function fetch (item, callback) {
-		if ( item.buffer ) {
-
-			callback && callback(item.buffer)
-
-		} else {
-
-			var request = new XMLHttpRequest();
-			request.open('GET', item.url, true);
-			request.responseType = 'arraybuffer';
-
-			request.onload = function() {
-				// copy buffer
-				decodeAudio(request.response, function (buffer) {
-					callback && callback(item.buffer = buffer);
-					request = request.onload = null;
-				})
-			}
-			request.send();
-
-		}
 	}
 	// 资源缓存器
 	var CACHE = [];
@@ -508,10 +508,10 @@ onee.define(function () { "use strict";
 				} else if ( that.status === "pause" ) {
 					// 重新获取全局时间戳
 					// that.startTime = audioCtx.currentTime;
-					// log(that.sourceNode)
+					// log(that.source)
 					reConnectSourceNode.call(that);
-					// that.sourceNode.start(0);
-					that.sourceNode.start(0, that.offsetTime);
+					// that.source.start(0);
+					that.source.start(0, that.offsetTime);
 					// goon meter drawer
 					that.meterDrawer && that.meterDrawer.goon();
 					that.status = "playing";
@@ -524,6 +524,11 @@ onee.define(function () { "use strict";
 
 			if ( !item ) return log("Can't find the music.");
 
+			that.status = "playing";
+			that.triggle("start");
+			that.audio.src = item.url;
+			that.audio.play()
+
 			// update item ui
 			// addClass(playlist[that.currentPlay].node, "active");
 			// prevIndex !== undefined && removeClass(playlist[prevIndex].node, "active");
@@ -531,7 +536,7 @@ onee.define(function () { "use strict";
 			// 触发decoding
 			// that.onDecodingAudio();
 			// if ( !item.buffer ) {
-			fetch(item, function (buffer) {
+			/*fetch(item, function (buffer) {
 				// playing
 				that.triggle("start");
 				that.status = "playing";
@@ -546,29 +551,29 @@ onee.define(function () { "use strict";
 
 				// 新建音频节点
 				reConnectSourceNode.call(that);
-				// that.sourceNode = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
-				// that.sourceNode.start(0);
+				// that.source = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
+				// that.source.start(0);
 		        // sourceNode.onended = proxy(that.stop, that);
 
 		        // that.setMeter(that.meter);
 		        try{
-		        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyserNode);
+		        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 		        } catch(e){}
 
 				// 获取meta数据
-				/*metaCtrl.get(item.name, function(meta) {
+				metaCtrl.get(item.name, function(meta) {
 					that.triggle("meta", meta)
-				});*/
-			});
+				});
+			});*/
 
-			// alert(that.sourceNode)
+			// alert(that.source)
 
-			var playerHandle = setInterval(function () {
-				if ( that.sourceNode ) {
-					that.sourceNode.start(0);
+			/*var playerHandle = setInterval(function () {
+				if ( that.source ) {
+					that.source.start(0);
 					clearInterval(playerHandle)
 				}
-			}, 100);
+			}, 100);*/
 			// }
 
 			/*fileReader(item.file, function (result) {
@@ -586,13 +591,13 @@ onee.define(function () { "use strict";
 
 					// 新建音频节点
 					reConnectSourceNode.call(that);
-					// that.sourceNode = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
-					that.sourceNode.start(0);
+					// that.source = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
+					that.source.start(0);
 			        // sourceNode.onended = proxy(that.stop, that);
 
 			        // that.setMeter(that.meter);
 			        try{
-			        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyserNode);
+			        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 			        } catch(e){}
 
 					// 获取meta数据
@@ -611,13 +616,13 @@ onee.define(function () { "use strict";
 
 			// 新建音频节点
 			reConnectSourceNode.call(that);
-			// that.sourceNode = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
-			that.sourceNode.start(0);
+			// that.source = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
+			that.source.start(0);
 	        // sourceNode.onended = proxy(that.stop, that);
 
 	        // that.setMeter(that.meter);
 	        try{
-	        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyserNode);
+	        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 	        } catch(e){}
 
 	        // 获取meta数据
@@ -717,7 +722,7 @@ onee.define(function () { "use strict";
 					delete this.meterDrawer;
 				}
 				if ( (this.meter=meter) && (meter=meterLibrary[meter]) && this.status !== "stop" ) {
-					this.meterDrawer = meter(this.ctx, this.analyserNode);
+					this.meterDrawer = meter(this.ctx, this.analyser);
 				}
 			}
 		}
