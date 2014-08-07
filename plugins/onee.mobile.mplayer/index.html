@@ -392,13 +392,17 @@
 </body>
 <!-- <script src="http://jdoi.net/git/onee/Lodash/lodash.min.js"></script>
 <script src="http://jdoi.net/git/onee/onee.js"></script> -->
-<script src="/onee/Lodash/lodash.min.js"></script>
-<script src="/onee/onee.js"></script>
+<!-- <script src="/onee/Lodash/lodash.min.js"></script>
+<script src="/onee/onee.js"></script> -->
 <script src="/onee/Zepto/zepto.js"></script>
 <script src="/onee/Zepto/event.js"></script>
 <script src="/onee/Zepto/touch.js"></script>
 <script src="/onee/Zepto/ajax.js"></script>
+<script src="/onee/Tween/RequestAnimationFrame.js"></script>
+<script src="./index.js"></script>
 <script type="text/javascript">
+(function () {
+
 
 	/*var request = new XMLHttpRequest();
 	request.open('GET', "./sources/beihai.mp3", true);
@@ -410,7 +414,7 @@
 		console.log(request)
 	}
 	request.send();*/
-	onee.use("onee.mobile.mplayer", function () {
+	// onee.use("onee.mobile.mplayer", function () {
 
 		/*var setCSS = onee.dom.css;
 		var setClass = onee.dom.setClass;
@@ -428,11 +432,11 @@
 		var fireEvt = onee.dom.fire;*/
 
 		// 播放器UI层控制逻辑
-		var player = onee.mplayer;
+		// var player = onee.mplayer;
 
 		// init ui
-		player.$article.css("height", window.innerHeight - player.UIuserctrl.clientHeight);
-		player.$hdisk.parent().css("height", window.innerWidth * .9375);
+		JPlayer.$article.css("height", window.innerHeight - JPlayer.UIuserctrl.clientHeight);
+		JPlayer.$hdisk.parent().css("height", window.innerWidth * .9375);
 		
 		$('.mb-ctrl').on('touchmove', function(e){
             e.preventDefault();
@@ -461,7 +465,7 @@
 
 		// alert(window.innerWidth * .9375)
 
-		player.add([
+		JPlayer.add([
 			{ name : "永动机 - 北海", url : "./sources/beihai.mp3" },
 			{ name : "永动机 - 北海", url : "./sources/beihai.mp3" },
 			{ name : "永动机 - 北海", url : "./sources/beihai.mp3" },
@@ -470,20 +474,21 @@
 		])
 		.on("start", function () {
 
-			player.$hdisk.removeClass("pause")
+			JPlayer.$hdisk.removeClass("pause")
 			// removeClass(that.ui.hdisk, "pause")
 
 		}).on("pause", function () {
 
-			player.$hdisk.addClass("pause")
+			JPlayer.$hdisk.addClass("pause")
 			// addClass(that.ui.hdisk, "pause")
 
 		}).on("stop", function () {
 
-			player.$hdisk.addClass("pause")
-			player.$hcover.removeClass("show")
+			JPlayer.$hdisk.addClass("pause")
+			JPlayer.$hcover.removeClass("show")
 
 		});
-	});
+	// });
+}())
 </script>
 </html>
