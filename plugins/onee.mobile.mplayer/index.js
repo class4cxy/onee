@@ -352,7 +352,6 @@ onee.define(function () { "use strict";
 				}
 			)*/
 		})
-
 		// 监听列表播放操作
 		that.$body.on("tap", "li[data-player=play]", function () {
 
@@ -546,6 +545,7 @@ onee.define(function () { "use strict";
 
 				// 新建音频节点
 				reConnectSourceNode.call(that);
+				// that.$proxyplay.trigger("touchstart");
 				// that.sourceNode = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
 				// that.sourceNode.start(0);
 		        // sourceNode.onended = proxy(that.stop, that);
@@ -562,13 +562,6 @@ onee.define(function () { "use strict";
 			});
 
 			// alert(that.sourceNode)
-
-			var playerHandle = setInterval(function () {
-				if ( that.sourceNode ) {
-					that.sourceNode.start(0);
-					clearInterval(playerHandle)
-				}
-			}, 100);
 			// }
 
 			/*fileReader(item.file, function (result) {
