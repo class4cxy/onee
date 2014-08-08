@@ -1,25 +1,25 @@
 /**
- * demo - mplayer
+ * demo - jplayer
  * 20140415
  * personal musicplayer
  * design by J.do
  * for more ? http://jdoi.net/
  */
 
-onee.define(function () { "use strict";
+(function (global) { "use strict";
 	// body...
 	// is exist
-	if ( onee.mplayer ) return;
+	// if ( onee.jplayer ) return;
 
 	// new a onee's log
-	var log     = onee.log("mplayer");
+	// var log     = onee.log("jplayer");
 	
 	// base method
-	var extend  = _.extend;
-	var each = _.each;
-	var map = _.map;
-	var indexOf = _.indexOf;
-	var random = _.random;
+	var extend  = $.extend;
+	var each = $.each;
+	var map = $.map;
+	// var indexOf = _.indexOf;
+	var random = Math.random;
 	var slice = Array.prototype.slice;
 	var EvtSys = $(document);
 	// var getAttr = Sizzle.attr;
@@ -34,13 +34,13 @@ onee.define(function () { "use strict";
 	// var innerHTML = onee.dom.html;
 	// var innerTEXT = onee.dom.text;
 	// var removeNode = onee.dom.remove;
-	var Interface = onee.interface;
+	// var Interface = onee.interface;
 	// var EvtSys = onee.evt();
 	// var GG = onee.dom.find;
 	// var onKey = onee.dom.key.on;
 
-	/*$player = $("*[mplayer=main]")
-	if ( !$player ) return log("Not match mplayer UI.");*/
+	/*$player = $("*[jplayer=main]")
+	if ( !$player ) return log("Not match jplayer UI.");*/
 
 	try {
 		// Fix up for prefixing
@@ -56,7 +56,7 @@ onee.define(function () { "use strict";
 	var cachePlayListName = [];
 	// var rSuffix = /\.\w+$/;
 	var rtpl = /\{(.*?)\}/g;
-	var TPL_ITEM = '<li mplayer="play" class="ui-border-1px mb-music-list-item" data-index="{index}" data-name="{name}" data-url="{url}">{name}</li>';
+	var TPL_ITEM = '<li jplayer="play" class="ui-border-1px mb-music-list-item" data-index="{index}" data-name="{name}" data-url="{url}">{name}</li>';
 	var TPL_EQITEM = '<p><input type="range" min="-30" max="30" value="{gain}" onwheel="1"><span>{key}</span></p>';
 
 	// 代理
@@ -214,7 +214,7 @@ onee.define(function () { "use strict";
 	}
 	var metaCtrl = function () {
 		// 读取音频meta数据
-		var cacheMetaData = JSON.parse(localStorage.getItem("mplayer-music-meta") || "{}");
+		var cacheMetaData = JSON.parse(localStorage.getItem("jplayer-music-meta") || "{}");
 		var metaurl = './meta.php';
 
 		return {
@@ -228,7 +228,7 @@ onee.define(function () { "use strict";
 				}
 			},
 			save : function () {
-				localStorage.setItem("mplayer-music-meta", JSON.stringify(cacheMetaData))
+				localStorage.setItem("jplayer-music-meta", JSON.stringify(cacheMetaData))
 			}
 
 		}
@@ -253,43 +253,43 @@ onee.define(function () { "use strict";
 	function reConnectSourceNode () {
 		// 不知道新建会不会之前造成什么不良反应
 		// 手动清掉
-		if (this.sourceNode) this.sourceNode = null;
-		if (this.BassSourceNode) this.sourceNode = null;
-		if (this.sourceNode) this.sourceNode = null;
+		if (this.source) this.source = null;
+		if (this.BassSourceNode) this.source = null;
+		if (this.source) this.source = null;
 
 		// 新建BufferSource节点
-		this.sourceNode = audioCtx.createBufferSource();
+		this.source = audioCtx.createBufferSource();
 		//then assign the buffer to the buffer source node
-		this.sourceNode.buffer = this.buffer;
+		this.source.buffer = this.buffer;
 		// fix in old browsers
-        if (!this.sourceNode.start) {
-            this.sourceNode.start = this.sourceNode.noteOn;
-            this.sourceNode.stop = this.sourceNode.noteOff;
+        if (!this.source.start) {
+            this.source.start = this.source.noteOn;
+            this.source.stop = this.source.noteOff;
         }
 
         // on end
-        this.sourceNode.onended = proxy(onPlayEnd, this);
+        this.source.onended = proxy(onPlayEnd, this);
 
         var len = 10, nex;
         // 重新连接EQ均衡器
-		this.sourceNode.connect(COMEQ[len-1].biquadFilter);
+		this.source.connect(COMEQ[len-1].biquadFilter);
 		while(len--) {
 			nex = len-1;
 			nex > -1 && COMEQ[len].biquadFilter.connect(COMEQ[nex].biquadFilter)
 		}
 		// 连接音频分析节点
-		COMEQ[0].biquadFilter.connect(this.analyserNode);
+		COMEQ[0].biquadFilter.connect(this.analyser);
 
 		// 重新连接音频分析节点
-        // this.sourceNode.connect(this.analyserNode);
+        // this.source.connect(this.analyser);
 		// 重新连接音频增益节点
-        this.analyserNode.connect(this.gainNode);
+        this.analyser.connect(this.gainNode);
         // 重新连接到终端
         this.gainNode.connect(audioCtx.destination);
 
 	}
 
-	function mplayer(options) {
+	function player(options) {
 
 		// var ui = this.ui = {};
 		var that = this;
@@ -303,43 +303,50 @@ onee.define(function () { "use strict";
 
 		if ( !that.UIbody ) return log("Can not match player `body`");
 
-		Interface(this, options, {
-			ctx : this.UImeter.getContext('2d'),
-			// 状态
-			status : "stop",
-			// 已播放时间-针对每一首音乐
-			offsetTime : 0,
-			// 当前播放
-			current : 0,
-			// 音频仪表效果
-			meter : "default",
-			// 播放模式(单曲循环-loopone/列表循环-loopall/随机播放-random)
-			playModel : "loopall",
-			// 音频缓冲区
-			buffer : null,
-			// 音频增益控制节点/控制音量
-			gainNode : audioCtx.createGain(),
-			// 音频分析节点
-			analyserNode : audioCtx.createAnalyser(),
-			// 音量
-			volume : 0.8,
-			// 当解析音频文件事件
-			onDecodingAudio : function () {},
-			// 均衡器列表
-			EQ : [0,0,0,0,0,0,0,0,0,0],
-			// 播放列表
-			playlist : []
-		});
+		this.ctx = this.UImeter.getContext('2d');
+		this.audio = new Audio();
+		// 音频分析节点
+		this.analyser = audioCtx.createAnalyser();
+		// 音源节点
+		this.source = audioCtx.createMediaElementSource(this.audio);
+		// 状态
+		this.status = "stop";
+		// 已播放时间-针对每一首音乐
+		this.offsetTime = 0;
+		// 当前播放
+		this.current = 0;
+		// 音频仪表效果
+		this.meter = options.meter || "default";
+		// 播放模式(单曲循环-loopone/列表循环-loopall/随机播放-random)
+		this.playModel = options.playModel || "loopall";
+		// 音量
+		this.volume = options.volume || 0.8;
+		// 均衡器列表
+		this.EQ = options.EQ || [0,0,0,0,0,0,0,0,0,0];
+
 
 		// 初始化EQ控件
-		each(COMEQ, function (item, k) {
+		var eql = COMEQ.length-1;
+
+		each(COMEQ, function (k, item) {
 			// 初始化滤波器节点
 			var biquadFilter = item.biquadFilter = audioCtx.createBiquadFilter();
 			var gain = biquadFilter.gain.value = that.EQ[k]||0;
 			biquadFilter.type = "peaking";
 			biquadFilter.frequency.value=item.frequency;
 
-			/*onEvt(
+			// connect first filter
+			if ( !k ) that.source.connect(biquadFilter)
+			// prev connect to curr filter
+			else COMEQ[k-1].biquadFilter.connect(biquadFilter);
+			// last filter connect to analyser
+			// analyser connect to destination
+			// console.log(typeof k)
+			if ( k === eql ) {
+				biquadFilter.connect(that.analyser)
+				that.analyser.connect(audioCtx.destination)
+			}
+ 			/*onEvt(
 				appendTo(ui.eqlist, TPL_EQITEM.replace(rtpl, function (a, b) {
 					if (b === 'gain') return gain;
 					return item[b];
@@ -351,7 +358,7 @@ onee.define(function () { "use strict";
 					biquadFilter.gain.value = that.EQ[k] = parseFloat(input.value)
 				}
 			)*/
-		})
+		});
 		// 监听列表播放操作
 		that.$body.on("tap", "li[data-player=play]", function () {
 
@@ -378,19 +385,11 @@ onee.define(function () { "use strict";
 		// 监听播放暂停事件
 		.on("tap", "a[data-player=play]", proxy(that.play, that));
 
-		// 增加额外方法
-		/*that.UIprogress.enable = function () {
-			// log(this)
-			var max = 0|that.buffer.duration
-			setAttr(this, "max", 0|that.buffer.duration);
-			setAttr(UIprogressbg, "max", 0|that.buffer.duration);
-		}*/
-
-
 		that.pause = function () {
 
-			this.sourceNode.stop(0);
+			// this.source.stop(0);
 			// pause meter drawer
+			this.audio.pause()
 			this.meterDrawer && this.meterDrawer.pause();
 			// 记录当前播放时间
 			// offsetTime = this.offsetTime;
@@ -399,16 +398,17 @@ onee.define(function () { "use strict";
 		}
 		that.stop = function () {
 			// 清空音频视图
-			if ( this.meterDrawer ) {
+			/*if ( this.meterDrawer ) {
 				this.meterDrawer.stop();
 				delete this.meterDrawer;
-			}
+			}*/
 			// 清空正在播放的音源
-			if ( this.sourceNode ) {
-				this.sourceNode.stop();
-				delete this.sourceNode;
+			/*if ( this.source ) {
+				this.source.stop();
+				delete this.source;
 				this.status = "stop"
-			}
+			}*/
+			this.audio.pause()
 			// uodate status and triggle event
 			that.triggle(this.status = "stop");
 			// 重置播放进度条 重置播放时间
@@ -416,6 +416,9 @@ onee.define(function () { "use strict";
 			// that.UIprogressbg.value = that.UIprogress.value = offsetTime = this.offsetTime = 0;
 		}
 
+
+        // 重新连接到终端
+        // this.gainNode.connect(audioCtx.destination);
 		// 更新播放进度
 		// var duration;
 		// var startTime = 0;
@@ -435,32 +438,10 @@ onee.define(function () { "use strict";
 
 		}, 13);*/
 	}
-	function fetch (item, callback) {
-		if ( item.buffer ) {
-
-			callback && callback(item.buffer)
-
-		} else {
-
-			var request = new XMLHttpRequest();
-			request.open('GET', item.url, true);
-			request.responseType = 'arraybuffer';
-
-			request.onload = function() {
-				// copy buffer
-				decodeAudio(request.response, function (buffer) {
-					callback && callback(item.buffer = buffer);
-					request = request.onload = null;
-				})
-			}
-			request.send();
-
-		}
-	}
 	// 资源缓存器
 	var CACHE = [];
 	// 继承事件管理器
-	extend(mplayer.prototype, {
+	extend(player.prototype, {
 		// inherit form zepto
 		on : function (type, callback) {
 			EvtSys.on(type, callback)
@@ -493,7 +474,7 @@ onee.define(function () { "use strict";
 				item = CACHE[index];
 				// 确保清空上一首正在播放的
 				that.stop();
-			// 否则当status == stop时，则直接播放mplayer.playlist[currentPlay]
+			// 否则当status == stop时，则直接播放jplayer.playlist[currentPlay]
 			} else if ( that.status === "stop" ) {
 				item = CACHE[that.current];
 			// status为pause或者playing时，切换播放/暂停状态即可
@@ -507,10 +488,10 @@ onee.define(function () { "use strict";
 				} else if ( that.status === "pause" ) {
 					// 重新获取全局时间戳
 					// that.startTime = audioCtx.currentTime;
-					// log(that.sourceNode)
+					// log(that.source)
 					reConnectSourceNode.call(that);
-					// that.sourceNode.start(0);
-					that.sourceNode.start(0, that.offsetTime);
+					// that.source.start(0);
+					that.source.start(0, that.offsetTime);
 					// goon meter drawer
 					that.meterDrawer && that.meterDrawer.goon();
 					that.status = "playing";
@@ -523,6 +504,11 @@ onee.define(function () { "use strict";
 
 			if ( !item ) return log("Can't find the music.");
 
+			that.status = "playing";
+			that.triggle("start");
+			that.audio.src = item.url;
+			that.audio.play()
+
 			// update item ui
 			// addClass(playlist[that.currentPlay].node, "active");
 			// prevIndex !== undefined && removeClass(playlist[prevIndex].node, "active");
@@ -530,7 +516,7 @@ onee.define(function () { "use strict";
 			// 触发decoding
 			// that.onDecodingAudio();
 			// if ( !item.buffer ) {
-			fetch(item, function (buffer) {
+			/*fetch(item, function (buffer) {
 				// playing
 				that.triggle("start");
 				that.status = "playing";
@@ -545,23 +531,39 @@ onee.define(function () { "use strict";
 
 				// 新建音频节点
 				reConnectSourceNode.call(that);
-				// that.$proxyplay.trigger("touchstart");
-				// that.sourceNode = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
-				// that.sourceNode.start(0);
+				// that.source = jplayer.createBufferSource(that.buffer = buffer, proxy(jplayer.onPlayEnd, that));
+				// that.source.start(0);
 		        // sourceNode.onended = proxy(that.stop, that);
 
 		        // that.setMeter(that.meter);
 		        try{
-		        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyserNode);
+		        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 		        } catch(e){}
 
 				// 获取meta数据
-				/*metaCtrl.get(item.name, function(meta) {
+				metaCtrl.get(item.name, function(meta) {
 					that.triggle("meta", meta)
-				});*/
-			});
+				});
+			});*/
 
-			// alert(that.sourceNode)
+			// alert(that.source)
+<<<<<<< .mine
+
+
+
+
+
+
+
+=======
+
+			/*var playerHandle = setInterval(function () {
+				if ( that.source ) {
+					that.source.start(0);
+					clearInterval(playerHandle)
+				}
+			}, 100);*/
+>>>>>>> .theirs
 			// }
 
 			/*fileReader(item.file, function (result) {
@@ -579,13 +581,13 @@ onee.define(function () { "use strict";
 
 					// 新建音频节点
 					reConnectSourceNode.call(that);
-					// that.sourceNode = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
-					that.sourceNode.start(0);
+					// that.source = jplayer.createBufferSource(that.buffer = buffer, proxy(jplayer.onPlayEnd, that));
+					that.source.start(0);
 			        // sourceNode.onended = proxy(that.stop, that);
 
 			        // that.setMeter(that.meter);
 			        try{
-			        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyserNode);
+			        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 			        } catch(e){}
 
 					// 获取meta数据
@@ -604,13 +606,13 @@ onee.define(function () { "use strict";
 
 			// 新建音频节点
 			reConnectSourceNode.call(that);
-			// that.sourceNode = mplayer.createBufferSource(that.buffer = buffer, proxy(mplayer.onPlayEnd, that));
-			that.sourceNode.start(0);
+			// that.source = jplayer.createBufferSource(that.buffer = buffer, proxy(jplayer.onPlayEnd, that));
+			that.source.start(0);
 	        // sourceNode.onended = proxy(that.stop, that);
 
 	        // that.setMeter(that.meter);
 	        try{
-	        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyserNode);
+	        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 	        } catch(e){}
 
 	        // 获取meta数据
@@ -710,16 +712,16 @@ onee.define(function () { "use strict";
 					delete this.meterDrawer;
 				}
 				if ( (this.meter=meter) && (meter=meterLibrary[meter]) && this.status !== "stop" ) {
-					this.meterDrawer = meter(this.ctx, this.analyserNode);
+					this.meterDrawer = meter(this.ctx, this.analyser);
 				}
 			}
 		}
 	})
 
-	onee.mplayer = new mplayer(JSON.parse(localStorage.getItem("mplayer-user-custom")||"{}"));
+	global.JPlayer = new player(JSON.parse(localStorage.getItem("jplayer-user-custom")||"{}"));
 
 	// 扩展实例化后的对象
-	extend(onee.mplayer, {
+	extend(global.JPlayer, {
 		// 解析歌词文件，有UI层根据需要自行调用
 		// 
 		// [00:13.17]朋友已走
@@ -736,8 +738,8 @@ onee.define(function () { "use strict";
 		parseLyric : function () {
 			var rLine = /\[\d\d:\d\d\.\d\d\][^\r\n]+/g;
 			var rFormatTime = /\[(\d\d):([\d\.]+)/;
-			var sortBy = _.sortBy;
-			var getFile = onee.get;
+			// var sortBy = _.sortBy;
+			var getFile = $.get;
 			// [01:12.85 => 72.85
 			function t2second (t) {
 				return t.replace(rFormatTime, function (all,m,s) {
@@ -792,9 +794,9 @@ onee.define(function () { "use strict";
 	// 监听浏览器关闭动作
 	/*onEvt(window, "beforeunload", function () {
 		// log("beforeunload")
-		var cfg = onee.mplayer;
+		var cfg = onee.jplayer;
 		// 存储当前用户习惯
-		localStorage.setItem("mplayer-user-custom", JSON.stringify({
+		localStorage.setItem("jplayer-user-custom", JSON.stringify({
 			// currentPlay : cfg.currentPlay,
 			playModel : cfg.playModel,
 			meter : cfg.meter,
@@ -806,4 +808,4 @@ onee.define(function () { "use strict";
 
 	});*/
 
-}, ["RequestAnimationFrame"]);
+}(window));
