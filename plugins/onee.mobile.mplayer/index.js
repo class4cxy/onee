@@ -547,15 +547,7 @@
 			});*/
 
 			// alert(that.source)
-<<<<<<< .mine
 
-
-
-
-
-
-
-=======
 
 			/*var playerHandle = setInterval(function () {
 				if ( that.source ) {
@@ -563,7 +555,6 @@
 					clearInterval(playerHandle)
 				}
 			}, 100);*/
->>>>>>> .theirs
 			// }
 
 			/*fileReader(item.file, function (result) {
