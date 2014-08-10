@@ -15,11 +15,11 @@
 	// var log     = onee.log("jplayer");
 	
 	// base method
-	var extend  = $.extend;
-	var each = $.each;
-	var map = $.map;
+	var extend  = _.extend;
+	var each = _.each;
+	var map = _.map;
 	// var indexOf = _.indexOf;
-	var random = Math.random;
+	var random = _.random;
 	var slice = Array.prototype.slice;
 	var EvtSys = $(document);
 	// var getAttr = Sizzle.attr;
@@ -56,7 +56,13 @@
 	var cachePlayListName = [];
 	// var rSuffix = /\.\w+$/;
 	var rtpl = /\{(.*?)\}/g;
-	var TPL_ITEM = '<li jplayer="play" class="ui-border-1px mb-music-list-item" data-index="{index}" data-name="{name}" data-url="{url}">{name}</li>';
+	var TPL_ITEM = '<li data-player="playitem" class="ui-border-1px mb-music-list-item" data-index="{index}" data-name="{name}" data-url="{url}">\
+						<div class="mb-music-list-item-hack-middle">\
+						<i>{name}</i>\
+						<i class="mb-music-list-item-singer"></i>\
+						</div>\
+						<p class="mb-music-list-item-duration"></p>\
+					</li>';
 	var TPL_EQITEM = '<p><input type="range" min="-30" max="30" value="{gain}" onwheel="1"><span>{key}</span></p>';
 
 	// 代理
@@ -142,14 +148,15 @@
 				// that           = this,
 				cwidth            = ctx.canvas.width,
 				cheight           = ctx.canvas.height-2,
-				meterNum          = cwidth/8|0,
 				//width of the meters in the spectrum;
-				meterWidth        = 6,
+				meterWidth        = 70,
+				meterSpaceWidth   = meterWidth+2,
+				meterNum          = Math.ceil(cwidth/meterSpaceWidth),
 				capHeight         = 2,
 				capStyle          = '#fff',
 				capYPositionArray = [],
 				autoAnimationHandle;
-
+			// alert(meterNum)
 	        // set style of bar
 			var gradient = ctx.createLinearGradient(0, -300, 0, 0);
 	        gradient.addColorStop(1, '#0f0');
@@ -173,7 +180,9 @@
 	            ctx.clearRect(0, 0, cwidth, -cheight);
 	            for (var i = 0; i < meterNum; i++) {
 	                var value = array[i*step];
-	                var rwidth = i*8;
+					// console.log(value);
+	                JPlayer.UIdebug.innerText = value;
+	                var rwidth = i*meterSpaceWidth;
 	                if (capYPositionArray.length < meterNum) {
 	                    capYPositionArray.push(value);
 	                }
@@ -181,9 +190,13 @@
 					ctx.fillStyle = capStyle;
 					// console.log(value)
 					//draw the cap, with transition effect
+					// JPlayer.UIdebug.innerText = value;
 					if (value < capYPositionArray[i]) {
+						// alert(value)
 					    ctx.fillRect(rwidth, -capYPositionArray[i]--, meterWidth, capHeight);
 					} else {
+						// JPlayer.$debug.text(capYPositionArray[i]);
+						// alert(value)
 					    ctx.fillRect(rwidth, -value, meterWidth, capHeight);
 					    capYPositionArray[i] = value;
 					};
@@ -250,7 +263,7 @@
 	];
 	// 重新串联各音频节点(sourceNode-analyserNode-gainNode-context.destination)
 	// 每次重新播放都会触发该进程
-	function reConnectSourceNode () {
+	/*function reConnectSourceNode () {
 		// 不知道新建会不会之前造成什么不良反应
 		// 手动清掉
 		if (this.source) this.source = null;
@@ -287,7 +300,7 @@
         // 重新连接到终端
         this.gainNode.connect(audioCtx.destination);
 
-	}
+	}*/
 
 	function player(options) {
 
@@ -303,14 +316,15 @@
 
 		if ( !that.UIbody ) return log("Can not match player `body`");
 
-		this.ctx = this.UImeter.getContext('2d');
-		this.audio = new Audio();
+		this.ctx = this.UIcanvas.getContext('2d');
+		var audio = this.audio = new Audio();
 		// 音频分析节点
 		this.analyser = audioCtx.createAnalyser();
+		// this.analyser.smoothingTimeConstant = 1;
 		// 音源节点
-		this.source = audioCtx.createMediaElementSource(this.audio);
+		this.source = audioCtx.createMediaElementSource(audio);
 		// 状态
-		this.status = "stop";
+		// this.status = "stop";
 		// 已播放时间-针对每一首音乐
 		this.offsetTime = 0;
 		// 当前播放
@@ -328,7 +342,7 @@
 		// 初始化EQ控件
 		var eql = COMEQ.length-1;
 
-		each(COMEQ, function (k, item) {
+		each(COMEQ, function (item, k) {
 			// 初始化滤波器节点
 			var biquadFilter = item.biquadFilter = audioCtx.createBiquadFilter();
 			var gain = biquadFilter.gain.value = that.EQ[k]||0;
@@ -360,10 +374,8 @@
 			)*/
 		});
 		// 监听列表播放操作
-		that.$body.on("tap", "li[data-player=play]", function () {
-
+		that.$body.on("singleTap", "li[data-player=playitem]", function () {
 			that.play(this.dataset.index)
-
 		})
 		.on({
 			// 监听播放进度条控件改变后事件
@@ -389,34 +401,19 @@
 
 			// this.source.stop(0);
 			// pause meter drawer
-			this.audio.pause()
+			audio.pause()
 			this.meterDrawer && this.meterDrawer.pause();
 			// 记录当前播放时间
 			// offsetTime = this.offsetTime;
 			// uodate status and triggle event
-			that.triggle(this.status = "pause");
+			// this.status = "pause";
 		}
-		that.stop = function () {
-			// 清空音频视图
-			/*if ( this.meterDrawer ) {
-				this.meterDrawer.stop();
-				delete this.meterDrawer;
-			}*/
-			// 清空正在播放的音源
-			/*if ( this.source ) {
-				this.source.stop();
-				delete this.source;
-				this.status = "stop"
-			}*/
-			this.audio.pause()
-			// uodate status and triggle event
-			that.triggle(this.status = "stop");
-			// 重置播放进度条 重置播放时间
-			// this.offsetTime = 0;
-			// that.UIprogressbg.value = that.UIprogress.value = offsetTime = this.offsetTime = 0;
-		}
-
-
+		// 事件列表
+        each("timeupdate playing pause ended".split(" "), function (type, k) {
+            audio.addEventListener(type, function (e) {
+                that.triggle(type, audio)
+            })
+        });
         // 重新连接到终端
         // this.gainNode.connect(audioCtx.destination);
 		// 更新播放进度
@@ -466,127 +463,42 @@
 		},
 		play : function (index) {
 
-			var item, that = this;
+			var item, that = this, audio = that.audio;
 			// 如果播放列表为空
 			if ( CACHE.length === 0 ) return;
 			// index存在，则清空当前的，直接播放CACHE[index]
 			if ( index !== undefined ) {
-				item = CACHE[index];
+				item = CACHE[that.current = index];
+				that.triggle("stop");
 				// 确保清空上一首正在播放的
-				that.stop();
-			// 否则当status == stop时，则直接播放jplayer.playlist[currentPlay]
-			} else if ( that.status === "stop" ) {
+                if ( this.meterDrawer ) {
+                    this.meterDrawer.stop();
+                    delete this.meterDrawer;
+                }
+                // this.audio.pause()
+			// 使用currentTime 属性区分当前是否停止状态
+			} else if ( audio.currentTime === 0 ) {
 				item = CACHE[that.current];
 			// status为pause或者playing时，切换播放/暂停状态即可
 			} else {
 				// 暂停
-				if ( that.status === "playing" ) {
-
-					that.pause()
-
-				// 继续播放
-				} else if ( that.status === "pause" ) {
-					// 重新获取全局时间戳
-					// that.startTime = audioCtx.currentTime;
-					// log(that.source)
-					reConnectSourceNode.call(that);
-					// that.source.start(0);
-					that.source.start(0, that.offsetTime);
-					// goon meter drawer
-					that.meterDrawer && that.meterDrawer.goon();
-					that.status = "playing";
-					that.triggle("start");
-					// addClass(that.ui.play, that.status = "playing");
-				}
-
+                audio.paused ? audio.play() : that.pause();
 				return this
 			}
 
 			if ( !item ) return log("Can't find the music.");
 
-			that.status = "playing";
 			that.triggle("start");
-			that.audio.src = item.url;
-			that.audio.play()
+			audio.src = item.url;
+			audio.play();
 
-			// update item ui
-			// addClass(playlist[that.currentPlay].node, "active");
-			// prevIndex !== undefined && removeClass(playlist[prevIndex].node, "active");
+			// start frequency animation
+			that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 
-			// 触发decoding
-			// that.onDecodingAudio();
-			// if ( !item.buffer ) {
-			/*fetch(item, function (buffer) {
-				// playing
-				that.triggle("start");
-				that.status = "playing";
-				that.buffer = buffer;
-				// that.onDecodingAudio.onDone();
-				// 移除临时回调
-				// delete that.onDecodingAudio.onDone;
-
-				// 初始化播放进度条
-				// that.UIprogress.enable()
-				// that.ui.progress[0].enable()
-
-				// 新建音频节点
-				reConnectSourceNode.call(that);
-				// that.source = jplayer.createBufferSource(that.buffer = buffer, proxy(jplayer.onPlayEnd, that));
-				// that.source.start(0);
-		        // sourceNode.onended = proxy(that.stop, that);
-
-		        // that.setMeter(that.meter);
-		        try{
-		        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
-		        } catch(e){}
-
-				// 获取meta数据
-				metaCtrl.get(item.name, function(meta) {
-					that.triggle("meta", meta)
-				});
-			});*/
-
-			// alert(that.source)
-
-
-			/*var playerHandle = setInterval(function () {
-				if ( that.source ) {
-					that.source.start(0);
-					clearInterval(playerHandle)
-				}
-			}, 100);*/
-			// }
-
-			/*fileReader(item.file, function (result) {
-				decodeAudio(result, function (buffer) {
-					// playing
-					that.triggle("onstart");
-					that.status = "playing";
-					that.buffer = buffer;
-					that.onDecodingAudio.onDone();
-					// 移除临时回调
-					delete that.onDecodingAudio.onDone;
-
-					// 初始化播放进度条
-					that.ui.progress[0].enable()
-
-					// 新建音频节点
-					reConnectSourceNode.call(that);
-					// that.source = jplayer.createBufferSource(that.buffer = buffer, proxy(jplayer.onPlayEnd, that));
-					that.source.start(0);
-			        // sourceNode.onended = proxy(that.stop, that);
-
-			        // that.setMeter(that.meter);
-			        try{
-			        	that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
-			        } catch(e){}
-
-					// 获取meta数据
-					metaCtrl.get(item.name, function(meta) {
-						that.triggle("onmetacoming", meta)
-					});
-				})
-			});*/
+			metaCtrl.get(item.name, function(meta) {
+                // console.log(meta)
+				that.triggle("meta", meta)
+			});
 
 		},
 		/*playOnLine : function () {
@@ -682,7 +594,7 @@
 				// rebuild playlist ui
 				var list = this.ui.list;
 				innerHTML(list, "");
-				each(playlist, function (item, k) {
+				each(playlist, function (k, item) {
 					item.node = appendTo(list, compliePlaylistNode({index : k, name : item.name}))
 	            });
 	            // 重新标示当前播放
@@ -729,7 +641,7 @@
 		parseLyric : function () {
 			var rLine = /\[\d\d:\d\d\.\d\d\][^\r\n]+/g;
 			var rFormatTime = /\[(\d\d):([\d\.]+)/;
-			// var sortBy = _.sortBy;
+			var sortBy = _.sortBy;
 			var getFile = $.get;
 			// [01:12.85 => 72.85
 			function t2second (t) {
