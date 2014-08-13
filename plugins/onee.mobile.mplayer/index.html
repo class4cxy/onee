@@ -487,6 +487,9 @@
 <script src="./index.js"></script>
 <script type="text/javascript">
 (function () {
+	window.onerror = function (e) {
+		alert(e)
+	}
 	/*var request = new XMLHttpRequest();
 	request.open('GET', "./sources/yuwochangzai.mp3", true);
 	request.responseType = 'arraybuffer';
@@ -553,7 +556,6 @@
 		// alert(window.innerWidth * .9375)
 
 		JPlayer.add([
-			{ name : "平凡之路", url : "./sources/pingfanzhilu.mp3", singer : "朴树" },
 			{ name : "与我常在", url : "./sources/yuwochangzai.mp3", singer : "陈奕迅" }
 		])
 		// on start a new music
