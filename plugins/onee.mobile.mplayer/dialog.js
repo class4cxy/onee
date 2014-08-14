@@ -8,9 +8,9 @@
 
     var tapEvent = 'tap';
     // Why not use tap event? We know click event has a 300+ delay, on iOS 5- this will trigger click event on backdrop.
-    if($.os.ios < 5){
+    /*if($.os.ios < 5){
         tapEvent = "click";
-    }
+    }*/
 
     var tapDialogEventName = tapEvent + '.dialog';
 
@@ -240,4 +240,4 @@
         $target.dialog(option, this);
     })
 
-});
+}());

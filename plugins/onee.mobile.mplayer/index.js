@@ -585,7 +585,7 @@
 
 				reConnectSourceNode.call(that);
 
-				// that.sourceNode.start(0);
+				that.sourceNode.start(0);
 
 				// start frequency animation
 				that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
