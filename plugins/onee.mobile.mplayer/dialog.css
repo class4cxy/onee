@@ -1,0 +1,59 @@
+.ui-dialog {
+	display: none;
+
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    z-index: 10000;
+
+    -webkit-transform: translate3d(-50%, -50%, 0);
+
+    -webkit-transition: all 200ms ease-in-out;
+
+    overflow: hidden;    
+}
+.ui-dialog.ui-no-animation {
+    -webkit-transition-duration: 0;
+}
+
+.ui-dialog.js-show{
+    display: block;
+    
+    opacity: 1 !important;
+    -webkit-transform: translate3d(-50%, -50%, 0) scale(1) !important;
+}
+
+.poor-device .ui-dialog{
+    position: absolute;
+}
+
+.ui-dialog.js-effect-from-below {
+    -webkit-transform: translate3d(-50%, -50%, 0) scale(0.5);
+    opacity: 0
+}
+
+.ui-dialog.js-effect-from-above {
+    -webkit-transform: translate3d(-50%, -50%, 0) scale(1.5);
+}
+
+.ui-dialog.js-effect-from-bottom {
+    -webkit-transform: translate3d(-50%, 0, 0);
+}
+
+.ui-dialog.js-effect-from-top {
+    -webkit-transform: translate3d(-50%, -100%, 0);
+}
+
+.ui-dialog.js-effect-from-right {
+    -webkit-transform: translate3d(0, -50%, 0);
+}
+
+.ui-dialog.js-effect-from-left {
+    -webkit-transform: translate3d(-100%, -50%, 0);
+}
+
+.ui-dialog.js-effect-drop-down {
+    -webkit-transform-origin: center top;
+
+    -webkit-transform: translate3d(-50%, -50%, 0) rotateX(-90deg);
+}

@@ -6,6 +6,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
     <link rel="stylesheet" href="http://jdoi.net/git/onee/style/initialize.css">
     <link rel="stylesheet" href="./carousel.css">
+    <link rel="stylesheet" href="./dialog.css">
+    <link rel="stylesheet" href="./notify.css">
 </head>
 <style>
 	html,body{
@@ -381,17 +383,24 @@
 		font-size: 20px;
 		color: #ffbb39
 	}
-    .mb-debug{
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 20px;
-        line-height: 20px;
-        width: 100%;
-        text-align: center;
-        color: #fff;
-        background-color: rgb(0,0,0)
-    }
+	/* .mb-tips{
+		display: -webkit-box;
+		position: fixed;
+		z-index: 10000;
+		background-color: rgba(0,0,0,.5);
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		-webkit-box-align: center;
+		-webkit-box-pack: center;
+	}
+	.mb-tips-wins{
+		background-color: #fff;
+		height: 80px;
+		width: 80px;
+		text-align: center;
+	} */
 </style>
 <body>
 	<div class="musicbox" data-player="body">
@@ -436,14 +445,6 @@
 				<input type="range" min="0" max="0" mplayer="progress" value="0">
 			</p>
 			<div class="mb-ctrl-btn">
-				<!-- <a href="javascript:;" class="hide-text" title="添加音乐" mplayer="add">添加音乐</a> -->
-				<!-- <div class="clearfix tools">
-					<a href="javascript:;" class="hide-text hmeter" title="音频图">
-						音频图
-						<p mplayer="hmeter"></p>
-					</a><a href="javascript:;" class="hide-text heq" title="均衡器" mplayer="heqs">均衡器</a><a href="javascript:;" mplayer="playmodel" title="..." class="hide-text">...</a><a href="javascript:;" class="hide-text hlyric" mplayer="hlyric" title="歌词">歌词</a>
-				</div> -->
-				
 				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-prev" data-player="prev" title="上一首">上一首</a>
 				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-play" data-player="play" title="播放/暂停">播放/暂停</a>
 				<!-- <a href="javascript:;"data-player="proxyplay"></a> -->
@@ -461,15 +462,13 @@
 			<em class="c">X</em>
 			<div class="eqlist clearfix" mplayer="eqlist"></div>
 		</div> -->
-		<!-- 歌词控件 -->
-		<!-- <div class="ease lyric" mplayer="lyricwrap">
-			<h3>lyric</h3>
-			<em class="c">X</em>
-			<ul mplayer="lyric" class="ease">Loading...</ul>
-		</div> -->
 	</div>
-    <div class="mb-debug" data-player="debug"></div>
-	<!-- <audio id="in2"></audio> -->
+	<!--notify-->
+    <div id="notify" data-backdrop=false data-expires="2000" data-effect="from-top" class="ui-dialog ui-notify" role="notify">
+        <i class="icon icon-warning"></i>
+        <span class="content"></span>
+    </div>
+    <!--notify-->
 </body>
 <!-- <script src="http://jdoi.net/git/onee/Lodash/lodash.min.js"></script>
 <script src="http://jdoi.net/git/onee/onee.js"></script> -->
@@ -481,9 +480,11 @@
 <script src="http://jdoi.net/git/onee/Zepto/touch.js"></script>
 <script src="http://jdoi.net/git/onee/Zepto/ajax.js"></script>
 <script src="http://jdoi.net/git/onee/Zepto/data.js"></script>
+<script src="http://jdoi.net/git/onee/Zepto/transition.js"></script>
 <script src="http://jdoi.net/git/onee/Tween/RequestAnimationFrame.js"></script>
-<script src="./carousel.js"></script>
 <script src="./index.js"></script>
+<script src="./carousel.js"></script>
+<script src="./dialog.js"></script>
 <script type="text/javascript">
 (function () {
 	window.onerror = function (e) {
@@ -554,7 +555,7 @@
 		// alert(window.innerWidth * .9375)
 
 		JPlayer.add([
-			{ name : "与我常在", url : "./sources/yuwochangzai.mp3", singer : "陈奕迅" }
+			{ name : "北海", url : "./sources/beihai.mp3", singer : "永动机" }
 		])
 		// on start a new music
 		.on("start", function () {

@@ -1,4 +1,4 @@
-define(function(){
+(function(){
 
     // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
     // ============================================================
