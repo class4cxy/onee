@@ -149,7 +149,7 @@
 				cwidth            = ctx.canvas.width,
 				cheight           = ctx.canvas.height-2,
 				//width of the meters in the spectrum;
-				meterWidth        = 70,
+				meterWidth        = 8,
 				meterSpaceWidth   = meterWidth+2,
 				meterNum          = Math.ceil(cwidth/meterSpaceWidth),
 				capHeight         = 2,
@@ -263,7 +263,7 @@
 	];
 	// 重新串联各音频节点(sourceNode-analyserNode-gainNode-context.destination)
 	// 每次重新播放都会触发该进程
-	/*function reConnectSourceNode () {
+	function reConnectSourceNode () {
 		// 不知道新建会不会之前造成什么不良反应
 		// 手动清掉
 		if (this.source) this.source = null;
@@ -300,7 +300,7 @@
         // 重新连接到终端
         this.gainNode.connect(audioCtx.destination);
 
-	}*/
+	}
 
 	function player(options) {
 
@@ -322,7 +322,7 @@
 		this.analyser = audioCtx.createAnalyser();
 		// this.analyser.smoothingTimeConstant = 1;
 		// 音源节点
-		this.source = audioCtx.createMediaElementSource(audio);
+		// this.source = audioCtx.createMediaElementSource(audio);
 		// 状态
 		// this.status = "stop";
 		// 已播放时间-针对每一首音乐
@@ -338,6 +338,26 @@
 		// 均衡器列表
 		this.EQ = options.EQ || [0,0,0,0,0,0,0,0,0,0];
 
+		audio.oncanplay = function () {
+			that.source = audioCtx.createMediaElementSource(audio);
+			that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
+			each(COMEQ, function (item, k) {
+				if ( !k ) that.source.connect(item.biquadFilter)
+				// prev connect to curr filter
+				else COMEQ[k-1].biquadFilter.connect(item.biquadFilter);
+				// last filter connect to analyser
+				// analyser connect to destination
+				// console.log(typeof k)
+				if ( k === eql ) {
+					item.biquadFilter.connect(that.analyser)
+					that.analyser.connect(audioCtx.destination)
+				}
+			});
+		}
+
+		audio.onerror = function () {
+
+		}
 
 		// 初始化EQ控件
 		var eql = COMEQ.length-1;
@@ -350,7 +370,7 @@
 			biquadFilter.frequency.value=item.frequency;
 
 			// connect first filter
-			if ( !k ) that.source.connect(biquadFilter)
+			/*if ( !k ) that.source.connect(biquadFilter)
 			// prev connect to curr filter
 			else COMEQ[k-1].biquadFilter.connect(biquadFilter);
 			// last filter connect to analyser
@@ -359,7 +379,7 @@
 			if ( k === eql ) {
 				biquadFilter.connect(that.analyser)
 				that.analyser.connect(audioCtx.destination)
-			}
+			}*/
  			/*onEvt(
 				appendTo(ui.eqlist, TPL_EQITEM.replace(rtpl, function (a, b) {
 					if (b === 'gain') return gain;
@@ -493,12 +513,12 @@
 			audio.play();
 
 			// start frequency animation
-			that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
+			// that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 
-			metaCtrl.get(item.name, function(meta) {
+			/*metaCtrl.get(item.name, function(meta) {
                 // console.log(meta)
 				that.triggle("meta", meta)
-			});
+			});*/
 
 		},
 		/*playOnLine : function () {
@@ -710,5 +730,4 @@
 		metaCtrl.save()
 
 	});*/
-
 }(window));
