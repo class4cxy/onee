@@ -486,10 +486,12 @@
 <script src="./index.js"></script>
 <script type="text/javascript">
 (function () {
+	window.onerror = function (e) {
+		alert(e)
+	}
 	/*var request = new XMLHttpRequest();
 	request.open('GET', "./sources/yuwochangzai.mp3", true);
 	request.responseType = 'arraybuffer';
-	
 	// Decode asynchronously
 	request.onload = function() {
 
@@ -552,7 +554,7 @@
 		// alert(window.innerWidth * .9375)
 
 		JPlayer.add([
-			{ name : "北海", url : "./sources/beihai.mp3", singer : "永动机" }
+			{ name : "与我常在", url : "./sources/yuwochangzai.mp3", singer : "陈奕迅" }
 		])
 		// on start a new music
 		.on("start", function () {
