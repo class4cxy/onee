@@ -1,0 +1,59 @@
+.ui-alert {
+    border-radius: 10px;
+    padding-top: 21px;
+    width: 270px;
+
+    background: #d1d1d1;
+
+    text-align: center;
+}
+
+.ui-alert-title {
+    margin: 0;      /* 因为用的是<h3> */
+
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.ui-alert-body {
+    padding: 12px 19px 19px;
+
+    font-size: 14px;
+    line-height: 20px;
+}
+.ui-alert-body:after{
+    border-bottom: 1px solid #aeaeb0;
+}
+
+.ui-alert-footer {
+    display: -webkit-box;
+}
+.ui-alert-button {
+    display: block;
+
+    width: 50%;
+    height: 45px;
+
+    color: #167efb;
+
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 45px;
+
+    -webkit-box-flex: 1;
+}
+.ui-alert-button.active {
+    background: #e1e1e1;
+}
+
+.ui-alert-button:first-child:after{
+    border-right: 1px solid #aeaeb0;
+}
+
+.ui-alert-button[cmd="enter"]{
+    font-weight: bold;
+}
+
+.hide-cancel .ui-alert-button[cmd="cancel"]{
+    display: none;
+}

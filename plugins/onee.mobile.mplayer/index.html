@@ -8,8 +8,20 @@
     <link rel="stylesheet" href="./carousel.css">
     <link rel="stylesheet" href="./dialog.css">
     <link rel="stylesheet" href="./notify.css">
+    <link rel="stylesheet" href="./alert.css">
 </head>
 <style>
+	
+	/*rewrite alert.css*/
+	.ui-alert{
+		padding: 0;
+		height: 100px;
+		width: 100px;
+	}
+	.ui-alert-body{
+		padding: 0;
+	}
+
 	html,body{
 		height: 100%;
 		width: 100%;
@@ -469,6 +481,12 @@
         <span class="content"></span>
     </div>
     <!--notify-->
+    <div id="alert" class="ui-dialog" data-effect="from-below" role="alert-dialog" data-backdrop="static">
+        <div class="js-dialog-content ui-alert">
+            <!-- <div class="ui-alert-header"><h3 class="ui-alert-title" id="myAlertLable">温馨提示</h3></div> -->
+            <div class="ui-alert-body" role="note"><p class="content"></p></div>
+        </div>
+    </div>
 </body>
 <!-- <script src="http://jdoi.net/git/onee/Lodash/lodash.min.js"></script>
 <script src="http://jdoi.net/git/onee/onee.js"></script> -->
@@ -487,9 +505,7 @@
 <script src="./dialog.js"></script>
 <script type="text/javascript">
 (function () {
-	window.onerror = function (e) {
-		alert(e)
-	}
+	$("#alert").dialog({show:!!1, content: '<canvas id="loader" height="70" width="70"></canvas><p>loading</p>'})
 	/*var request = new XMLHttpRequest();
 	request.open('GET', "./sources/yuwochangzai.mp3", true);
 	request.responseType = 'arraybuffer';
@@ -577,6 +593,10 @@
 			JPlayer.$hcover.removeClass("mb-disk-cover-show")
 			JPlayer.$lyric.html("").text("歌词")
 
+		}).on("loading", function (e) {
+
+			console.log(e)
+
 		});
 		(function(){
 
@@ -624,6 +644,11 @@
 				var s = duration%60;
 				return (m > 9 ? m : '0'+m) +':' + (s > 9 ? s : '0'+s);
 			}
+			var drawLoading = function () {
+				// body...
+
+			}
+
 			JPlayer.on("timeupdate", function (e, audio) {
 				if (tmpLRC) {
 					// console.log(tmpLRC[pointer)
