@@ -413,6 +413,23 @@
 		width: 80px;
 		text-align: center;
 	} */
+	.ui-alert{
+		position: relative;
+	}
+	.mb-loader-cv{
+		-webkit-transform:scale(0.5);
+	}
+	.mb-loader-tx{
+		color: #9d9b9b;
+		font-size: 20px;
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		text-align: center;
+		line-height: 100px
+	}
 </style>
 <body>
 	<div class="musicbox" data-player="body">
@@ -484,7 +501,12 @@
     <div id="alert" class="ui-dialog" data-effect="from-below" role="alert-dialog" data-backdrop="static">
         <div class="js-dialog-content ui-alert">
             <!-- <div class="ui-alert-header"><h3 class="ui-alert-title" id="myAlertLable">温馨提示</h3></div> -->
-            <div class="ui-alert-body" role="note"><p class="content"></p></div>
+            <div class="ui-alert-body" role="note">
+            	<div class="content">
+            		<canvas class="mb-loader-cv" id="loader" height="100" width="100"></canvas>
+            		<p class="mb-loader-tx" id="loaderPercent">0</p>
+            	</div>
+            </div>
         </div>
     </div>
 </body>
@@ -505,7 +527,7 @@
 <script src="./dialog.js"></script>
 <script type="text/javascript">
 (function () {
-	$("#alert").dialog({show:!!1, content: '<canvas id="loader" height="70" width="70"></canvas><p>loading</p>'})
+	// $("#alert").dialog({show:!!1})
 	/*var request = new XMLHttpRequest();
 	request.open('GET', "./sources/yuwochangzai.mp3", true);
 	request.responseType = 'arraybuffer';
@@ -593,11 +615,63 @@
 			JPlayer.$hcover.removeClass("mb-disk-cover-show")
 			JPlayer.$lyric.html("").text("歌词")
 
-		}).on("loading", function (e) {
+		}).on("loading", function () {
 
-			console.log(e)
+			$("#alert").dialog({show:!!1});
+
+		}).on("progress", function (e, dat) {
+
+			var loaded = dat.loaded,
+				total  = dat.total;
+
+			if ( loaded === total ) {
+				$("#alert").dialog("hide");
+			}
+
+			drawLoading(loaded, total);
+
 
 		});
+
+		var drawLoading = function () {
+			// body...
+			var ctx = document.getElementById("loader").getContext('2d');
+			var perc = document.getElementById("loaderPercent");
+			// var len = ctx.width;
+			var radius = ctx.canvas.width/2;
+			// console.log(ctx)
+			var PI2 = 2 * Math.PI;
+			// var PI15 = 1.5 * Math.PI;
+			var PI_2 = Math.PI/2;
+
+			var _clear_ = function _clear_ () {
+
+				ctx.clearRect(0,0,radius,radius);
+					
+				ctx.beginPath();
+				ctx.strokeStyle = "#afafaf";
+				ctx.lineWidth = 4;
+				ctx.lineCap = "round";
+				ctx.arc(radius, radius, radius-4, -PI_2, 1.5 * Math.PI);
+				ctx.stroke();
+				perc.innerText = "0";
+				return _clear_
+			}();
+
+			return function (curr, total) {
+				// console.log(curr, total)
+				var percent = curr/total;
+
+				ctx.beginPath();
+				ctx.strokeStyle = "#ffb80d";
+				ctx.arc(radius, radius, radius-4, -PI_2, PI2*percent-PI_2);
+				ctx.stroke();
+				perc.innerText = Math.floor(percent*100);
+
+				if ( curr === total ) _clear_();
+			}
+		}();
+
 		(function(){
 
 			var tmpLRC;
@@ -644,10 +718,7 @@
 				var s = duration%60;
 				return (m > 9 ? m : '0'+m) +':' + (s > 9 ? s : '0'+s);
 			}
-			var drawLoading = function () {
-				// body...
-
-			}
+			// drawLoading.clear();
 
 			JPlayer.on("timeupdate", function (e, audio) {
 				if (tmpLRC) {

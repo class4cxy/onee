@@ -521,9 +521,10 @@
 						that.tiggle("meta", meta)
 					});*/
 	 			}
+	 			that.triggle(that.status = "loading");
 	 			request.onprogress = function(e) {
 					if(e.lengthComputable) {
-						that.triggle(that.status = "loading", e);
+						that.triggle(that.status = "progress", e);
 					}
 				}
 				request.send();
