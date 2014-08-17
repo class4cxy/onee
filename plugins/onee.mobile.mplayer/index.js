@@ -345,6 +345,7 @@
 	function onPlayEnd () {
 		// note: when stop function or playend will disapatch it
         // i just need it dispatch by playend
+        // console.log("do")
         // 当结束时
     	if (this.buffer.duration<=this.offsetTime) {
     		this.stop();
@@ -534,7 +535,6 @@
 				// _lastPauseTime = audioCtx.currentTime;
 
 			}).on("stop", function () {
-				// console.log("e")
 				// reset count
 				_lastStartTime = _offsetTime = that.offsetTime = 0;
 
