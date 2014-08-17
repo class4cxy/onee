@@ -315,12 +315,12 @@
 		{key : "8khz", frequency : 8e3},
 		{key : "16khz", frequency : 16e3}
 	];
-	// 重新串联各音频节点(source-analyser-gainNode-context.destination)
-	// 每次重新播放都会触发该进程
-	function reConnectContext () {
+
+	// 重建sourceNode
+	function reBuildSourceNode () {
 		// 不知道新建会不会之前造成什么不良反应
 		// 手动清掉
-		if (this.source) this.source = null;
+		if (this.source) delete this.source;
 
 		// 新建BufferSource节点
 		this.source = audioCtx.createBufferSource();
@@ -333,7 +333,58 @@
         }
 
         // on end
-        this.source.onended = proxy(this.stop, this);
+        var that = this;
+        this.source.onended = proxy(onPlayEnd, this);
+        // this.source.onended = function (e) {console.log(e)}
+        // start it 
+        // console.log(this.offsetTime)
+        // this.source.start(0, this.offsetTime)
+        // this.offsetTime ? this.source.start(0, this.offsetTime) : this.source.start(0);
+	}
+	// 当播放结束，用于相对应播放模式的逻辑控制
+	function onPlayEnd () {
+		// note: when stop function or playend will disapatch it
+        // i just need it dispatch by playend
+        // 当结束时
+    	if (this.buffer.duration<=this.offsetTime) {
+    		this.stop();
+    	}
+
+    	var len = 10, nex;
+    	this.source.disconnect(COMEQ[len-1].biquadFilter);
+
+    	while(len--) {
+			nex = len-1;
+			nex > -1 && COMEQ[len].biquadFilter.disconnect(COMEQ[nex].biquadFilter)
+		}
+
+		COMEQ[0].biquadFilter.disconnect(this.analyser);
+		// 重新连接音频PProcessor节点
+        this.analyser.disconnect(this.processor);
+        // 重新连接到终端
+        this.processor.disconnect(audioCtx.destination);
+	}
+	// 重新串联各音频节点(source-analyser-gainNode-context.destination)
+	// 每次重新播放都会触发该进程
+	function reConnectContext () {
+
+		// 不知道新建会不会之前造成什么不良反应
+		// 手动清掉
+		if (this.source) delete this.source;
+
+		// 新建BufferSource节点
+		this.source = audioCtx.createBufferSource();
+		//then assign the buffer to the buffer source node
+		// this.source.buffer = this.buffer;
+		// fix in old browsers
+        if (!this.source.start) {
+            this.source.start = this.source.noteOn;
+            this.source.stop = this.source.noteOff;
+        }
+
+        // on end
+        var that = this;
+        this.source.onended = proxy(onPlayEnd, this);
 
         var len = 10, nex;
         // 重新连接EQ均衡器
@@ -345,14 +396,39 @@
 		// 连接音频分析节点
 		COMEQ[0].biquadFilter.connect(this.analyser);
 
-		// 重新连接音频分析节点
-        // this.source.connect(this.analyser);
-		// 重新连接音频增益节点
-        // this.analyser.connect(this.gainNode);
+		// 重新连接音频PProcessor节点
+        this.analyser.connect(this.processor);
         // 重新连接到终端
-        this.analyser.connect(audioCtx.destination);
+        this.processor.connect(audioCtx.destination);
 
 	}
+
+	/*function disConnectContext () {
+
+        // var len = 10, nex;
+        this.source.stop(0);
+        var that = this;
+        // 延时用于等待onended事件的触发
+        // onended 事件应该是异步触发
+        setTimeout(function () {
+
+        	var len = 10, nex;
+        	that.source.disconnect(COMEQ[len-1].biquadFilter);
+
+        	while(len--) {
+				nex = len-1;
+				nex > -1 && COMEQ[len].biquadFilter.disconnect(COMEQ[nex].biquadFilter)
+			}
+
+			COMEQ[0].biquadFilter.disconnect(that.analyser);
+			// 重新连接音频PProcessor节点
+	        that.analyser.disconnect(that.processor);
+	        // 重新连接到终端
+	        that.processor.disconnect(audioCtx.destination);
+
+        }, 13);
+
+	}*/
 
 	function player(options) {
 
@@ -372,6 +448,8 @@
 		// var audio = this.audio = new Audio();
 		// 音频分析节点
 		this.analyser = audioCtx.createAnalyser();
+		// processor node
+		this.processor = audioCtx.createScriptProcessor(4096, 1, 1)
 		// this.analyser.smoothingTimeConstant = 1;
 		// 音源节点
 		// this.source = audioCtx.createMediaElementSource(audio);
@@ -379,6 +457,9 @@
 		this.status = "stop";
 		// 已播放时间-针对每一首音乐
 		this.offsetTime = 0;
+
+		// this._startTime = 0;
+		// this._lastPauseTime = 0;
 		// 当前播放
 		this.current = 0;
 		// 音频仪表效果
@@ -422,52 +503,44 @@
 		// 监听播放暂停事件
 		.on("tap", "a[data-player=play]", proxy(that.play, that));
 
+		(function () {
 
-		that.pause = function () {
-			// log(audioCtx.currentTime);
-			this.source.stop(0);
-			// pause meter drawer
-			this.meterDrawer && this.meterDrawer.pause();
-			// 记录当前播放时间
-			// offsetTime = this.offsetTime;
+			var _lastStartTime = 0;
+			var _offsetTime = 0;
 
-			that.triggle(this.status = "pause");
-		}
-		that.stop = function () {
-			// 清空音频视图
-			if ( this.meterDrawer ) {
-				this.meterDrawer.stop();
-				delete this.meterDrawer;
+			that.processor.onaudioprocess = function (e) {
+				// 当peocessor节点连接上audio context，就会触发该事件
+				// 这不科学呀，自建playing标示
+				if ( that.status === "playing" ) {
+					var input = e.inputBuffer.getChannelData(0);
+					var output = e.outputBuffer.getChannelData(0);
+					// input -> output
+					for(var i=0, len = input.length; i<len; i++) output[i] = input[i];
+					// record offsetTime
+					that.offsetTime = _offsetTime + 0|audioCtx.currentTime - _lastStartTime;
+					// trigger event
+					that.trigger(that.status = "playing")
+				}
 			}
-			// 清空正在播放的音源
-			if ( this.source ) {
-				this.source.stop();
-				delete this.source;
-			}
-			// 重置播放进度条 重置播放时间
-			// UIprogressbg.value = UIprogress.value = offsetTime = this.offsetTime = 0;
 
-			that.triggle(this.status = "stop");
-		}
+			that.on("start", function () {
 
-		// 更新播放进度
-		// var duration;
-		// var startTime = 0;
-		// var offsetTime = 0;
-		// 改用setInterval
-		// 由于requestAnimationFrame在窗口最小化/不在当前窗口时
-		// 执行频率会降低，导致时间计算不准确
-		/*setInterval(function () {
-			// update play progress ui, 取整
-			// 当用户改变ui.progress的进度时
-			// 暂停追随播放进度，changing是自定义一属性
-			if ( !UIprogress.isChanging && that.status === "playing" ) {
-				that.offsetTime = offsetTime+audioCtx.currentTime-startTime;
-				that.triggle("onplaying", UIprogressbg.value = UIprogress.value = 0|that.offsetTime)
-				// that.offsetTime
-			} else startTime = 0|audioCtx.currentTime;
+				_lastStartTime = audioCtx.currentTime;
 
-		}, 13);*/
+			}).on("pause", function () {
+				
+				// 记录当前播放时间
+				_offsetTime += audioCtx.offsetTime - _lastStartTime;
+				// _lastPauseTime = audioCtx.currentTime;
+
+			}).on("stop", function () {
+				// console.log("e")
+				// reset count
+				_lastStartTime = _offsetTime = that.offsetTime = 0;
+
+			});
+
+		}());
 	}
 	// 资源缓存器
 	var CACHE = [];
@@ -482,7 +555,7 @@
 			EvtSys.off(type)
 			return this
 		},
-		triggle : function (type, data) {
+		trigger : function (type, data) {
 			EvtSys.trigger(type, data)
 			return this
 		},
@@ -513,7 +586,6 @@
 					// copy buffer
 					decodeAudio(request.response, function (buffer) {
 						// that.buffer = buffer;
-						console.log("ready..")
 						callback && callback(item.buffer = buffer);
 						request = request.onload = null;
 					});
@@ -521,10 +593,10 @@
 						that.tiggle("meta", meta)
 					});*/
 	 			}
-	 			that.triggle(that.status = "loading");
+	 			that.trigger(that.status = "loading");
 	 			request.onprogress = function(e) {
 					if(e.lengthComputable) {
-						that.triggle(that.status = "progress", e);
+						that.trigger(that.status = "progress", e);
 					}
 				}
 				request.send();
@@ -533,14 +605,13 @@
 		},
 		play : function (index) {
 
-
 			var item, that = this;
 			// 如果播放列表为空
 			if ( CACHE.length === 0 ) return;
 			// index存在，则清空当前的，直接播放CACHE[index]
 			if ( index !== undefined ) {
 				item = CACHE[that.current = index];
-				that.triggle("stop");
+				that.trigger("stop");
 				that.stop();
 			// 否则当status == stop时，则直接播放mplayer.playlist[currentPlay]
 			} else if ( that.status === "stop" ) {
@@ -554,17 +625,17 @@
 
 				// 继续播放
 				} else if ( that.status === "pause" ) {
-					// 重新获取全局时间戳
-					// that.startTime = audioCtx.currentTime;
-					// log(that.source)
+					// re build the audio context
 					reConnectContext.call(that);
-					that.source.buffer = that.buffer;
-					// that.source.start(0);
+					// start
 					that.source.start(0, that.offsetTime);
+					//
+					that.source.buffer = that.buffer;
 					// goon meter drawer
 					that.meterDrawer && that.meterDrawer.goon();
+
+					that.trigger("start");
 					that.status = "playing";
-					that.triggle("start");
 					// addClass(that.ui.play, that.status = "playing");
 				}
 
@@ -573,37 +644,59 @@
 
 			if ( !item ) return log("Can't find the music.");
 
-			/*that.triggle("start");
+			/*that.trigger("start");
 			audio.src = item.url;
 			audio.play();*/
 
-			// metaCtrl.get(item.name, function(meta) {
-                // console.log(meta)
-				// that.triggle("meta", meta)
-			// });
-
 			// 触发decoding
-			// 
+			// re build source node
+			// reBuildSourceNode.call(that);
+			// re connect audiocontext
 			reConnectContext.call(that);
+			// start immediately
+			that.source.start(0);
 
+			// fetch source buffer
 			that.fetch(item, function (buffer) {
 
 				that.source.buffer = that.buffer = buffer;
-
-				// reConnectContext.call(that);
-
-				// that.source.start(0);
-
+				// record start timestamp
+				// that._startTime = +new Date();
 				// start frequency animation
 				that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
 
-				that.triggle("start");
+				that.trigger("start");
 
-				that.status = "playing"
+				that.status = "playing";
+
+				// fetch meta info
+				metaCtrl.get(item.name, function(meta) {
+					that.trigger("meta", meta);
+				});
 			});
 
-			that.source.start(0);
+		},
+		pause : function () {
 
+			// disconnect audiocontext
+			this.source.stop(0);
+			// disConnectContext.call(this);
+			// pause meter drawer
+			this.meterDrawer && this.meterDrawer.pause();
+
+			this.trigger(this.status = "pause");
+		},
+		stop : function () {
+			// 清空音频视图
+			if ( this.meterDrawer ) {
+				this.meterDrawer.stop();
+				delete this.meterDrawer;
+			}
+			// disconnect audiocontext
+			// disConnectContext.call(this);
+			this.source.stop(0);
+
+			this.trigger(this.status = "stop");
 		},
 		next : function () {
 
@@ -687,7 +780,7 @@
 	            addClass(playlist[this.currentPlay].node, "active");
 	            // 触发onlistchange事件
 	            // this.onlistchange();
-	            this.triggle("onlistchange");
+	            this.trigger("onlistchange");
 				// clear entry
 				FileSys && FileSys.rm(file.fullpath);
 				// free memory

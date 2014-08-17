@@ -527,6 +527,9 @@
 <script src="./dialog.js"></script>
 <script type="text/javascript">
 (function () {
+	/*window.onerror = function (e) {
+		alert(e)
+	}*/
 	// $("#alert").dialog({show:!!1})
 	/*var request = new XMLHttpRequest();
 	request.open('GET', "./sources/yuwochangzai.mp3", true);
@@ -633,6 +636,7 @@
 
 		});
 
+		// UI animation loading
 		var drawLoading = function () {
 			// body...
 			var ctx = document.getElementById("loader").getContext('2d');
@@ -672,6 +676,7 @@
 			}
 		}();
 
+		// UI lyric
 		(function(){
 
 			var tmpLRC;
@@ -694,7 +699,7 @@
                 // 
                 var $currPlayItem = JPlayer.$list.find("li").eq(JPlayer.current);
                 $currPlayItem.find(".mb-music-list-item-singer").text(meta.artist);
-                $currPlayItem.find(".mb-music-list-item-duration").text(duration2time(JPlayer.audio.duration));
+                $currPlayItem.find(".mb-music-list-item-duration").text(duration2time(JPlayer.buffer.duration));
 				// 获取歌词文件，并解析好
 				JPlayer.parseLyric(meta, function (lrcs) {
 					// build lyric html
@@ -718,9 +723,8 @@
 				var s = duration%60;
 				return (m > 9 ? m : '0'+m) +':' + (s > 9 ? s : '0'+s);
 			}
-			// drawLoading.clear();
 
-			JPlayer.on("timeupdate", function (e, audio) {
+			JPlayer.on("playing", function (e, audio) {
 				if (tmpLRC) {
 					// console.log(tmpLRC[pointer)
 					if ( audio.currentTime > tmpLRC[pointer].s ) {
