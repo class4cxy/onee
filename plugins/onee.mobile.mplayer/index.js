@@ -38,17 +38,139 @@
 	// var EvtSys = onee.evt();
 	// var GG = onee.dom.find;
 	// var onKey = onee.dom.key.on;
+	
+	// Fix up for prefixing
+	// global.AudioContext = window.AudioContext||window.webkitAudioContext;
 
-	// if ( !uiMain ) return log("Not match mplayer UI.");
+	// if ( !AudioContext ) return console.log('Web Audio API is not supported in this browser');
 
-	try {
+	// 公共EQ对应表
+	var COMEQ = [
+		{key : "31hz", frequency : 31},
+		{key : "62hz", frequency : 62},
+		{key : "125hz", frequency : 125},
+		{key : "250hz", frequency : 250},
+		{key : "500hz", frequency : 500},
+		{key : "1khz", frequency : 1e3},
+		{key : "2khz", frequency : 2e3},
+		{key : "4khz", frequency : 4e3},
+		{key : "8khz", frequency : 8e3},
+		{key : "16khz", frequency : 16e3}
+	];
+
+	var audio = (function (factory) {
+		// body...
+
+		// Fix up for prefixing
+		window.AudioContext = window.AudioContext||window.webkitAudioContext;
+
+		return AudioContext ? factory(new AudioContext()) : null;
+		// if ( AudioContext ) {
+		// 	return factory(new AudioContext());
+		// } else console.log( 'Web Audio API is not supported in this browser' );
+
+	})(function (ctx) {
+		// body...
+		var _process_;
+		
+		// build biquadFilter node
+		each(COMEQ, function (item, k) {
+			// 初始化滤波器节点
+			var biquadFilter = item.biquadFilter = ctx.createBiquadFilter();
+
+			biquadFilter.gain.value = 0;
+			biquadFilter.type = "peaking";
+			biquadFilter.frequency.value = item.frequency;
+
+		});
+		return {
+			ctx : ctx,
+			analyser : ctx.createAnalyser(),
+			// processor : _processor,
+			rebuild : function  (player) {
+				// build buffer source node
+				this.source = ctx.createBufferSource();
+				// fix in old browsers
+		        if (!this.source.start) {
+		            this.source.start = this.source.noteOn;
+		            this.source.stop = this.source.noteOff;
+		        }
+		        // on end
+		        var that = this;
+		        this.source.onended = function () {
+		        	that.onended(player)
+		        }
+		        // processor node has to rebuild
+		        // `inputBuffer` still exist when connect audio context nex time
+		        this.processor = ctx.createScriptProcessor(4096, 1, 1);
+		        this.processor.onaudioprocess = function (e) {
+					var input = e.inputBuffer.getChannelData(0);
+					var output = e.outputBuffer.getChannelData(0);
+					// input -> output
+					for(var i=0, len = input.length; i<len; i++) output[i] = input[i];
+
+					_process_(e);
+				};
+				// connect biquadFilter node
+				var len = 10, nex;
+		        // 重新连接EQ均衡器
+				this.source.connect(COMEQ[len-1].biquadFilter);
+				while(len--) {
+					nex = len-1;
+					nex > -1 && COMEQ[len].biquadFilter.connect(COMEQ[nex].biquadFilter)
+				}
+				// 连接音频分析节点
+				COMEQ[0].biquadFilter.connect(this.analyser);
+				// 连接音频Processor节点
+		        this.analyser.connect(this.processor);
+		        // 重新连接到终端
+		        this.processor.connect(ctx.destination);
+
+			},
+			onaudioprocess : function(callback) {
+
+				_process_ = callback || function () {};
+
+			},
+			onended : function (player) {
+				// note: when stop function or playend will disapatch it
+		        // i just need it dispatch by playend
+		        // 当结束时
+		    	if (Math.floor(player.buffer.duration) <= Math.floor(player.offsetTime)) {
+		    		player.stop();
+		    	}
+
+		    	var len = 10, nex;
+		    	this.source.disconnect(COMEQ[len-1].biquadFilter);
+		    	while(len--) {
+					nex = len-1;
+					nex > -1 && COMEQ[len].biquadFilter.disconnect(COMEQ[nex].biquadFilter)
+				}
+
+				COMEQ[0].biquadFilter.disconnect(this.analyser);
+				// 重新连接音频PProcessor节点
+		        this.analyser.disconnect(this.processor);
+		        // 重新连接到终端
+		        this.processor.disconnect(ctx.destination);
+		        // reset audio source node
+		        this.source = null;
+			}
+		}
+	});
+
+
+	// 
+	if ( !Audio ) return console.log('Web Audio API is not supported in this browser');
+
+
+	/*try {
 		// Fix up for prefixing
 		window.AudioContext = window.AudioContext||window.webkitAudioContext;
 		var audioCtx = new AudioContext();
 	}
 	catch(e) {
-		return log('Web Audio API is not supported in this browser');
-	}
+		return console.log('Web Audio API is not supported in this browser');
+	}*/
 
 	// 用于快速查询重复音频
 	// 增加/删除操作都要同步到该缓存
@@ -107,53 +229,7 @@
 			// }
 		})
 	}*/
-	// 当播放结束，用于相对应播放模式的逻辑控制
-	/*function onPlayEnd () {
-		// note: when stop function or playend will disapatch it
-        // i just need it dispatch by playend
-    	if (this.buffer.duration<=this.offsetTime) {
-    		this.stop();
-    		switch( this.playModel ) {
-    			case "loopone" :
-        			this.currentPlay--;
-        			this.next();
-    			break;
-    			case "loopall" :
-    				this.next();
-    			break;
-    			case "random" :
-    				this.random();
-    			break;
-    		}
-    	}
-	}*/
 	
-	// 读取本地文件
-	/*var fileReader = (function () {
-		var isReading = !!0;
-		return function ( file, callback ) {
-
-			if ( !isReading && file ) {
-				isReading = !!1;
-				// 异步读取本地文件 #https://developer.mozilla.org/zh-CN/docs/DOM/FileReader
-				var fread = new FileReader();
-
-				fread.onloadend = function (e) {
-
-					isReading = !!0
-					fread.readyState === 2 ?
-						callback && callback(e.target.result)
-					:
-						log(e);
-					fread = fread.onloadend = null
-					
-				}
-
-				fread.readAsArrayBuffer(file);
-			}
-
-		}
-	})();*/
 	// 解析音频文件
 	var decodeAudio = (function () {
 
@@ -164,7 +240,7 @@
 			if ( !isDecoding && audioData ) {
 
 				isDecoding = !!1;
-				audioCtx.decodeAudioData(
+				audio.ctx.decodeAudioData(
 
 					audioData,
 					// on success
@@ -176,8 +252,8 @@
 					// on fail
 					function(e) {
 						isDecoding = !!0;
-	                	log('Fail to decode the file!');
-	                	log(e)
+	                	console.log('Fail to decode the file!');
+	                	console.log(e)
 	            	}
             	)
 			}
@@ -302,135 +378,6 @@
 
 	}();
 
-	// 公共EQ对应表
-	var COMEQ = [
-		{key : "31hz", frequency : 31},
-		{key : "62hz", frequency : 62},
-		{key : "125hz", frequency : 125},
-		{key : "250hz", frequency : 250},
-		{key : "500hz", frequency : 500},
-		{key : "1khz", frequency : 1e3},
-		{key : "2khz", frequency : 2e3},
-		{key : "4khz", frequency : 4e3},
-		{key : "8khz", frequency : 8e3},
-		{key : "16khz", frequency : 16e3}
-	];
-
-	// 重建sourceNode
-	function reBuildSourceNode () {
-		// 不知道新建会不会之前造成什么不良反应
-		// 手动清掉
-		if (this.source) delete this.source;
-
-		// 新建BufferSource节点
-		this.source = audioCtx.createBufferSource();
-		//then assign the buffer to the buffer source node
-		// this.source.buffer = this.buffer;
-		// fix in old browsers
-        if (!this.source.start) {
-            this.source.start = this.source.noteOn;
-            this.source.stop = this.source.noteOff;
-        }
-
-        // on end
-        var that = this;
-        this.source.onended = proxy(onPlayEnd, this);
-        // this.source.onended = function (e) {console.log(e)}
-        // start it 
-        // console.log(this.offsetTime)
-        // this.source.start(0, this.offsetTime)
-        // this.offsetTime ? this.source.start(0, this.offsetTime) : this.source.start(0);
-	}
-	// 当播放结束，用于相对应播放模式的逻辑控制
-	function onPlayEnd () {
-		// note: when stop function or playend will disapatch it
-        // i just need it dispatch by playend
-        // console.log("do")
-        // 当结束时
-    	if (this.buffer.duration<=this.offsetTime) {
-    		this.stop();
-    	}
-
-    	var len = 10, nex;
-    	this.source.disconnect(COMEQ[len-1].biquadFilter);
-
-    	while(len--) {
-			nex = len-1;
-			nex > -1 && COMEQ[len].biquadFilter.disconnect(COMEQ[nex].biquadFilter)
-		}
-
-		COMEQ[0].biquadFilter.disconnect(this.analyser);
-		// 重新连接音频PProcessor节点
-        this.analyser.disconnect(this.processor);
-        // 重新连接到终端
-        this.processor.disconnect(audioCtx.destination);
-	}
-	// 重新串联各音频节点(source-analyser-gainNode-context.destination)
-	// 每次重新播放都会触发该进程
-	function reConnectContext () {
-
-		// 不知道新建会不会之前造成什么不良反应
-		// 手动清掉
-		if (this.source) delete this.source;
-
-		// 新建BufferSource节点
-		this.source = audioCtx.createBufferSource();
-		//then assign the buffer to the buffer source node
-		// this.source.buffer = this.buffer;
-		// fix in old browsers
-        if (!this.source.start) {
-            this.source.start = this.source.noteOn;
-            this.source.stop = this.source.noteOff;
-        }
-
-        // on end
-        var that = this;
-        this.source.onended = proxy(onPlayEnd, this);
-
-        var len = 10, nex;
-        // 重新连接EQ均衡器
-		this.source.connect(COMEQ[len-1].biquadFilter);
-		while(len--) {
-			nex = len-1;
-			nex > -1 && COMEQ[len].biquadFilter.connect(COMEQ[nex].biquadFilter)
-		}
-		// 连接音频分析节点
-		COMEQ[0].biquadFilter.connect(this.analyser);
-
-		// 重新连接音频PProcessor节点
-        this.analyser.connect(this.processor);
-        // 重新连接到终端
-        this.processor.connect(audioCtx.destination);
-
-	}
-
-	/*function disConnectContext () {
-
-        // var len = 10, nex;
-        this.source.stop(0);
-        var that = this;
-        // 延时用于等待onended事件的触发
-        // onended 事件应该是异步触发
-        setTimeout(function () {
-
-        	var len = 10, nex;
-        	that.source.disconnect(COMEQ[len-1].biquadFilter);
-
-        	while(len--) {
-				nex = len-1;
-				nex > -1 && COMEQ[len].biquadFilter.disconnect(COMEQ[nex].biquadFilter)
-			}
-
-			COMEQ[0].biquadFilter.disconnect(that.analyser);
-			// 重新连接音频PProcessor节点
-	        that.analyser.disconnect(that.processor);
-	        // 重新连接到终端
-	        that.processor.disconnect(audioCtx.destination);
-
-        }, 13);
-
-	}*/
-
 	function player(options) {
 
 		// var ui = this.ui = {};
@@ -446,15 +393,7 @@
 		if ( !that.UIbody ) return log("Can not match player `body`");
 
 		this.ctx = this.UIcanvas.getContext('2d');
-		// var audio = this.audio = new Audio();
-		// 音频分析节点
-		this.analyser = audioCtx.createAnalyser();
-		// processor node
-		this.processor = audioCtx.createScriptProcessor(4096, 1, 1)
-		// this.analyser.smoothingTimeConstant = 1;
-		// 音源节点
-		// this.source = audioCtx.createMediaElementSource(audio);
-		// 状态
+
 		this.status = "stop";
 		// 已播放时间-针对每一首音乐
 		this.offsetTime = 0;
@@ -470,29 +409,13 @@
 		// 音量
 		// this.volume = options.volume || 0.8;
 		// 均衡器列表
-		this.EQ = options.EQ || [25,0,0,0,0,0,0,0,0,0];
-
+		this.EQ = options.EQ || [0,0,0,0,0,0,0,0,0,0];
 
 		// 初始化EQ控件
 		each(COMEQ, function (item, k) {
-			// 初始化滤波器节点
-			var biquadFilter = item.biquadFilter = audioCtx.createBiquadFilter();
-			var gain = biquadFilter.gain.value = that.EQ[k]||0;
-			biquadFilter.type = "peaking";
-			biquadFilter.frequency.value=item.frequency;
- 			/*onEvt(
-				appendTo(ui.eqlist, TPL_EQITEM.replace(rtpl, function (a, b) {
-					if (b === 'gain') return gain;
-					return item[b];
-				})),
-				"input",
-				function () {
-					// log(this)
-					var input = GG("input", this)[0];
-					biquadFilter.gain.value = that.EQ[k] = parseFloat(input.value)
-				}
-			)*/
+			item.biquadFilter.gain.value = that.EQ[k];
 		});
+
 		// 监听列表播放操作
 		that.$body.on("singleTap", "li[data-player=playitem]", function () {
 			that.play(this.dataset.index)
@@ -508,36 +431,34 @@
 
 			var _lastStartTime = 0;
 			var _offsetTime = 0;
+			var _ctx = audio.ctx;
 
-			that.processor.onaudioprocess = function (e) {
+			audio.onaudioprocess(function (e) {
 				// 当peocessor节点连接上audio context，就会触发该事件
 				// 这不科学呀，自建playing标示
 				if ( that.status === "playing" ) {
-					var input = e.inputBuffer.getChannelData(0);
-					var output = e.outputBuffer.getChannelData(0);
-					// input -> output
-					for(var i=0, len = input.length; i<len; i++) output[i] = input[i];
 					// record offsetTime
-					that.offsetTime = _offsetTime + 0|audioCtx.currentTime - _lastStartTime;
+					that.offsetTime = _offsetTime + _ctx.currentTime - _lastStartTime;
 					// trigger event
 					that.trigger(that.status = "playing")
 				}
-			}
+			})
 
 			that.on("start", function () {
 
-				_lastStartTime = audioCtx.currentTime;
-
-			}).on("pause", function () {
-				
+				_lastStartTime = _ctx.currentTime;
+				// console.log(_lastStartTime)
+			})
+			.on("pause", function () {
 				// 记录当前播放时间
-				_offsetTime += audioCtx.offsetTime - _lastStartTime;
-				// _lastPauseTime = audioCtx.currentTime;
+				console.log("pause")
+				_offsetTime = that.offsetTime
 
-			}).on("stop", function () {
+			})
+			.on("stop", function () {
 				// reset count
+				console.log("stop")
 				_lastStartTime = _offsetTime = that.offsetTime = 0;
-
 			});
 
 		}());
@@ -626,17 +547,20 @@
 				// 继续播放
 				} else if ( that.status === "pause" ) {
 					// re build the audio context
-					reConnectContext.call(that);
-					// start
-					that.source.start(0, that.offsetTime);
+					// reConnectContext.call(that);
+					audio.rebuild(that);
 					//
-					that.source.buffer = that.buffer;
+					audio.source.buffer = that.buffer;
+					// start
+					// audio.source.start(0);
+					// console.log(that.offsetTime)
+					audio.source.start(0, that.offsetTime);
 					// goon meter drawer
 					that.meterDrawer && that.meterDrawer.goon();
 
 					that.trigger("start");
 					that.status = "playing";
-					// addClass(that.ui.play, that.status = "playing");
+
 				}
 
 				return this
@@ -652,18 +576,16 @@
 			// re build source node
 			// reBuildSourceNode.call(that);
 			// re connect audiocontext
-			reConnectContext.call(that);
+			// reConnectContext.call(that);
+			audio.rebuild(that);
 			// start immediately
-			that.source.start(0);
-
+			audio.source.start(0);
 			// fetch source buffer
 			that.fetch(item, function (buffer) {
 
-				that.source.buffer = that.buffer = buffer;
-				// record start timestamp
-				// that._startTime = +new Date();
+				audio.source.buffer = that.buffer = buffer;
 				// start frequency animation
-				that.meterDrawer = meterLibrary[that.meter](that.ctx, that.analyser);
+				that.meterDrawer = meterLibrary[that.meter](that.ctx, audio.analyser);
 
 				that.trigger("start");
 
@@ -677,14 +599,11 @@
 
 		},
 		pause : function () {
-
-			// disconnect audiocontext
-			this.source.stop(0);
-			// disConnectContext.call(this);
 			// pause meter drawer
 			this.meterDrawer && this.meterDrawer.pause();
-
 			this.trigger(this.status = "pause");
+			// 放到最后，涉及到清理ctx
+			audio.source.stop(0);
 		},
 		stop : function () {
 			// 清空音频视图
@@ -692,11 +611,9 @@
 				this.meterDrawer.stop();
 				delete this.meterDrawer;
 			}
-			// disconnect audiocontext
-			// disConnectContext.call(this);
-			this.source.stop(0);
-
 			this.trigger(this.status = "stop");
+
+			audio.source.stop(0);
 		},
 		next : function () {
 
