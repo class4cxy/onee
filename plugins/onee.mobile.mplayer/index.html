@@ -58,6 +58,12 @@
 		cursor: pointer;
 		border:none;
 	}
+	progress{
+		-webkit-appearance: none;
+	}
+	progress::-webkit-progress-value {
+		background-color: #c28a03
+	}
 	.ui-border-1px{
 	    position: relative;
 	}
@@ -316,7 +322,7 @@
 		box-shadow: 0 0 6px rgba(255,255,255,.8);
 		border-radius: 4px;
 		border: none;
-		background-color: #016eb7;
+		background-color: #c28a03;
 		height: 5px;
 		width: 5px;
 	}
@@ -329,37 +335,34 @@
 		width: 4px;
 	} */
 	.mb-ctrl-btn{
-		letter-spacing: -3px;
+		/*letter-spacing: -3px;*/
 		margin: 8px 0;
-		text-align: center;
+		display: -webkit-box;
+		-webkit-box-align: center;
+		-webkit-box-pack: center;
+		/*text-align: center;*/
 	}
 	.mb-ctrl-btns{
-		background: url(images/ctrl-map.png) no-repeat;
-		background-size: 100%;
-		display: inline-block;
-		vertical-align: middle;
+		/*background: url(images/ctrl-map.png) no-repeat;*/
+		/*background-size: 100%;*/
+		/*display: inline-block;*/
+		/*vertical-align: middle;*/
 	}
-	.mb-ctrl-play{
+	/* .mb-ctrl-play{
 		height: 70px;
 		width: 70px;
 		background-position: center -73px
 	}
-	/* .article .btn .play:hover{
-		background-position: center 0
-	} */
 	.mb-ctrl-next{
 		height: 65px;
 		width: 65px;
 		background-position: center -208px
 	}
-	/* .article .btn .next:hover{
-		background-position: center -177px
-	} */
 	.mb-ctrl-prev{
 		height: 65px;
 		width: 65px;
 		background-position: center -137px
-	}
+	} */
 	.mb-currinfo{
 		padding: 8px 10px;
 		line-height: 18px;
@@ -470,14 +473,99 @@
 				<p class="mb-currinfo-album" data-player="singer_album"></p>
 			</div>
 			<p class="mb-ctrl-progress">
-				<progress max="0" value="0" mplayer="progressbg"></progress>
-				<input type="range" min="0" max="0" mplayer="progress" value="0">
+				<progress max="100" value="" data-player="progressbg"></progress>
+				<input type="range" min="0" max="100" data-player="progress" value="0">
 			</p>
+			<style>
+			.mb-ctrl-btns{
+				display: -webkit-box;
+				-webkit-box-align:center;
+				-webkit-box-pack: center;
+				border-radius: 50px;
+				margin: 0 8px;
+				border: 1px solid #d79a07
+			}
+			.mb-ctrl-btns-el{
+				display: block;
+				height: 20px;
+				width: 1px;
+			}
+			.mb-ctrl-next .mb-ctrl-btns-el,
+			.mb-ctrl-prev .mb-ctrl-btns-el{
+				height: 16px;
+				width: 16px;
+			}
+			.mb-ctrl-play .mb-ctrl-btns-el1{
+				border-right: 1px solid #d79a07;
+				margin-right: 9px;
+			}
+			.mb-ctrl-play .mb-ctrl-btns-el2{
+				border-left: 1px solid #d79a07;
+			}
+			.mb-ctrl-next .mb-ctrl-btns-el1{
+				border: solid #d79a07;
+				border-width: 1px 1px 0 0;
+				height: 12px;
+				width: 12px;
+				-webkit-transform: rotate(45deg);
+			}
+			.mb-ctrl-next .mb-ctrl-btns-el2{
+				margin-left: 5px;
+				border-left: 1px solid #d79a07;
+				width: 10px
+			}
+			 .mb-ctrl-prev .mb-ctrl-btns-el1{
+				border-right: 1px solid #d79a07;
+				margin-right: 5px;
+				width: 10px
+			} 
+			.mb-ctrl-prev .mb-ctrl-btns-el2{
+				border: solid #d79a07;
+				border-width: 1px 0 0 1px;
+				margin-right: 5px;
+				height: 12px;
+				width: 12px;
+				-webkit-transform: rotate(-45deg);
+			}
+			.mb-ctrl-play{
+				height: 60px;
+				width: 60px;
+			}
+			.mb-ctrl-playing{
+				-webkit-transform: rotate(90deg);
+			}
+			.mb-ctrl-playing .mb-ctrl-btns-el1{
+				-webkit-transform: rotate(30deg);
+			}
+			.mb-ctrl-playing .mb-ctrl-btns-el2{
+				-webkit-transform: rotate(-30deg);
+			}
+			.mb-ctrl-next,
+			.mb-ctrl-prev{
+				height: 50px;
+				width: 50px;
+			}
+			/* .mb-ctrl-prev{
+				height: 65px;
+				width: 65px;
+			} */
+			</style>
 			<div class="mb-ctrl-btn">
-				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-prev" data-player="prev" title="上一首">上一首</a>
-				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-play" data-player="play" title="播放/暂停">播放/暂停</a>
-				<!-- <a href="javascript:;"data-player="proxyplay"></a> -->
-				<a href="javascript:;" class="hide-text mb-ctrl-btns mb-ctrl-next" data-player="next" title="下一首">下一首</a>
+				<p class="mb-ctrl-btns mb-ctrl-prev" data-player="prev">
+					<a class="mb-ctrl-btns-el mb-ctrl-btns-el1"></a>
+					<a class="mb-ctrl-btns-el mb-ctrl-btns-el2"></a>
+				</p>
+				<p class="ease mb-ctrl-btns mb-ctrl-play" data-player="play">
+					<a class="ease mb-ctrl-btns-el mb-ctrl-btns-el1"></a>
+					<a class="ease mb-ctrl-btns-el mb-ctrl-btns-el2"></a>
+				</p>
+				<p class="mb-ctrl-btns mb-ctrl-next" data-player="next">
+					<a class="mb-ctrl-btns-el mb-ctrl-btns-el1"></a>
+					<a class="mb-ctrl-btns-el mb-ctrl-btns-el2"></a>
+				</p>
+				<!-- <a href="javascript:;" class="mb-ctrl-btns mb-ctrl-prev" data-player="prev">上一首</a>
+				<a href="javascript:;" class="mb-ctrl-btns mb-ctrl-play" data-player="play">播放/暂停</a>
+				<a href="javascript:;" class="mb-ctrl-btns mb-ctrl-next" data-player="next">下一首</a> -->
 				<!-- <a href="javascript:;" class="hvolume">
 					<input type="range" min="0" max="100" class="leve1" mplayer="volume" onwheel="1">
 				</a> -->
@@ -600,23 +688,29 @@
 		])
 		// on start a new music
 		.on("start", function () {
-			JPlayer.$lyric.html("").text("Loading...")
+			JPlayer.$hdisk.removeClass("mb-disk-pause");
+			JPlayer.$play.addClass("mb-ctrl-playing");
+			JPlayer.$lyric.html("").text("Loading...");
+			JPlayer.UIprogress.max = JPlayer.UIprogressbg.max = 0|JPlayer.buffer.duration;
 		})
 		.on("playing", function () {
 
-			JPlayer.$hdisk.removeClass("mb-disk-pause")
+			JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = JPlayer.offsetTime;
 			// removeClass(that.ui.hdisk, "pause")
 
 		}).on("pause", function () {
 
-			JPlayer.$hdisk.addClass("mb-disk-pause")
+			JPlayer.$hdisk.addClass("mb-disk-pause");
+			JPlayer.$play.removeClass("mb-ctrl-playing");
 			// addClass(that.ui.hdisk, "pause")
 
 		}).on("stop", function () {
 
-			JPlayer.$hdisk.addClass("mb-disk-pause")
-			JPlayer.$hcover.removeClass("mb-disk-cover-show")
-			JPlayer.$lyric.html("").text("歌词")
+			JPlayer.$hdisk.addClass("mb-disk-pause");
+			JPlayer.$hcover.removeClass("mb-disk-cover-show");
+			JPlayer.$play.removeClass("mb-ctrl-playing");
+			JPlayer.$lyric.html("").text("歌词");
+			JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = 0
 
 		}).on("loading", function () {
 
@@ -667,7 +761,7 @@
 				var percent = curr/total;
 
 				ctx.beginPath();
-				ctx.strokeStyle = "#ffb80d";
+				ctx.strokeStyle = "#c28a03";
 				ctx.arc(radius, radius, radius-4, -PI_2, PI2*percent-PI_2);
 				ctx.stroke();
 				perc.innerText = Math.floor(percent*100);

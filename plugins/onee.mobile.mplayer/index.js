@@ -421,11 +421,11 @@
 			that.play(this.dataset.index)
 		})
 		// 监听下一首事件
-		.on("tap", "a[data-player=next]", proxy(that.next, that))
+		.on("tap", "p[data-player=next]", proxy(that.next, that))
 		// 监听上一首事件
-		.on("tap", "a[data-player=prev]", proxy(that.prev, that))
+		.on("tap", "p[data-player=prev]", proxy(that.prev, that))
 		// 监听播放暂停事件
-		.on("tap", "a[data-player=play]", proxy(that.play, that));
+		.on("tap", "p[data-player=play]", proxy(that.play, that));
 
 		(function () {
 
@@ -438,7 +438,7 @@
 				// 这不科学呀，自建playing标示
 				if ( that.status === "playing" ) {
 					// record offsetTime
-					that.offsetTime = _offsetTime + _ctx.currentTime - _lastStartTime;
+					that.offsetTime = _offsetTime + (0|_ctx.currentTime) - _lastStartTime;
 					// trigger event
 					that.trigger(that.status = "playing")
 				}
@@ -446,7 +446,7 @@
 
 			that.on("start", function () {
 
-				_lastStartTime = _ctx.currentTime;
+				_lastStartTime = 0|_ctx.currentTime;
 				// console.log(_lastStartTime)
 			})
 			.on("pause", function () {
