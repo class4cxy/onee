@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="./dialog.css">
     <link rel="stylesheet" href="./notify.css">
     <link rel="stylesheet" href="./alert.css">
+    <link rel="stylesheet" href="./backdrop.css">
 </head>
 <style>
 	
@@ -261,13 +262,19 @@
 		display: -webkit-box;
 		-webkit-box-align: center;
 	}
-	/*.mb-music-list-item:before{
+	.mb-music-list-item-curr{
+		color: #ffab3f
+	}
+	.mb-music-list-item-curr:before{
 		content: "";
-		width: 0;
+		width: 8px;
 		height: 100%;
-		display: inline-block;
-		vertical-align: middle;
-	}*/
+		position: absolute;
+		display: block;
+		top: 0;
+		left: -15px;
+		background-color: #ffab3f
+	} 
 	.mb-music-list-item-hack-middle{
 		-webkit-box-flex:10;
 	}
@@ -615,231 +622,240 @@
 <script src="./dialog.js"></script>
 <script type="text/javascript">
 (function () {
-	/*window.onerror = function (e) {
-		alert(e)
-	}*/
-	// $("#alert").dialog({show:!!1})
-	/*var request = new XMLHttpRequest();
-	request.open('GET', "./sources/yuwochangzai.mp3", true);
-	request.responseType = 'arraybuffer';
-	// Decode asynchronously
-	request.onload = function() {
 
-		console.log(request)
-	}
-	request.send();*/
-	// onee.use("onee.mobile.mplayer", function () {
+	var map = _.map;
+	var TPL_ITEM = '<li data-player="playitem" class="ui-border-1px mb-music-list-item" data-index="{index}" data-name="{name}" data-url="{url}">\
+						<div class="mb-music-list-item-hack-middle">\
+						<i>{name}</i>\
+						<i class="mb-music-list-item-singer"></i>\
+						</div>\
+						<p class="mb-music-list-item-duration"></p>\
+					</li>';
 
-		/*var setCSS = onee.dom.css;
-		var setClass = onee.dom.setClass;
-		var innerHTML = onee.dom.html;
-		var addClass = onee.dom.addClass;
-		var removeClass = onee.dom.delClass;
-		var onEvt = onee.dom.on;
-		var fireEvt = onee.dom.fire;
-		var innerText = onee.dom.text;
-		var each = _.each;
-		var map = _.map;
-		var find = onee.dom.find;
-		var stopDefault = onee.dom.stopDefault;
-		var getAttr = onee.dom.getAttr;
-		var fireEvt = onee.dom.fire;*/
-
-		// 播放器UI层控制逻辑
-		// var player = onee.mplayer;
+	var compliePlaylistNode = (function () {
+		var rtpl = /\{(.*?)\}/g;
+		return function (index, dat) {
+			return TPL_ITEM.replace(rtpl, function (a, b) {
+	    		if (b === "index") return index;
+	    		return dat[b];
+	    	})
+		}
+	}());
 
 		// init ui
-		$(".ui-carousel").carousel(1);
+	$(".ui-carousel").carousel(1);
 
-		JPlayer.$article.css("height", window.innerHeight - JPlayer.UIuserctrl.clientHeight);
-		JPlayer.$hdisk.parent().css("height", window.innerWidth * .9375);
-		JPlayer.UIcanvas.height = window.innerWidth * .9375;
-		JPlayer.UIcanvas.width = window.innerWidth;
-		
-		$('.mb-ctrl').on('touchmove', function(e){
-            e.preventDefault();
-        });
+	JPlayer.$article.css("height", window.innerHeight - JPlayer.UIuserctrl.clientHeight);
+	JPlayer.$hdisk.parent().css("height", window.innerWidth * .9375);
+	JPlayer.UIcanvas.height = window.innerWidth * .9375;
+	JPlayer.UIcanvas.width = window.innerWidth;
+	
+	$('.mb-ctrl').on('touchmove', function(e){
+        e.preventDefault();
+    });
 
-        // Handle the start of interactions
-        $(document).on('touchstart', '.mb-music-item', function(e){
-            var page = e.currentTarget;
-            var startTopScroll = page.scrollTop;
-            if(startTopScroll <= 0)
-                page.scrollTop = 1;
+    // Handle the start of interactions
+    $(document).on('touchstart', '.mb-music-item', function(e){
+        var page = e.currentTarget;
+        var startTopScroll = page.scrollTop;
+        if(startTopScroll <= 0)
+            page.scrollTop = 1;
 
-            if(startTopScroll + page.offsetHeight >= page.scrollHeight)
-                page.scrollTop = page.scrollHeight - page.offsetHeight - 1;
+        if(startTopScroll + page.offsetHeight >= page.scrollHeight)
+            page.scrollTop = page.scrollHeight - page.offsetHeight - 1;
 
-        }).on('touchmove', '.mb-music-item', function(e){
-            var page = e.currentTarget;
-            // TODO cache element select
-            var content = page.querySelector('.ui-page-content');
-            // Offset value have include content and border
-            if( !content || content.offsetHeight <= parseInt(getComputedStyle(page).height) ){
-                // your element have overflow
-                return e.preventDefault();
-            }
-        })
+    }).on('touchmove', '.mb-music-item', function(e){
+        var page = e.currentTarget;
+        // TODO cache element select
+        var content = page.querySelector('.ui-page-content');
+        // Offset value have include content and border
+        if( !content || content.offsetHeight <= parseInt(getComputedStyle(page).height) ){
+            // your element have overflow
+            return e.preventDefault();
+        }
+    })
 
-		// alert(window.innerWidth * .9375)
+	// build play list
+	JPlayer.$list.html(map(JPlayer.cache = [
+		{ name : "福尔摩斯", url : "./sources/fuermosi.mp3", singer : "萧敬腾" },
+		{ name : "与我常在", url : "./sources/yuwochangzai.mp3", singer : "陈奕迅" },
+		{ name : "可以了", url : "./sources/keyile.mp3", singer : "陈奕迅" },
+		{ name : "3 Things", url : "./sources/3Things.mp3", singer : "Jason Mraz" },
+		{ name : "北海", url : "./sources/beihai.mp3", singer : "永动机" }
+	], function (source, k) {
+    	return compliePlaylistNode(k, source)
+    }).join(''));
 
-		JPlayer.add([
-			{ name : "北海", url : "./sources/beihai.mp3", singer : "永动机" }
-		])
-		// on start a new music
-		.on("start", function () {
-			JPlayer.$hdisk.removeClass("mb-disk-pause");
-			JPlayer.$play.addClass("mb-ctrl-playing");
-			JPlayer.$lyric.html("").text("Loading...");
-			JPlayer.UIprogress.max = JPlayer.UIprogressbg.max = 0|JPlayer.buffer.duration;
-		})
-		.on("playing", function () {
+	// ============== addEventListener to JPlayer's event
+	// on start a new music
+	JPlayer.on("start", function () {
+		JPlayer.$hdisk.removeClass("mb-disk-pause");
+		JPlayer.$play.addClass("mb-ctrl-playing");
+		JPlayer.$lyric.html("").text("Loading...");
+		JPlayer.$list
+			.find(".mb-music-list-item").removeClass("mb-music-list-item-curr")
+			.eq(JPlayer.current).addClass("mb-music-list-item-curr");
+		JPlayer.UIprogress.max = JPlayer.UIprogressbg.max = 0|JPlayer.buffer.duration;
+	})
+	.on("playing", function () {
 
-			JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = JPlayer.offsetTime;
-			// removeClass(that.ui.hdisk, "pause")
+		JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = JPlayer.offsetTime;
+		// removeClass(that.ui.hdisk, "pause")
 
-		}).on("pause", function () {
+	})
+	.on("pause", function () {
 
-			JPlayer.$hdisk.addClass("mb-disk-pause");
-			JPlayer.$play.removeClass("mb-ctrl-playing");
-			// addClass(that.ui.hdisk, "pause")
+		JPlayer.$hdisk.addClass("mb-disk-pause");
+		JPlayer.$play.removeClass("mb-ctrl-playing");
+		// addClass(that.ui.hdisk, "pause")
 
-		}).on("stop", function () {
+	})
+	.on("stop", function () {
 
-			JPlayer.$hdisk.addClass("mb-disk-pause");
-			JPlayer.$hcover.removeClass("mb-disk-cover-show");
-			JPlayer.$play.removeClass("mb-ctrl-playing");
-			JPlayer.$lyric.html("").text("歌词");
-			JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = 0
+		JPlayer.$hdisk.addClass("mb-disk-pause");
+		JPlayer.$hcover.removeClass("mb-disk-cover-show");
+		JPlayer.$play.removeClass("mb-ctrl-playing");
+		JPlayer.$lyric.html("").text("歌词");
+		JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = 0
 
-		}).on("loading", function () {
+	})
+	.on("loading", function () {
 
-			$("#alert").dialog({show:!!1});
+		$("#alert").dialog("show");
 
-		}).on("progress", function (e, dat) {
+	})
+	.on("progress", function (e, dat) {
 
-			var loaded = dat.loaded,
-				total  = dat.total;
+		var loaded = dat.loaded,
+			total  = dat.total;
 
-			if ( loaded === total ) {
-				$("#alert").dialog("hide");
-			}
+		if ( loaded === total ) {
+			$("#alert").dialog("hide");
+		}
 
-			drawLoading(loaded, total);
+		drawLoading(loaded, total);
+	})
+	// ================ addEventListener to UI
+	// 监听列表播放操作
+	.$body.on("click", "li[data-player=playitem]", function () {
+		JPlayer.play(this.dataset.index)
+	})
+	// 监听下一首事件
+	.on("tap", "p[data-player=next]", function () { JPlayer.next() })
+	// 监听上一首事件
+	.on("tap", "p[data-player=prev]", function () { JPlayer.prev() })
+	// 监听播放暂停事件
+	.on("tap", "p[data-player=play]", function () { JPlayer.play() });
 
+	// UI animation loading
+	var drawLoading = function () {
+		// body...
+		var ctx = document.getElementById("loader").getContext('2d');
+		var perc = document.getElementById("loaderPercent");
+		// var len = ctx.width;
+		var radius = ctx.canvas.width/2;
+		// console.log(ctx)
+		var PI2 = 2 * Math.PI;
+		// var PI15 = 1.5 * Math.PI;
+		var PI_2 = Math.PI/2;
 
-		});
+		var _clear_ = function _clear_ () {
 
-		// UI animation loading
-		var drawLoading = function () {
-			// body...
-			var ctx = document.getElementById("loader").getContext('2d');
-			var perc = document.getElementById("loaderPercent");
-			// var len = ctx.width;
-			var radius = ctx.canvas.width/2;
-			// console.log(ctx)
-			var PI2 = 2 * Math.PI;
-			// var PI15 = 1.5 * Math.PI;
-			var PI_2 = Math.PI/2;
-
-			var _clear_ = function _clear_ () {
-
-				ctx.clearRect(0,0,radius,radius);
-					
-				ctx.beginPath();
-				ctx.strokeStyle = "#afafaf";
-				ctx.lineWidth = 4;
-				ctx.lineCap = "round";
-				ctx.arc(radius, radius, radius-4, -PI_2, 1.5 * Math.PI);
-				ctx.stroke();
-				perc.innerText = "0";
-				return _clear_
-			}();
-
-			return function (curr, total) {
-				// console.log(curr, total)
-				var percent = curr/total;
-
-				ctx.beginPath();
-				ctx.strokeStyle = "#c28a03";
-				ctx.arc(radius, radius, radius-4, -PI_2, PI2*percent-PI_2);
-				ctx.stroke();
-				perc.innerText = Math.floor(percent*100);
-
-				if ( curr === total ) _clear_();
-			}
+			ctx.clearRect(0,0,radius,radius);
+				
+			ctx.beginPath();
+			ctx.strokeStyle = "#afafaf";
+			ctx.lineWidth = 4;
+			ctx.lineCap = "round";
+			ctx.arc(radius, radius, radius-4, -PI_2, 1.5 * Math.PI);
+			ctx.stroke();
+			perc.innerText = "0";
+			return _clear_
 		}();
 
-		// UI lyric
-		(function(){
+		return function (curr, total) {
+			// console.log(curr, total)
+			var percent = curr/total;
 
-			var tmpLRC;
-			// 当前歌词索引
-			var pointer = 1;
-			var $lyric = JPlayer.$lyric;
-			var middlePos = $lyric.parent().height()/2 - 20;
-			// var UIlyric = JPlayer.UIlyric;
-			// 歌词节点列表
-			var $LRCitems;
-			JPlayer.on("meta", function (e, meta) {
-				var coverURL = meta.pic;
-				JPlayer.$hcover
-                    .css("backgroundImage", "url("+(coverURL?coverURL.slice(0, coverURL.length-6)+'.jpg':"about:blank")+")")
-                    .addClass("mb-disk-cover-show");
+			ctx.beginPath();
+			ctx.strokeStyle = "#c28a03";
+			ctx.arc(radius, radius, radius-4, -PI_2, PI2*percent-PI_2);
+			ctx.stroke();
+			perc.innerText = Math.floor(percent*100);
 
-                JPlayer.$name.text(meta.title);
-                JPlayer.$singer_album.text(meta.artist+"《"+meta.album_name+"》");
+			if ( curr === total ) _clear_();
+		}
+	}();
 
-                // 
-                var $currPlayItem = JPlayer.$list.find("li").eq(JPlayer.current);
-                $currPlayItem.find(".mb-music-list-item-singer").text(meta.artist);
-                $currPlayItem.find(".mb-music-list-item-duration").text(duration2time(JPlayer.buffer.duration));
-				// 获取歌词文件，并解析好
-				JPlayer.parseLyric(meta, function (lrcs) {
-					// build lyric html
-                    $lyric
-                        .html($.map(lrcs, function(item) {
-                            return '<li class="mb-music-lyric-row">'+item.tx+'</li>';
-                        }).join(''))
-                        .css({
-                        	"-webkitTransform" : "translate3d(0px, "+middlePos+"px, 0px)"
-                        });
-                    // 引用歌词节点，初始化歌词节点
-					($LRCitems = $lyric.find("li")).eq(0).addClass("mb-music-lyric-row-curr");
-					// 引用到局部变量
-					tmpLRC = lrcs.length && lrcs;
+	// UI lyric
+	(function(){
 
-				});
+		var tmpLRC;
+		// 当前歌词索引
+		var pointer = 1;
+		var $lyric = JPlayer.$lyric;
+		var middlePos = $lyric.parent().height()/2 - 20;
+		// var UIlyric = JPlayer.UIlyric;
+		// 歌词节点列表
+		var $LRCitems;
+		JPlayer.on("meta", function (e, meta) {
+			var coverURL = meta.pic;
+			JPlayer.$hcover
+                .css("backgroundImage", "url("+(coverURL?coverURL.slice(0, coverURL.length-6)+'.jpg':"about:blank")+")")
+                .addClass("mb-disk-cover-show");
+
+            JPlayer.$name.text(meta.title);
+            JPlayer.$singer_album.text(meta.artist+"《"+meta.album_name+"》");
+
+            // 
+            var $currPlayItem = JPlayer.$list.find("li").eq(JPlayer.current);
+            $currPlayItem.find(".mb-music-list-item-singer").text(meta.artist);
+            $currPlayItem.find(".mb-music-list-item-duration").text(duration2time(JPlayer.buffer.duration));
+			// 获取歌词文件，并解析好
+			JPlayer.parseLyric(meta, function (lrcs) {
+				// build lyric html
+                $lyric
+                    .html($.map(lrcs, function(item) {
+                        return '<li class="mb-music-lyric-row">'+item.tx+'</li>';
+                    }).join(''))
+                    .css({
+                    	"-webkitTransform" : "translate3d(0px, "+middlePos+"px, 0px)"
+                    });
+                // 引用歌词节点，初始化歌词节点
+				($LRCitems = $lyric.find("li")).eq(0).addClass("mb-music-lyric-row-curr");
+				// 引用到局部变量
+				tmpLRC = lrcs.length && lrcs;
+
 			});
-			function duration2time (duration) {
-				duration = duration.toFixed(0);
-				var m = Math.round(duration/60);
-				var s = duration%60;
-				return (m > 9 ? m : '0'+m) +':' + (s > 9 ? s : '0'+s);
-			}
+		});
+		function duration2time (duration) {
+			duration = duration.toFixed(0);
+			var m = Math.round(duration/60);
+			var s = duration%60;
+			return (m > 9 ? m : '0'+m) +':' + (s > 9 ? s : '0'+s);
+		}
 
-			JPlayer.on("playing", function (e, audio) {
-				if (tmpLRC) {
-					// console.log(tmpLRC[pointer)
-					if ( audio.currentTime > tmpLRC[pointer].s ) {
-						// 移除上一行样式
-                        $LRCitems.eq(pointer-1).removeClass("mb-music-lyric-row-curr");
-						// removeClass(LRCitems[pointer-1], "curr")
-						// 添加当前行样式
-                        $LRCitems.eq(pointer).addClass("mb-music-lyric-row-curr");
-						// addClass(LRCitems[pointer], "curr")
-						// 设置居中
-						$lyric.css({"-webkitTransform" : 'translate3d(0px, '+ (middlePos-40*pointer++) +'px, 0px)'});
-						// $lyric.css("top", middlePos-40*pointer++);
-                        // UIlyric.style.top = (111-40*pointer++)+'px';
-						// 结束操作
-						pointer === tmpLRC.length && (tmpLRC = null);
-					}
+		JPlayer.on("playing", function (e, audio) {
+			if (tmpLRC) {
+				// console.log(tmpLRC[pointer)
+				if ( audio.currentTime > tmpLRC[pointer].s ) {
+					// 移除上一行样式
+                    $LRCitems.eq(pointer-1).removeClass("mb-music-lyric-row-curr");
+					// removeClass(LRCitems[pointer-1], "curr")
+					// 添加当前行样式
+                    $LRCitems.eq(pointer).addClass("mb-music-lyric-row-curr");
+					// addClass(LRCitems[pointer], "curr")
+					// 设置居中
+					$lyric.css({"-webkitTransform" : 'translate3d(0px, '+ (middlePos-40*pointer++) +'px, 0px)'});
+					// $lyric.css("top", middlePos-40*pointer++);
+                    // UIlyric.style.top = (111-40*pointer++)+'px';
+					// 结束操作
+					pointer === tmpLRC.length && (tmpLRC = null);
 				}
-			});
+			}
+		});
 
-		}());
-	// });
+	}());
 }())
 </script>
 </html>

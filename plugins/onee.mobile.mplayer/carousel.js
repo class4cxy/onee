@@ -146,7 +146,12 @@
             .on("touchmove", function (evt) {
 
                 _autoLoop.stop.call(that);
-                if ( that.current <= -1 || that.current >= framesLen ) return;
+                if (
+                    that.current <= -1 ||
+                    that.current >= framesLen ||
+                    that.currentpos >= 0 ||
+                    that.currentpos <= -max
+                ) return false;
                 var e = evt.touches[0];
                 evt.preventDefault();
 

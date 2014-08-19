@@ -71,7 +71,7 @@
 
 	})(function (ctx) {
 		// body...
-		var _process_;
+		var _process_, _onendCallback_ = [];
 		
 		// build biquadFilter node
 		each(COMEQ, function (item, k) {
@@ -83,6 +83,34 @@
 			biquadFilter.frequency.value = item.frequency;
 
 		});
+
+		function _onended (player) {
+			// note: when stop function or playend will disapatch it
+	        // i just need it dispatch by playend
+	        // 当结束时
+	    	if (Math.floor(player.buffer.duration) <= Math.floor(player.offsetTime)) {
+	    		player.stop();
+	    	}
+
+	    	var len = 10, nex;
+	    	this.source.disconnect(COMEQ[len-1].biquadFilter);
+	    	while(len--) {
+				nex = len-1;
+				nex > -1 && COMEQ[len].biquadFilter.disconnect(COMEQ[nex].biquadFilter)
+			}
+
+			COMEQ[0].biquadFilter.disconnect(this.analyser);
+			// 重新连接音频PProcessor节点
+	        this.analyser.disconnect(this.processor);
+	        // 重新连接到终端
+	        this.processor.disconnect(ctx.destination);
+	        // reset audio source node
+	        this.source = null;
+	        // handle callback
+	        var onendcaller = _onendCallback_.shift();
+	        typeof onendcaller === "function" && onendcaller()
+		}
+
 		return {
 			ctx : ctx,
 			analyser : ctx.createAnalyser(),
@@ -98,7 +126,7 @@
 		        // on end
 		        var that = this;
 		        this.source.onended = function () {
-		        	that.onended(player)
+		        	_onended.call(that, player)
 		        }
 		        // processor node has to rebuild
 		        // `inputBuffer` still exist when connect audio context nex time
@@ -132,28 +160,8 @@
 				_process_ = callback || function () {};
 
 			},
-			onended : function (player) {
-				// note: when stop function or playend will disapatch it
-		        // i just need it dispatch by playend
-		        // 当结束时
-		    	if (Math.floor(player.buffer.duration) <= Math.floor(player.offsetTime)) {
-		    		player.stop();
-		    	}
-
-		    	var len = 10, nex;
-		    	this.source.disconnect(COMEQ[len-1].biquadFilter);
-		    	while(len--) {
-					nex = len-1;
-					nex > -1 && COMEQ[len].biquadFilter.disconnect(COMEQ[nex].biquadFilter)
-				}
-
-				COMEQ[0].biquadFilter.disconnect(this.analyser);
-				// 重新连接音频PProcessor节点
-		        this.analyser.disconnect(this.processor);
-		        // 重新连接到终端
-		        this.processor.disconnect(ctx.destination);
-		        // reset audio source node
-		        this.source = null;
+			onended : function (callback) {
+				typeof callback === "function" && _onendCallback_.push(callback);
 			}
 		}
 	});
@@ -162,74 +170,6 @@
 	// 
 	if ( !Audio ) return console.log('Web Audio API is not supported in this browser');
 
-
-	/*try {
-		// Fix up for prefixing
-		window.AudioContext = window.AudioContext||window.webkitAudioContext;
-		var audioCtx = new AudioContext();
-	}
-	catch(e) {
-		return console.log('Web Audio API is not supported in this browser');
-	}*/
-
-	// 用于快速查询重复音频
-	// 增加/删除操作都要同步到该缓存
-	var cachePlayListName = [];
-	// var rSuffix = /\.\w+$/;
-	var rtpl = /\{(.*?)\}/g;
-	var TPL_ITEM = '<li data-player="playitem" class="ui-border-1px mb-music-list-item" data-index="{index}" data-name="{name}" data-url="{url}">\
-						<div class="mb-music-list-item-hack-middle">\
-						<i>{name}</i>\
-						<i class="mb-music-list-item-singer"></i>\
-						</div>\
-						<p class="mb-music-list-item-duration"></p>\
-					</li>';
-	var TPL_EQITEM = '<p><input type="range" min="-30" max="30" value="{gain}" onwheel="1"><span>{key}</span></p>';
-
-	// 代理
-	function proxy (factory, context, param) {
-		return function () {
-			factory.call(context||null, param)
-		}
-	}
-
-	// 代理
-	function proxy (factory, context, param) {
-		return function () {
-			factory.call(context||null, param)
-		}
-	}
-
-	// 批量entries转换/过滤非audio格式
-	/*function entry2file (entries, callback) {
-		var len = entries.length;
-		var files = [];
-		var retEntries = [];
-		var endCallback = function () {
-			--len || callback(files,retEntries);
-		}
-		each(entries, function (entry, k) {
-			// if (entry.isFile) {
-			// change to [object file]
-			entry.file(function (file) {
-
-				if ( file.type.indexOf("audio") > -1 ) {
-					// 记录Entry的fullpath属性
-					// 用于移除列表时同时移除缓存区的entry
-					// file._fullpath_ = entry.fullPath;
-					files[files.length] = file;
-					retEntries[retEntries.length] = entry;
-				} else log( "ERROR : "+ file.name + " is not an audio." );
-
-				endCallback()
-			}, function (e) {
-				log("ERROR : "+e);
-				endCallback()
-			})
-			// }
-		})
-	}*/
-	
 	// 解析音频文件
 	var decodeAudio = (function () {
 
@@ -378,6 +318,76 @@
 
 	}();
 
+	// 资源缓存器
+	var CACHE = [];
+
+	// fetch audio file
+	// decode audio
+	function fetch ( item, callback ) {
+		if ( item.buffer ) {
+	
+			callback && callback(item.buffer)
+
+		} else {
+
+			var request = new XMLHttpRequest();
+			var that = this;
+			request.open('GET', item.url, true);
+			request.responseType = 'arraybuffer';
+
+			// Decode asynchronously
+			request.onload = function() {
+				// copy buffer
+				decodeAudio(request.response, function (buffer) {
+					// that.buffer = buffer;
+					callback && callback(item.buffer = buffer);
+					request = request.onload = null;
+				});
+				/*metaCtrl.get(url, function(meta) {
+					that.tiggle("meta", meta)
+				});*/
+ 			}
+ 			that.trigger(that.status = "loading");
+ 			request.onprogress = function(e) {
+				if(e.lengthComputable) {
+					that.trigger(that.status = "progress", e);
+				}
+			}
+			request.send();
+
+		}
+	}
+
+	// re connect audio context
+	// call fetch
+	// start source
+	// call metaCtrl
+	// initialize meterDrawer
+	function play ( item ) {
+
+		var that = this;
+
+		audio.rebuild(that);
+		// start immediately
+		audio.source.start(0);
+		// fetch source buffer
+		fetch.call(that, item, function (buffer) {
+
+			audio.source.buffer = that.buffer = buffer;
+			// start frequency animation
+			that.meterDrawer = meterLibrary[that.meter](that.ctx, audio.analyser);
+
+			that.trigger("start");
+
+			that.status = "playing";
+
+			// fetch meta info
+			metaCtrl.get(item.name, function(meta) {
+				that.trigger("meta", meta);
+			});
+		});
+	}
+
 	function player(options) {
 
 		// var ui = this.ui = {};
@@ -397,6 +407,8 @@
 		this.status = "stop";
 		// 已播放时间-针对每一首音乐
 		this.offsetTime = 0;
+		// playlist
+		this.cache = [];
 
 		// this._startTime = 0;
 		// this._lastPauseTime = 0;
@@ -416,8 +428,8 @@
 			item.biquadFilter.gain.value = that.EQ[k];
 		});
 
-		// 监听列表播放操作
-		that.$body.on("singleTap", "li[data-player=playitem]", function () {
+		/*// 监听列表播放操作
+		that.$body.on("click", "li[data-player=playitem]", function () {
 			that.play(this.dataset.index)
 		})
 		// 监听下一首事件
@@ -425,7 +437,7 @@
 		// 监听上一首事件
 		.on("tap", "p[data-player=prev]", proxy(that.prev, that))
 		// 监听播放暂停事件
-		.on("tap", "p[data-player=play]", proxy(that.play, that));
+		.on("tap", "p[data-player=play]", proxy(that.play, that));*/
 
 		(function () {
 
@@ -457,14 +469,13 @@
 			})
 			.on("stop", function () {
 				// reset count
-				console.log("stop")
 				_lastStartTime = _offsetTime = that.offsetTime = 0;
 			});
 
 		}());
 	}
-	// 资源缓存器
-	var CACHE = [];
+
+
 	// 继承事件管理器
 	extend(player.prototype, {
 		// inherit form zepto
@@ -480,63 +491,25 @@
 			EvtSys.trigger(type, data)
 			return this
 		},
-		add : function (sources) {
-			var that = this;
-			if (sources.length && typeof sources === "object") {
-	            that.$list.html(map(CACHE = sources, function (source, k) {
-	            	return compliePlaylistNode(k, source)
-	            }).join(''));
-			}
-			return that
-		},
-		fetch : function (item, callback) {
-			if ( item.buffer ) {
-	
-				callback && callback(item.buffer)
-				// that.source.start(0);
-	
-			} else {
-	
-				var request = new XMLHttpRequest();
-				var that = this;
-				request.open('GET', item.url, true);
-				request.responseType = 'arraybuffer';
-	
-				// Decode asynchronously
-				request.onload = function() {
-					// copy buffer
-					decodeAudio(request.response, function (buffer) {
-						// that.buffer = buffer;
-						callback && callback(item.buffer = buffer);
-						request = request.onload = null;
-					});
-					/*metaCtrl.get(url, function(meta) {
-						that.tiggle("meta", meta)
-					});*/
-	 			}
-	 			that.trigger(that.status = "loading");
-	 			request.onprogress = function(e) {
-					if(e.lengthComputable) {
-						that.trigger(that.status = "progress", e);
-					}
-				}
-				request.send();
-	
-			}
-		},
 		play : function (index) {
 
-			var item, that = this;
+			var item, that = this, cache = that.cache;
 			// 如果播放列表为空
-			if ( CACHE.length === 0 ) return;
+			if ( cache.length === 0 ) return;
 			// index存在，则清空当前的，直接播放CACHE[index]
 			if ( index !== undefined ) {
-				item = CACHE[that.current = index];
-				that.trigger("stop");
-				that.stop();
+				if ( that.status === "pause" || that.status === "playing" ) {
+					// waitting for onended event dispatch
+					audio.onended(function () {
+						play.call(that, item = cache[that.current = index])
+					});
+					return that.stop();
+
+				} else item = cache[that.current = index];
+
 			// 否则当status == stop时，则直接播放mplayer.playlist[currentPlay]
 			} else if ( that.status === "stop" ) {
-				item = CACHE[that.current];
+				item = cache[that.current];
 			// status为pause或者playing时，切换播放/暂停状态即可
 			} else {
 				// 暂停
@@ -547,13 +520,10 @@
 				// 继续播放
 				} else if ( that.status === "pause" ) {
 					// re build the audio context
-					// reConnectContext.call(that);
 					audio.rebuild(that);
 					//
 					audio.source.buffer = that.buffer;
 					// start
-					// audio.source.start(0);
-					// console.log(that.offsetTime)
 					audio.source.start(0, that.offsetTime);
 					// goon meter drawer
 					that.meterDrawer && that.meterDrawer.goon();
@@ -568,6 +538,9 @@
 
 			if ( !item ) return log("Can't find the music.");
 
+			// call play function
+			play.call(that, item);
+
 			/*that.trigger("start");
 			audio.src = item.url;
 			audio.play();*/
@@ -577,7 +550,7 @@
 			// reBuildSourceNode.call(that);
 			// re connect audiocontext
 			// reConnectContext.call(that);
-			audio.rebuild(that);
+			/*audio.rebuild(that);
 			// start immediately
 			audio.source.start(0);
 			// fetch source buffer
@@ -595,7 +568,7 @@
 				metaCtrl.get(item.name, function(meta) {
 					that.trigger("meta", meta);
 				});
-			});
+			});*/
 
 		},
 		pause : function () {
@@ -607,12 +580,10 @@
 		},
 		stop : function () {
 			// 清空音频视图
-			if ( this.meterDrawer ) {
-				this.meterDrawer.stop();
-				delete this.meterDrawer;
-			}
-			this.trigger(this.status = "stop");
+			this.meterDrawer.stop();
+			delete this.meterDrawer;
 
+			this.trigger(this.status = "stop");
 			audio.source.stop(0);
 		},
 		next : function () {
@@ -622,10 +593,10 @@
 
 			// var prevIndex = this.currentPlay;
 
-			if ( CACHE.length <= ++this.currentPlay ) {
-				this.currentPlay = 0
+			if ( this.cache.length <= ++this.current ) {
+				this.current = 0
 			}
-			this.play(this.currentPlay)
+			this.play(this.current)
 
 		},
 		prev : function () {
@@ -635,11 +606,11 @@
 
 			// var prevIndex = this.currentPlay;
 
-			if ( 0 >= --this.currentPlay ) {
-				var len = CACHE.length;
-				this.currentPlay = len === 0 ? 0 : len-1;
+			if ( 0 > --this.current ) {
+				var len = this.cache.length;
+				this.current = len === 0 ? 0 : len-1;
 			}
-			this.play(this.currentPlay)
+			this.play(this.current)
 		},
 		random : function () {
 			// 随机且不与上一首相同
