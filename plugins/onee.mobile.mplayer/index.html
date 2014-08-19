@@ -623,6 +623,8 @@
 <script type="text/javascript">
 (function () {
 
+	window.onerror = function (e) {alert(e)}
+
 	var map = _.map;
 	var TPL_ITEM = '<li data-player="playitem" class="ui-border-1px mb-music-list-item" data-index="{index}" data-name="{name}" data-url="{url}">\
 						<div class="mb-music-list-item-hack-middle">\
