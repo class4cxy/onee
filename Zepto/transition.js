@@ -29,4 +29,4 @@
 
     $.support.transition = transitionEnd()
 
-});
+}());

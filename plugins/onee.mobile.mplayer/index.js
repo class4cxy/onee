@@ -6,14 +6,7 @@
  * for more ? http://jdoi.net/
  */
 
-(function (global, undefined) { "use strict";
-	// body...
-	// is exist
-	// if ( onee.mplayer ) return;
-
-	// new a onee's log
-	// var log     = onee.log("mplayer");
-	
+;(function (global, undefined) { "use strict";
 	// base method
 	var extend  = _.extend;
 	var each = _.each;
@@ -22,27 +15,6 @@
 	var random = _.random;
 	var slice = Array.prototype.slice;
 	var EvtSys = $(document);
-	// var getAttr = Sizzle.attr;
-	// var setAttr = onee.dom.setAttr;
-	// var setClass = onee.dom.setClass;
-	// var addClass = onee.dom.addClass;
-	// var removeClass = onee.dom.delClass;
-	// var onEvt = onee.dom.on;
-	// var fireEvt = onee.dom.fire;
-	// var appendTo = onee.dom.append;
-	// var setCSS = onee.dom.css;
-	// var innerHTML = onee.dom.html;
-	// var innerTEXT = onee.dom.text;
-	// var removeNode = onee.dom.remove;
-	// var Interface = onee.interface;
-	// var EvtSys = onee.evt();
-	// var GG = onee.dom.find;
-	// var onKey = onee.dom.key.on;
-	
-	// Fix up for prefixing
-	// global.AudioContext = window.AudioContext||window.webkitAudioContext;
-
-	// if ( !AudioContext ) return console.log('Web Audio API is not supported in this browser');
 
 	// 公共EQ对应表
 	var COMEQ = [
@@ -166,10 +138,9 @@
 		}
 	});
 
-
 	// 
-	if ( !Audio ) return console.log('Web Audio API is not supported in this browser');
-
+	if ( !audio ) return console.log('Web Audio API is not supported in this browser');
+	
 	// 解析音频文件
 	var decodeAudio = (function () {
 
@@ -319,7 +290,7 @@
 	}();
 
 	// 资源缓存器
-	var CACHE = [];
+	// var CACHE = [];
 
 	// fetch audio file
 	// decode audio
@@ -425,7 +396,8 @@
 
 		// 初始化EQ控件
 		each(COMEQ, function (item, k) {
-			item.biquadFilter.gain.value = that.EQ[k];
+			// alert(item.biquadFilter.gain)
+			// item.biquadFilter.gain.value = that.EQ[k];
 		});
 
 		/*// 监听列表播放操作
@@ -540,35 +512,6 @@
 
 			// call play function
 			play.call(that, item);
-
-			/*that.trigger("start");
-			audio.src = item.url;
-			audio.play();*/
-
-			// 触发decoding
-			// re build source node
-			// reBuildSourceNode.call(that);
-			// re connect audiocontext
-			// reConnectContext.call(that);
-			/*audio.rebuild(that);
-			// start immediately
-			audio.source.start(0);
-			// fetch source buffer
-			that.fetch(item, function (buffer) {
-
-				audio.source.buffer = that.buffer = buffer;
-				// start frequency animation
-				that.meterDrawer = meterLibrary[that.meter](that.ctx, audio.analyser);
-
-				that.trigger("start");
-
-				that.status = "playing";
-
-				// fetch meta info
-				metaCtrl.get(item.name, function(meta) {
-					that.trigger("meta", meta);
-				});
-			});*/
 
 		},
 		pause : function () {
@@ -686,26 +629,12 @@
 				}
 			}
 		}
-	})
-
+	});
+	// alert(localStorage.getItem("jplayer-user-custom")||"{}");
 	global.JPlayer = new player(JSON.parse(localStorage.getItem("jplayer-user-custom")||"{}"));
 
 	// 扩展实例化后的对象
 	extend(global.JPlayer, {
-		/*ready : function (callback) {
-			var that = this;
-			FileSys ? FileSys.init(function () {
-				callback && callback.call(that)
-				// read the location entry
-				FileSys.ls(function (entries) {
-					entry2file(entries,
-						function (files) {
-							that.add(files);
-						}
-					);
-				})
-			}) : callback && callback.call(that);
-		},*/
 		// 解析歌词文件，有UI层根据需要自行调用
 		// 
 		// [00:13.17]朋友已走
@@ -792,4 +721,4 @@
 
 	});*/
 
-}(window));
+})(window);
