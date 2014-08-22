@@ -117,16 +117,11 @@
 	}
 	.mb-logo{
 		position: absolute;
-		font-size: 36px;
-		font-weight: bold;
-		height: 60px;
-		line-height: 60px;
-		text-align: center;
-		width: 195px;
+		font-size: 12px;
 		text-shadow:0 0 5px rgba(0,0,0,.4);
-		top: 12px;
-		background-color: 
-		left: 0
+		-webkit-transform: rotate(-45deg);
+		bottom: 9px;
+		right: -2px
 	}
 
 	.mb-hack-vmiddle{
@@ -596,6 +591,7 @@
 			<div class="ease mb-ctrl-eq" data-player="eq">
 				<p class="mb-ctrl-eq mb-ctrl-eq-in"></p>
 			</div>
+			<p class="mb-logo">J.Player</p>
 		</div>
 		<!-- 解析音源loading -->
 		<!-- <p mplayer="decoding" class="ease loading">decoding audio...</p> -->
@@ -649,7 +645,7 @@
 		width: 17px;
 	}
 	</style>
-	<div id="alertEq" class="ui-dialog mb-eq" data-dismiss="dialog" data-effect="from-above" role="alert-dialog" data-backdrop="static">
+	<div id="alertEq" class="ui-dialog mb-eq" data-backdrop="close" data-effect="from-below" role="alert-dialog" data-backdrop="static">
         <div class="js-dialog-content ui-alert mb-eq-wrap">
             <div class="ui-alert-body mb-eq-body" role="note" id="eqScroll">
             	<div class="content mb-eq-list" data-player="eqlist"></div>
