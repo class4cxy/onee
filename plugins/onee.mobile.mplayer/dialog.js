@@ -79,9 +79,9 @@
 
         // killing the scroll on body
         if(this.role != "notify" || $.isPoorDevice){
-            $(document).on('touchmove.dialog', function(e){
+            /*$(document).on('touchmove.dialog', function(e){
                 e.preventDefault();
-            });
+            });*/
         }
 
         this.backdrop(function () {

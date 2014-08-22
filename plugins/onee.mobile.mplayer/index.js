@@ -17,7 +17,8 @@
 	var EvtSys = $(document);
 
 	// 公共EQ对应表
-	var COMEQ = [
+	global.COMEQ = {}
+	/*global.COMEQ = [
 		{key : "31hz", frequency : 31},
 		{key : "62hz", frequency : 62},
 		{key : "125hz", frequency : 125},
@@ -28,9 +29,9 @@
 		{key : "4khz", frequency : 4e3},
 		{key : "8khz", frequency : 8e3},
 		{key : "16khz", frequency : 16e3}
-	];
+	];*/
 
-	var audio = (function (factory) {
+	global.audio = (function (factory) {
 		// body...
 
 		// Fix up for prefixing
@@ -44,17 +45,19 @@
 	})(function (ctx) {
 		// body...
 		var _process_, _onendCallback_ = [];
-		
-		// build biquadFilter node
-		each(COMEQ, function (item, k) {
-			// 初始化滤波器节点
-			var biquadFilter = item.biquadFilter = ctx.createBiquadFilter();
 
-			biquadFilter.gain.value = 0;
-			biquadFilter.type = "peaking";
-			biquadFilter.frequency.value = item.frequency;
-
-		});
+		// 统一操作滤波器节点（连接/断开）
+		function _bf_ (action) {
+			action = action || "connect";
+			this.source.connect(COMEQ["f31"]);
+	    	var tmpbf;
+	    	each(COMEQ, function ( bf, k ) {
+	    		if ( tmpbf ) tmpbf.connect(bf);
+	    		tmpbf = bf;
+	    	});
+	    	tmpbf.connect(this.analyser);
+	    	tmpbf = null;
+		}
 
 		function _onended (player) {
 			// note: when stop function or playend will disapatch it
@@ -64,14 +67,8 @@
 	    		player.stop();
 	    	}
 
-	    	var len = 10, nex;
-	    	this.source.disconnect(COMEQ[len-1].biquadFilter);
-	    	while(len--) {
-				nex = len-1;
-				nex > -1 && COMEQ[len].biquadFilter.disconnect(COMEQ[nex].biquadFilter)
-			}
-
-			COMEQ[0].biquadFilter.disconnect(this.analyser);
+	    	// connect biquadFilter node
+			_bf_.call(this, "disconnect");
 			// 重新连接音频PProcessor节点
 	        this.analyser.disconnect(this.processor);
 	        // 重新连接到终端
@@ -112,15 +109,7 @@
 					_process_(e);
 				};
 				// connect biquadFilter node
-				var len = 10, nex;
-		        // 重新连接EQ均衡器
-				this.source.connect(COMEQ[len-1].biquadFilter);
-				while(len--) {
-					nex = len-1;
-					nex > -1 && COMEQ[len].biquadFilter.connect(COMEQ[nex].biquadFilter)
-				}
-				// 连接音频分析节点
-				COMEQ[0].biquadFilter.connect(this.analyser);
+				_bf_.call(this, "connect");
 				// 连接音频Processor节点
 		        this.analyser.connect(this.processor);
 		        // 重新连接到终端
@@ -334,7 +323,7 @@
 	// start source
 	// call metaCtrl
 	// initialize meterDrawer
-	function play ( item ) {
+	function start ( item ) {
 
 		var that = this;
 
@@ -392,30 +381,25 @@
 		// 音量
 		// this.volume = options.volume || 0.8;
 		// 均衡器列表
-		this.EQ = options.EQ || [0,0,0,0,0,0,0,0,0,0];
-
-		// 初始化EQ控件
-		each(COMEQ, function (item, k) {
-			// alert(item.biquadFilter.gain)
-			// item.biquadFilter.gain.value = that.EQ[k];
-		});
-
-		/*// 监听列表播放操作
-		that.$body.on("click", "li[data-player=playitem]", function () {
-			that.play(this.dataset.index)
-		})
-		// 监听下一首事件
-		.on("tap", "p[data-player=next]", proxy(that.next, that))
-		// 监听上一首事件
-		.on("tap", "p[data-player=prev]", proxy(that.prev, that))
-		// 监听播放暂停事件
-		.on("tap", "p[data-player=play]", proxy(that.play, that));*/
+		var eq = this.EQ = options.EQ || {};
 
 		(function () {
 
 			var _lastStartTime = 0;
 			var _offsetTime = 0;
 			var _ctx = audio.ctx;
+
+			// build biquadFilter node
+			each([31,62,125,250,1000,2000,4000,8000,16000], function (freq, k) {
+				// 初始化滤波器节点
+				var index = 'f'+freq;
+				var biquadFilter = COMEQ[index] = _ctx.createBiquadFilter();
+
+				biquadFilter.gain.value = eq[index] = eq[index] || 0;
+				biquadFilter.type = "peaking";
+				biquadFilter.frequency.value = freq;
+
+			});
 
 			audio.onaudioprocess(function (e) {
 				// 当peocessor节点连接上audio context，就会触发该事件
@@ -473,7 +457,7 @@
 				if ( that.status === "pause" || that.status === "playing" ) {
 					// waitting for onended event dispatch
 					audio.onended(function () {
-						play.call(that, item = cache[that.current = index])
+						start.call(that, item = cache[that.current = index])
 					});
 					return that.stop();
 
@@ -511,7 +495,7 @@
 			if ( !item ) return log("Can't find the music.");
 
 			// call play function
-			play.call(that, item);
+			start.call(that, item);
 
 		},
 		pause : function () {
@@ -578,6 +562,12 @@
 				}
 			}
 			this.play(this.currentPlay)
+		},
+		eq : function (freq, value) {
+			var biquadFilter = COMEQ[freq];
+			if ( biquadFilter ) {
+				this.EQ[freq] = biquadFilter.gain.value = value;
+			}
 		},
 		/*remove : function (index) {
 			var playlist = this.playlist;

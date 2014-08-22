@@ -14,11 +14,12 @@
 <style>
 	
 	/*rewrite alert.css*/
-	.ui-alert{
+	/* .ui-alert-load{
 		padding: 0;
 		height: 100px;
 		width: 100px;
-	}
+	} */
+	.ui-alert,
 	.ui-alert-body{
 		padding: 0;
 	}
@@ -423,8 +424,13 @@
 		width: 80px;
 		text-align: center;
 	} */
-	.ui-alert{
+	/* .ui-alert{
 		position: relative;
+	} */
+	.mb-loader{
+		position: relative;
+		height: 100px;
+		width: 100px
 	}
 	.mb-loader-cv{
 		-webkit-transform:scale(0.5);
@@ -439,6 +445,74 @@
 		bottom: 0;
 		text-align: center;
 		line-height: 100px
+	}
+	.mb-ctrl-btns{
+		display: -webkit-box;
+		-webkit-box-align:center;
+		-webkit-box-pack: center;
+		border-radius: 50px;
+		margin: 0 8px;
+		border: 1px solid #d79a07
+	}
+	.mb-ctrl-btns-el{
+		display: block;
+		height: 20px;
+		width: 1px;
+	}
+	.mb-ctrl-next .mb-ctrl-btns-el,
+	.mb-ctrl-prev .mb-ctrl-btns-el{
+		height: 16px;
+		width: 16px;
+	}
+	.mb-ctrl-play .mb-ctrl-btns-el1{
+		border-right: 1px solid #d79a07;
+		margin-right: 9px;
+	}
+	.mb-ctrl-play .mb-ctrl-btns-el2{
+		border-left: 1px solid #d79a07;
+	}
+	.mb-ctrl-next .mb-ctrl-btns-el1{
+		border: solid #d79a07;
+		border-width: 1px 1px 0 0;
+		height: 12px;
+		width: 12px;
+		-webkit-transform: rotate(45deg);
+	}
+	.mb-ctrl-next .mb-ctrl-btns-el2{
+		margin-left: 5px;
+		border-left: 1px solid #d79a07;
+		width: 10px
+	}
+	 .mb-ctrl-prev .mb-ctrl-btns-el1{
+		border-right: 1px solid #d79a07;
+		margin-right: 5px;
+		width: 10px
+	} 
+	.mb-ctrl-prev .mb-ctrl-btns-el2{
+		border: solid #d79a07;
+		border-width: 1px 0 0 1px;
+		margin-right: 5px;
+		height: 12px;
+		width: 12px;
+		-webkit-transform: rotate(-45deg);
+	}
+	.mb-ctrl-play{
+		height: 60px;
+		width: 60px;
+	}
+	.mb-ctrl-playing{
+		-webkit-transform: rotate(90deg);
+	}
+	.mb-ctrl-playing .mb-ctrl-btns-el1{
+		-webkit-transform: rotate(30deg);
+	}
+	.mb-ctrl-playing .mb-ctrl-btns-el2{
+		-webkit-transform: rotate(-30deg);
+	}
+	.mb-ctrl-next,
+	.mb-ctrl-prev{
+		height: 50px;
+		width: 50px;
 	}
 </style>
 <body>
@@ -483,80 +557,6 @@
 				<progress max="100" value="" data-player="progressbg"></progress>
 				<input type="range" min="0" max="100" data-player="progress" value="0">
 			</p>
-			<style>
-			.mb-ctrl-btns{
-				display: -webkit-box;
-				-webkit-box-align:center;
-				-webkit-box-pack: center;
-				border-radius: 50px;
-				margin: 0 8px;
-				border: 1px solid #d79a07
-			}
-			.mb-ctrl-btns-el{
-				display: block;
-				height: 20px;
-				width: 1px;
-			}
-			.mb-ctrl-next .mb-ctrl-btns-el,
-			.mb-ctrl-prev .mb-ctrl-btns-el{
-				height: 16px;
-				width: 16px;
-			}
-			.mb-ctrl-play .mb-ctrl-btns-el1{
-				border-right: 1px solid #d79a07;
-				margin-right: 9px;
-			}
-			.mb-ctrl-play .mb-ctrl-btns-el2{
-				border-left: 1px solid #d79a07;
-			}
-			.mb-ctrl-next .mb-ctrl-btns-el1{
-				border: solid #d79a07;
-				border-width: 1px 1px 0 0;
-				height: 12px;
-				width: 12px;
-				-webkit-transform: rotate(45deg);
-			}
-			.mb-ctrl-next .mb-ctrl-btns-el2{
-				margin-left: 5px;
-				border-left: 1px solid #d79a07;
-				width: 10px
-			}
-			 .mb-ctrl-prev .mb-ctrl-btns-el1{
-				border-right: 1px solid #d79a07;
-				margin-right: 5px;
-				width: 10px
-			} 
-			.mb-ctrl-prev .mb-ctrl-btns-el2{
-				border: solid #d79a07;
-				border-width: 1px 0 0 1px;
-				margin-right: 5px;
-				height: 12px;
-				width: 12px;
-				-webkit-transform: rotate(-45deg);
-			}
-			.mb-ctrl-play{
-				height: 60px;
-				width: 60px;
-			}
-			.mb-ctrl-playing{
-				-webkit-transform: rotate(90deg);
-			}
-			.mb-ctrl-playing .mb-ctrl-btns-el1{
-				-webkit-transform: rotate(30deg);
-			}
-			.mb-ctrl-playing .mb-ctrl-btns-el2{
-				-webkit-transform: rotate(-30deg);
-			}
-			.mb-ctrl-next,
-			.mb-ctrl-prev{
-				height: 50px;
-				width: 50px;
-			}
-			/* .mb-ctrl-prev{
-				height: 65px;
-				width: 65px;
-			} */
-			</style>
 			<div class="mb-ctrl-btn">
 				<p class="mb-ctrl-btns mb-ctrl-prev" data-player="prev">
 					<a class="mb-ctrl-btns-el mb-ctrl-btns-el1"></a>
@@ -570,32 +570,75 @@
 					<a class="mb-ctrl-btns-el mb-ctrl-btns-el1"></a>
 					<a class="mb-ctrl-btns-el mb-ctrl-btns-el2"></a>
 				</p>
-				<!-- <a href="javascript:;" class="mb-ctrl-btns mb-ctrl-prev" data-player="prev">上一首</a>
-				<a href="javascript:;" class="mb-ctrl-btns mb-ctrl-play" data-player="play">播放/暂停</a>
-				<a href="javascript:;" class="mb-ctrl-btns mb-ctrl-next" data-player="next">下一首</a> -->
-				<!-- <a href="javascript:;" class="hvolume">
-					<input type="range" min="0" max="100" class="leve1" mplayer="volume" onwheel="1">
-				</a> -->
 			</div>
 		</div>
 		<!-- 解析音源loading -->
 		<!-- <p mplayer="decoding" class="ease loading">decoding audio...</p> -->
-		<!-- 均衡器控件 -->
-		<!-- <div class="ease eqctrl" mplayer="eqswrap">
-			<h3>equalizer</h3>
-			<em class="c">X</em>
-			<div class="eqlist clearfix" mplayer="eqlist"></div>
-		</div> -->
 	</div>
+	<!-- 均衡器控件 -->
+	<style>
+	.mb-eq{
+		width: 95%;
+	}
+	.mb-eq-wrap{
+		width: 100%;
+	}
+	.mb-eq-list{
+		display: -webkit-box;
+		width: 540px;
+		overflow: hidden;
+		padding: 0 20px
+	}
+	.mb-eq-body{
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+	.mb-eq-item{
+		width: 60px;
+		/*text-align: center;*/
+		padding: 130px 0 10px
+	}
+	.mb-eq-input:hover[type=range]{
+		background-color: #2c2b2a;
+		box-shadow: 0 0 3px rgba(0,0,0,.6)
+	}
+	.mb-eq-input[type=range]{
+		width: 130px;
+		height: 3px;
+		background-color: #7d7d7d;
+		-webkit-transform: rotate(-90deg) translate(61px,-35px);
+	}/* 
+	.article .eqctrl input[type=range]::-webkit-slider-runnable-track{
+	}
+	.article .eqctrl input[type=range]::-moz-range-track{
+		background-color: #282828;
+		width: 2px;
+		box-shadow: 1px 0 1px #040506
+	} */
+	.mb-eq-input[type=range]::-webkit-slider-thumb{
+		box-shadow:0 0 0 5px rgba(183, 131, 6, .4);
+		border-radius: 10px;
+		background-color: rgba(215,154,7,.7);
+		border: none;
+		height: 17px;
+		width: 17px;
+	}
+	</style>
+	<div id="alertEq" class="ui-dialog mb-eq" data-dismiss="dialog" data-effect="from-above" role="alert-dialog" data-backdrop="static">
+        <div class="js-dialog-content ui-alert mb-eq-wrap">
+            <div class="ui-alert-body mb-eq-body" role="note" id="eqScroll">
+            	<div class="content mb-eq-list" data-player="eqlist"></div>
+            </div>
+        </div>
+    </div>
 	<!--notify-->
-    <div id="notify" data-backdrop=false data-expires="2000" data-effect="from-top" class="ui-dialog ui-notify" role="notify">
+    <div id="notify" data-backdrop="false" data-expires="2000" data-effect="from-top" class="ui-dialog ui-notify" role="notify">
         <!-- <i class="icon icon-warning"></i> -->
         <span class="content"></span>
     </div>
     <!--notify-->
-    <div id="alert" class="ui-dialog" data-effect="from-below" role="alert-dialog" data-backdrop="static">
-        <div class="js-dialog-content ui-alert">
-            <!-- <div class="ui-alert-header"><h3 class="ui-alert-title" id="myAlertLable">温馨提示</h3></div> -->
+    <div id="alertLoader" class="ui-dialog" data-effect="from-above" role="alert-dialog" data-backdrop="static">
+        <div class="js-dialog-content ui-alert mb-loader">
             <div class="ui-alert-body" role="note">
             	<div class="content">
             		<canvas class="mb-loader-cv" id="loader" height="100" width="100"></canvas>
@@ -610,7 +653,7 @@
 <!-- <script src="/onee/Lodash/lodash.min.js"></script>
 <script src="/onee/onee.js"></script> -->
 <script>
-	window.onerror = function (e) {alert(JSON.stringify(arguments))}
+	// window.onerror = function (e) {alert(JSON.stringify(arguments))}
 </script>
 <script src="http://jdoi.net/git/onee/Lodash/lodash.min.js"></script>
 <script src="http://jdoi.net/git/onee/Zepto/zepto.js"></script>
@@ -620,9 +663,10 @@
 <script src="http://jdoi.net/git/onee/Zepto/data.js"></script>
 <script src="http://jdoi.net/git/onee/Zepto/transition.js"></script>
 <script src="http://jdoi.net/git/onee/Tween/RequestAnimationFrame.js"></script>
-<script src="http://player.jdoi.net/index.js" type="text/javascript"></script>
-<script src="http://player.jdoi.net/carousel.js" type="text/javascript"></script>
-<script src="http://player.jdoi.net/dialog.js" type="text/javascript"></script>
+<script src="./index.js" type="text/javascript"></script>
+<script src="./carousel.js" type="text/javascript"></script>
+<script src="./dialog.js" type="text/javascript"></script>
+<!-- <script src="./iscroll.js" type="text/javascript"></script> -->
 <script type="text/javascript">
 (function () {
 
@@ -633,12 +677,13 @@
 						<i class="mb-music-list-item-singer"></i>\
 						</div>\
 						<p class="mb-music-list-item-duration"></p>\
-					</li>';
+					</li>',
+		TPL_EQITEM = '<p class="mb-eq-item"><input data-freq="{freq}" class="mb-eq-input" type="range" min="-30" max="30" value="{gain}" onwheel="1"><span>{key}</span></p>';;
 
-	var compliePlaylistNode = (function () {
+	var complieHTML = (function () {
 		var rtpl = /\{(.*?)\}/g;
-		return function (index, dat) {
-			return TPL_ITEM.replace(rtpl, function (a, b) {
+		return function (tpl, dat, index) {
+			return tpl.replace(rtpl, function (a, b) {
 	    		if (b === "index") return index;
 	    		return dat[b];
 	    	})
@@ -647,13 +692,14 @@
 
 		// init ui
 	$(".ui-carousel").carousel(1);
+	$("#alertEq").dialog("show");
 
 	JPlayer.$article.css("height", window.innerHeight - JPlayer.UIuserctrl.clientHeight);
 	JPlayer.$hdisk.parent().css("height", window.innerWidth * .9375);
 	JPlayer.UIcanvas.height = window.innerWidth * .9375;
 	JPlayer.UIcanvas.width = window.innerWidth;
 	
-	$('.mb-ctrl').on('touchmove', function(e){
+	$('.mb-ctrl, .js-backdrop').on('touchmove', function(e){
         e.preventDefault();
     });
 
@@ -686,8 +732,31 @@
 		{ name : "3 Things", url : "./sources/3Things.mp3", singer : "Jason Mraz" },
 		{ name : "北海", url : "./sources/beihai.mp3", singer : "永动机" }
 	], function (source, k) {
-    	return compliePlaylistNode(k, source)
+    	return complieHTML(TPL_ITEM, source, k)
     }).join(''));
+
+	var uiEq = {
+		"f31" : "31hz",
+		"f62" : "62hz",
+		"f125" : "125hz",
+		"f250" : "250hz",
+		"f1000" : "1khz",
+		"f2000" : "2khz",
+		"f4000" : "4khz",
+		"f8000" : "8khz",
+		"f16000" : "16khz"
+	};
+
+    JPlayer.$eqlist.html(map(JPlayer.EQ, function (eq, k) {
+    	return complieHTML(TPL_EQITEM, {
+    		key : uiEq[k],
+    		gain : eq,
+    		freq : k
+    	})
+    }).join('')).on("input", function (e) {
+    	var element = e.target;
+    	JPlayer.eq(element.dataset.freq, element.value)
+    });
 
 	// ============== addEventListener to JPlayer's event
 	// on start a new music
@@ -724,7 +793,7 @@
 	})
 	.on("loading", function () {
 
-		$("#alert").dialog("show");
+		$("#alertLoader").dialog("show");
 
 	})
 	.on("progress", function (e, dat) {
@@ -733,7 +802,7 @@
 			total  = dat.total;
 
 		if ( loaded === total ) {
-			$("#alert").dialog("hide");
+			$("#alertLoader").dialog("hide");
 		}
 
 		drawLoading(loaded, total);
