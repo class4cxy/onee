@@ -571,6 +571,31 @@
 					<a class="mb-ctrl-btns-el mb-ctrl-btns-el2"></a>
 				</p>
 			</div>
+			<style>
+			.mb-ctrl-eq{
+				position: absolute;
+				bottom: 20px;
+				left: 15px;
+				height: 20px;
+				width: 12px;
+				border: #d79a07 solid;
+				border-width: 0 2px
+			}
+			.mb-ctrl-eq-in{
+				left: 5px;
+				bottom: 0;
+				height: 15px;
+			}
+			.mb-ctrl-eq-on{
+				height: 15px
+			}
+			.mb-ctrl-eq-on .mb-ctrl-eq-in{
+				height: 20px
+			}
+			</style>
+			<div class="ease mb-ctrl-eq" data-player="eq">
+				<p class="mb-ctrl-eq mb-ctrl-eq-in"></p>
+			</div>
 		</div>
 		<!-- 解析音源loading -->
 		<!-- <p mplayer="decoding" class="ease loading">decoding audio...</p> -->
@@ -692,7 +717,6 @@
 
 		// init ui
 	$(".ui-carousel").carousel(1);
-	$("#alertEq").dialog("show");
 
 	JPlayer.$article.css("height", window.innerHeight - JPlayer.UIuserctrl.clientHeight);
 	JPlayer.$hdisk.parent().css("height", window.innerWidth * .9375);
@@ -817,7 +841,12 @@
 	// 监听上一首事件
 	.on("tap", "p[data-player=prev]", function () { JPlayer.prev() })
 	// 监听播放暂停事件
-	.on("tap", "p[data-player=play]", function () { JPlayer.play() });
+	.on("tap", "p[data-player=play]", function () { JPlayer.play() })
+
+	.on("tap", "[data-player=eq]", function (e) {
+		$(this).addClass("mb-ctrl-eq-on");
+		$("#alertEq").dialog("show");
+	});
 
 	// UI animation loading
 	var drawLoading = function () {
