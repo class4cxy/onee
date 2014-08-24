@@ -189,15 +189,15 @@
 				//width of the meters in the spectrum;
 				meterWidth        = 6,
 				capHeight         = 2,
-				capStyle          = '#fff',
+				capStyle          = '#ffab3f',
 				capYPositionArray = [],
 				autoAnimationHandle;
 
 	        // set style of bar
 			var gradient = ctx.createLinearGradient(0, -300, 0, 0);
-	        gradient.addColorStop(1, '#0f0');
-	        gradient.addColorStop(0.5, '#ff0');
-	        gradient.addColorStop(0, '#f00');
+	        gradient.addColorStop(1, '#5d9d7b');
+	        gradient.addColorStop(0.7, '#aeedcb');
+	        gradient.addColorStop(0, '#ffab3f');
 
 	        // 先保存当前状态，以免下次translate递增
 	        ctx.save();
@@ -247,6 +247,50 @@
 		    		ctx.restore();
 		    		// free memory
 		    		gradient = null
+		    	},
+		    	pause : function () {
+		    		cancelAnimationFrame(autoAnimationHandle);
+		    	},
+		    	goon : _outer_
+		    }
+		},
+		wave : function (ctx, analyser) {
+
+			var autoAnimationHandle,
+				cwidth = ctx.canvas.width,
+				cheight = ctx.canvas.height;
+
+			var _outer_ = function _inner_ () {
+
+		        autoAnimationHandle = requestAnimationFrame( _inner_ );
+
+		        var array = new Uint8Array(analyser.frequencyBinCount);
+		        // var meterNum = array.length;
+	            analyser.getByteTimeDomainData(array);
+
+	            ctx.clearRect(0, 0, cwidth, cheight);
+	            ctx.beginPath();
+	            for (var i = 0, len = array.length; i < len; i++) {
+	                var data = array[i];
+	                ctx.lineTo(i, (255 - data)/255 * cheight);
+	            }
+	            ctx.strokeStyle = "#ffab3f"
+	            ctx.stroke();
+	            ctx.beginPath();
+	            var y = cheight/2 - 0.5; //出现0.5才能让线条以1px宽度显示
+	            ctx.moveTo(0.0, y);
+	            ctx.lineTo(cwidth, y);
+	            ctx.strokeStyle = '#5d9d7b';
+	            ctx.stroke();
+	            return _inner_
+
+		    }();
+
+			return {
+		    	stop : function () {
+		    		cancelAnimationFrame(autoAnimationHandle);
+		    		ctx.clearRect(0, 2, cwidth, cheight);
+		    		autoAnimationHandle = null;
 		    	},
 		    	pause : function () {
 		    		cancelAnimationFrame(autoAnimationHandle);
@@ -375,7 +419,7 @@
 		// 当前播放
 		this.current = 0;
 		// 音频仪表效果
-		this.meter = options.meter || "default";
+		this.meter = options.meter || "wave";
 		// 播放模式(单曲循环-loopone/列表循环-loopall/随机播放-random)
 		// this.playModel = options.playModel || "loopall";
 		// 音量
@@ -412,14 +456,13 @@
 				}
 			})
 
-			that.on("start", function () {
+			that.on("start replay", function () {
 
 				_lastStartTime = 0|_ctx.currentTime;
 				// console.log(_lastStartTime)
 			})
 			.on("pause", function () {
 				// 记录当前播放时间
-				console.log("pause")
 				_offsetTime = that.offsetTime
 
 			})
@@ -484,7 +527,9 @@
 					// goon meter drawer
 					that.meterDrawer && that.meterDrawer.goon();
 
-					that.trigger("start");
+					// 特有事件
+					// 用于暂停后，再次播放
+					that.trigger("replay");
 					that.status = "playing";
 
 				}

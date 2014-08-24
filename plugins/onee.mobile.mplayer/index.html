@@ -64,7 +64,7 @@
 		-webkit-appearance: none;
 	}
 	progress::-webkit-progress-value {
-		background-color: #c28a03
+		background-color: #eed7ad
 	}
 	.ui-border-1px{
 	    position: relative;
@@ -117,11 +117,15 @@
 	}
 	.mb-logo{
 		position: absolute;
-		font-size: 12px;
-		text-shadow:0 0 5px rgba(0,0,0,.4);
-		-webkit-transform: rotate(-45deg);
-		bottom: 9px;
-		right: -2px
+		font-size: 14px;
+		font-weight: bold;
+		text-shadow: 0 1px 1px #fff;
+		-webkit-transform: rotate(45deg);
+		top: 20px;
+		right: -3px;
+		z-index: 3;
+		letter-spacing: 0px;
+		color: #ffab3f;
 	}
 
 	.mb-hack-vmiddle{
@@ -201,15 +205,15 @@
 		height: 50px;
 		width: 50px;
 		margin: -27px 0 0 -24px;
-		background-color: #0d0f0e;
-		box-shadow: inset 2px 4px 5px rgba(13,15,14,.5),
-					0 0 0 25px rgba(21,24,21,.7),
-					0 0 0 32px rgba(21,24,21,.4);
+		background-color: #59544c;
+		box-shadow: inset 0 0 5px rgba(13,15,14,1),
+					0 0 0 25px rgba(255,171,63,.4),
+					0 0 0 32px rgba(255,171,63,.4);
 		border-radius: 100px;
 	}
 
 	.mb-meter{
-		opacity: .4;
+		/*opacity: .8;*/
 		z-index: 2;
 	}
 	.mb-music{
@@ -325,7 +329,7 @@
 		box-shadow: 0 0 6px rgba(255,255,255,.8);
 		border-radius: 4px;
 		border: none;
-		background-color: #c28a03;
+		background-color: #eed7ad;
 		height: 5px;
 		width: 5px;
 	}
@@ -397,9 +401,8 @@
 		overflow: hidden;
 	}
 	.mb-music-lyric-row-curr{
-		color: #fff;
 		font-size: 20px;
-		color: #ffbb39
+		color: #ffab3f
 	}
 	/* .mb-tips{
 		display: -webkit-box;
@@ -447,7 +450,7 @@
 		-webkit-box-pack: center;
 		border-radius: 50px;
 		margin: 0 8px;
-		border: 1px solid #d79a07
+		border: 1px solid #ffab3f
 	}
 	.mb-ctrl-btns-el{
 		display: block;
@@ -460,14 +463,14 @@
 		width: 16px;
 	}
 	.mb-ctrl-play .mb-ctrl-btns-el1{
-		border-right: 1px solid #d79a07;
+		border-right: 1px solid #ffab3f;
 		margin-right: 9px;
 	}
 	.mb-ctrl-play .mb-ctrl-btns-el2{
-		border-left: 1px solid #d79a07;
+		border-left: 1px solid #ffab3f;
 	}
 	.mb-ctrl-next .mb-ctrl-btns-el1{
-		border: solid #d79a07;
+		border: solid #ffab3f;
 		border-width: 1px 1px 0 0;
 		height: 12px;
 		width: 12px;
@@ -475,16 +478,16 @@
 	}
 	.mb-ctrl-next .mb-ctrl-btns-el2{
 		margin-left: 5px;
-		border-left: 1px solid #d79a07;
+		border-left: 1px solid #ffab3f;
 		width: 10px
 	}
 	 .mb-ctrl-prev .mb-ctrl-btns-el1{
-		border-right: 1px solid #d79a07;
+		border-right: 1px solid #ffab3f;
 		margin-right: 5px;
 		width: 10px
 	} 
 	.mb-ctrl-prev .mb-ctrl-btns-el2{
-		border: solid #d79a07;
+		border: solid #ffab3f;
 		border-width: 1px 0 0 1px;
 		margin-right: 5px;
 		height: 12px;
@@ -515,6 +518,7 @@
 		<!-- <h1 class="mb-logo">J.Player</h1> -->
 		<!-- <a href="javascript:;" class="tiggle" mplayer="tiggle"></a> -->
 		<div class="mb-article" data-player="article">
+			<p class="mb-logo">J.PLAYER</p>
 			<div class="mb-hack-vmiddle">
 				<!-- 磁碟盘 -->
 				<div class="mb-disk mb-disk-pause mb-hack-blur" data-player="hdisk">
@@ -573,7 +577,7 @@
 				left: 15px;
 				height: 20px;
 				width: 12px;
-				border: #d79a07 solid;
+				border: #5d9d7b solid;
 				border-width: 0 2px
 			}
 			.mb-ctrl-eq-in{
@@ -591,7 +595,6 @@
 			<div class="ease mb-ctrl-eq" data-player="eq">
 				<p class="mb-ctrl-eq mb-ctrl-eq-in"></p>
 			</div>
-			<p class="mb-logo">J.Player</p>
 		</div>
 		<!-- 解析音源loading -->
 		<!-- <p mplayer="decoding" class="ease loading">decoding audio...</p> -->
@@ -781,18 +784,21 @@
 	// ============== addEventListener to JPlayer's event
 	// on start a new music
 	JPlayer.on("start", function () {
+		// cd disk animation
 		JPlayer.$hdisk.removeClass("mb-disk-pause");
+		// play button status
 		JPlayer.$play.addClass("mb-ctrl-playing");
+		// lyric status
 		JPlayer.$lyric.html("").text("Loading...");
+		// play list status
 		JPlayer.$list
-			.find(".mb-music-list-item").removeClass("mb-music-list-item-curr")
-			.eq(JPlayer.current).addClass("mb-music-list-item-curr");
+			.find(".mb-music-list-item:nth-child("+ (JPlayer.current+1) +")").addClass("mb-music-list-item-curr");
+		// progress reset
 		JPlayer.UIprogress.max = JPlayer.UIprogressbg.max = 0|JPlayer.buffer.duration;
 	})
 	.on("playing", function () {
 
 		JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = JPlayer.offsetTime;
-		// removeClass(that.ui.hdisk, "pause")
 
 	})
 	.on("pause", function () {
@@ -804,11 +810,17 @@
 	})
 	.on("stop", function () {
 
+		// cd disk animation
 		JPlayer.$hdisk.addClass("mb-disk-pause");
 		JPlayer.$hcover.removeClass("mb-disk-cover-show");
+		// play button status
 		JPlayer.$play.removeClass("mb-ctrl-playing");
+		// lyric status
 		JPlayer.$lyric.html("").text("歌词");
-		JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = 0
+		// play list status
+		JPlayer.$list.find(".mb-music-list-item:nth-child("+ (JPlayer.current+1) +")").removeClass("mb-music-list-item-curr");
+		// progress reset
+		JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = 0;
 
 	})
 	.on("loading", function () {
@@ -935,7 +947,7 @@
 		JPlayer.on("playing", function (e, audio) {
 			if (tmpLRC) {
 				// console.log(tmpLRC[pointer)
-				if ( audio.currentTime > tmpLRC[pointer].s ) {
+				if ( JPlayer.offsetTime > tmpLRC[pointer].s ) {
 					// 移除上一行样式
                     $LRCitems.eq(pointer-1).removeClass("mb-music-lyric-row-curr");
 					// removeClass(LRCitems[pointer-1], "curr")
