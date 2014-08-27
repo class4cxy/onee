@@ -168,7 +168,7 @@
 	//	}
 	//}
 	var meterLibrary = {
-		default : function (ctx, analyser) {
+		frequency : function (ctx, analyser) {
 			var 
 				// that           = this,
 				cwidth            = ctx.canvas.width,
@@ -263,13 +263,15 @@
 	                var data = array[i];
 	                ctx.lineTo(i, (255 - data)/255 * cheight);
 	            }
-	            ctx.strokeStyle = "#ffab3f"
+	            ctx.strokeStyle = "#ffab3f";
+	            ctx.lineWidth = 2;
 	            ctx.stroke();
 	            ctx.beginPath();
 	            var y = cheight/2 - 0.5; //出现0.5才能让线条以1px宽度显示
 	            ctx.moveTo(0.0, y);
 	            ctx.lineTo(cwidth, y);
 	            ctx.strokeStyle = '#5d9d7b';
+	            ctx.lineWidth = 1;
 	            ctx.stroke();
 	            return _inner_
 
@@ -409,7 +411,7 @@
 		// 当前播放
 		this.current = 0;
 		// 音频仪表效果
-		this.meter = options.meter || "default";
+		this.meter = options.meter || "frequency";
 		// 播放模式(单曲循环-loopone/列表循环-loopall/随机播放-random)
 		// this.playModel = options.playModel || "loopall";
 		// 音量
@@ -604,45 +606,6 @@
 				this.EQ[freq] = biquadFilter.gain.value = value;
 			}
 		},
-		/*remove : function (index) {
-			var playlist = this.playlist;
-			// 索引不存在，则移除全部数据
-			if ( index === undefined ) {
-				// remove from playlist
-				playlist = [];
-				// clear ui
-				innerHTML(this.ui.list, "");
-				// stop player
-				this.stop();
-			// 索引存在且在有效范围，则移除对应的数据
-			} else if ( index >-1 && index < playlist.length ) {
-				// remove from playlist
-				var file = playlist.splice(index,1)[0];
-	            // 同步cachePlayListName
-	            cachePlayListName.splice(index,1);
-				// 若删除当前播放音乐，则播放播放下一首
-				if ( this.currentPlay === index ) {
-					// 设置当前播放为
-					// this.currentPlay = 0;
-					this.next()
-				}
-				// rebuild playlist ui
-				var list = this.ui.list;
-				innerHTML(list, "");
-				each(playlist, function (item, k) {
-					item.node = appendTo(list, compliePlaylistNode({index : k, name : item.name}))
-	            });
-	            // 重新标示当前播放
-	            addClass(playlist[this.currentPlay].node, "active");
-	            // 触发onlistchange事件
-	            // this.onlistchange();
-	            this.trigger("onlistchange");
-				// clear entry
-				FileSys && FileSys.rm(file.fullpath);
-				// free memory
-				file = null
-			}
-		},*/
 		setMeter : function (meter) {
 			if (meter !== this.meter) {
 				if ( this.meterDrawer ) {
@@ -650,7 +613,7 @@
 					delete this.meterDrawer;
 				}
 				if ( (this.meter=meter) && (meter=meterLibrary[meter]) && this.status !== "stop" ) {
-					this.meterDrawer = meter(this.ctx, this.analyser);
+					this.meterDrawer = meter(this.ctx, audio.analyser);
 				}
 			}
 		}

@@ -512,7 +512,8 @@
 
 	/* rewrite carousel */
 	.ui-carousel-dots{
-		bottom: 0
+		bottom: 0;
+		opacity: .8
 	}
 	.ui-carousel-dots-i{
 		width: 10px;
@@ -582,83 +583,74 @@
 				</p>
 			</div>
 			<style>
-			.ease.mb-ctrl-eq,
-			.ease.mb-ctrl-eq-in{
-				-webkit-transition-duration:.4s;
-			}
 			.mb-ctrl-eq{
 				position: absolute;
-				bottom: 20px;
+				bottom: 23px;
 				left: 15px;
 				height: 22px;
-				width: 12px;
-				border: #5d9d7b solid;
-				border-width: 0 2px
+				display: -webkit-box;
+				width: 30px;
 			}
 			.mb-ctrl-eq-in{
-				left: 5px;
-				bottom: 0;
-				height: 15px;
+				border-left: 1px solid #5d9d7b;
+				width: 9px;
 			}
-			.mb-ctrl-eq-on{
-				height: 15px
-				/*-webkit-transform: scale3d(1,0.8,1)*/
+			.mb-ctrl-eq-in:after{
+				content: "";
+				display: block;
+				height: 2px;
+				width: 5px;
+				background-color: #ffab3f;
+				margin-left: -3px;
+				-webkit-transition-property:all;
+			    -webkit-transition-duration:.4s;
+			    -webkit-transition-timing-function:ease-in-out;
 			}
-			.mb-ctrl-eq-on .mb-ctrl-eq-in{
-				height: 22px
-				/*-webkit-transform: scale3d(1,2.2,1)*/
+			.mb-ctrl-eq-in1:after,
+			.mb-ctrl-eq-in3:after{
+				-webkit-transform: translate3D(0, 5px, 0);
+			}
+			.mb-ctrl-eq-in2:after{
+				-webkit-transform: translate3D(0, 15px, 0);
+			}
+			.mb-ctrl-eq-on .mb-ctrl-eq-in1:after,
+			.mb-ctrl-eq-on .mb-ctrl-eq-in3:after{
+				-webkit-transform: translate3D(0, 15px, 0);
+			}
+			.mb-ctrl-eq-on .mb-ctrl-eq-in2:after{
+				-webkit-transform: translate3D(0, 5px, 0);
 			}
 			.mb-ctrl-meter{
 				position: absolute;
-				bottom: 20px;
-				right: 15px;
-				height: 28px;
-				width: 28px;
-				background-color: rgba(0,0,0,.5)
+				bottom: 23px;
+				right: 25px;
+				height: 20px;
+				width: 14px;
+				border: #5d9d7b solid;
+				border-width: 0 2px
 			}
-			.mb-ctrl-meter-in1,
-			.mb-ctrl-meter-in2,
-			.mb-ctrl-meter-in3{
-				position: absolute;
-				height: 12px;
-				width: 7px;
-				top: 50%;
-				left: 50%;
-				content: "";
-				border: #5d9d7b 1px solid
+			.mb-ctrl-meter-in{
+				left: 6px;
+				bottom: 0;
+				height: 15px;
 			}
-			.mb-ctrl-meter-in1{
-				border-top: none;
-				margin-left: -4px;
+			.mb-ctrl-meter-wave{
+				width: 13px;
+				-webkit-transform: skew(-9deg);
 			}
-			.mb-ctrl-meter-in2{
-				border-bottom: none;
-				margin: -8px 0 0 -12px
-			}
-			.mb-ctrl-meter-in3{
-				border-bottom: none;
-				margin: -8px 0 0 4px
-			}
-			.mb-ctrl-meter-wave .mb-ctrl-meter-in1{
-				border-right: none;
-				-webkit-transform: rotate(-45deg);
-			}
-			.mb-ctrl-meter-wave .mb-ctrl-meter-in2{
-				border-right: none;
-				-webkit-transform: rotate(45deg);
-			}
-			.mb-ctrl-meter-wave .mb-ctrl-meter-in3{
-				border-right: none;
-				-webkit-transform: rotate(45deg);
+			.mb-ctrl-meter-wave .mb-ctrl-meter-in{
+				height: 20px;
+				width: 12px;
+				-webkit-transform: skew(36deg);
 			}
 			</style>
-			<div class="ease mb-ctrl-eq" data-player="eq">
-				<p class="ease mb-ctrl-eq mb-ctrl-eq-in"></p>
+			<div class="mb-ctrl-eq" data-player="eq">
+				<p class="mb-ctrl-eq-in mb-ctrl-eq-in1"></p>
+				<p class="mb-ctrl-eq-in mb-ctrl-eq-in2"></p>
+				<p class="mb-ctrl-eq-in mb-ctrl-eq-in3"></p>
 			</div>
-			<div class="mb-ctrl-meter mb-ctrl-meter-wave" data-player="meter">
-				<p class="ease mb-ctrl-meter-in1"></p>
-				<p class="ease mb-ctrl-meter-in2"></p>
-				<p class="ease mb-ctrl-meter-in3"></p>
+			<div class="ease mb-ctrl-meter" data-player="meter">
+				<p class="ease mb-ctrl-meter mb-ctrl-meter-in"></p>
 			</div>
 		</div>
 		<!-- 解析音源loading -->
@@ -846,6 +838,9 @@
     	JPlayer.eq(element.dataset.freq, element.value)
     });
 
+    // init ui meter handle
+    JPlayer.meter === "wave" && JPlayer.$meter.addClass("mb-ctrl-meter-wave");
+
 	// ============== addEventListener to JPlayer's event
 	// on start a new music
 	JPlayer.on("start", function () {
@@ -918,6 +913,17 @@
 	// 监听播放暂停事件
 	.on("tap", "p[data-player=play]", function () { JPlayer.play() })
 
+	// 监听频谱图切换
+	.on("tap", "[data-player=meter]", function (e) {
+		if ( JPlayer.$meter.hasClass("mb-ctrl-meter-wave") ) {
+			JPlayer.$meter.removeClass("mb-ctrl-meter-wave");
+			JPlayer.setMeter("frequency")
+		} else {
+			JPlayer.$meter.addClass("mb-ctrl-meter-wave");
+			JPlayer.setMeter("wave")
+		}
+	})
+	// 监听均衡控制开关
 	.on("tap", "[data-player=eq]", function (e) {
 		JPlayer.$eq.addClass("mb-ctrl-eq-on");
 		$("#alertEq").dialog("show");
