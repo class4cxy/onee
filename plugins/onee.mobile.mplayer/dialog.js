@@ -187,7 +187,7 @@
         var that = this;
 
         if (this.isShown && this.options.backdrop) {
-            this.$backdrop = $('<div class="js-backdrop" />')
+            this.$backdrop = $('<div class="js-backdrop" data-belong="'+ this.$element[0].id +'" />')
                 .appendTo(this.$element.parent());
 
             this.$backdrop.on(tapEvent, function (e) {

@@ -17,21 +17,9 @@
 	var EvtSys = $(document);
 
 	// 公共EQ对应表
-	global.COMEQ = {}
-	/*global.COMEQ = [
-		{key : "31hz", frequency : 31},
-		{key : "62hz", frequency : 62},
-		{key : "125hz", frequency : 125},
-		{key : "250hz", frequency : 250},
-		{key : "500hz", frequency : 500},
-		{key : "1khz", frequency : 1e3},
-		{key : "2khz", frequency : 2e3},
-		{key : "4khz", frequency : 4e3},
-		{key : "8khz", frequency : 8e3},
-		{key : "16khz", frequency : 16e3}
-	];*/
+	var COMEQ = {}
 
-	global.audio = (function (factory) {
+	var audio = (function (factory) {
 		// body...
 
 		// Fix up for prefixing
@@ -184,20 +172,19 @@
 			var 
 				// that           = this,
 				cwidth            = ctx.canvas.width,
-				cheight           = ctx.canvas.height-2,
-				meterNum          = cwidth/8|0,
+				cheight           = ctx.canvas.height,
+				// meterNum          = cwidth,
 				//width of the meters in the spectrum;
-				meterWidth        = 6,
-				capHeight         = 2,
-				capStyle          = '#ffab3f',
-				capYPositionArray = [],
+				// meterWidth        = 6,
+				// capHeight         = 2,
+				// capStyle          = '#ffab3f',
+				// capYPositionArray = [],
 				autoAnimationHandle;
 
 	        // set style of bar
 			var gradient = ctx.createLinearGradient(0, -300, 0, 0);
-	        gradient.addColorStop(1, '#5d9d7b');
-	        gradient.addColorStop(0.7, '#aeedcb');
-	        gradient.addColorStop(0, '#ffab3f');
+	        gradient.addColorStop(1, '#ffc06e');
+	        gradient.addColorStop(0, '#f00');
 
 	        // 先保存当前状态，以免下次translate递增
 	        ctx.save();
@@ -212,26 +199,28 @@
 		        // var meterNum = array.length;
 	            analyser.getByteFrequencyData(array);
 	            
-	            var step = Math.round(array.length / meterNum); //sample limited data from the total array
+	            var step = Math.round(array.length / cwidth); //sample limited data from the total array
 	            ctx.clearRect(0, 0, cwidth, -cheight);
-	            for (var i = 0; i < meterNum; i++) {
-	                var value = array[i*step];
-	                var rwidth = i*8;
-	                if (capYPositionArray.length < meterNum) {
+	            for (var i = 0; i < cwidth; i++) {
+	                // var value = array[i];
+	                // var rwidth = i*step;
+	                // var value = array[rwidth];
+	                /*if (capYPositionArray.length < meterNum) {
 	                    capYPositionArray.push(value);
-	                }
+	                }*/
 	                // log(value)
-					ctx.fillStyle = capStyle;
+					// ctx.fillStyle = capStyle;
 					// console.log(value)
 					//draw the cap, with transition effect
-					if (value < capYPositionArray[i]) {
-					    ctx.fillRect(rwidth, -capYPositionArray[i]--, meterWidth, capHeight);
+					/*if (value < capYPositionArray[i]) {
+					    ctx.fillRect(i, -capYPositionArray[i]--, meterWidth, capHeight);
 					} else {
-					    ctx.fillRect(rwidth, -value, meterWidth, capHeight);
+					    ctx.fillRect(i, -value, meterWidth, capHeight);
 					    capYPositionArray[i] = value;
-					};
+					};*/
 	                ctx.fillStyle = gradient; //set the filllStyle to gradient for a better look
-	                ctx.fillRect(rwidth, -value+capHeight, meterWidth, cheight); //the meter
+	                // ctx.fillRect(i, -value+capHeight, meterWidth, cheight); //the meter
+	                ctx.fillRect(i, -array[i*step], 1, cheight); //the meter
 	            }
 	            return _inner_
 
@@ -382,6 +371,7 @@
 			that.meterDrawer = meterLibrary[that.meter](that.ctx, audio.analyser);
 
 			that.trigger("start");
+			that.trigger("replay");
 
 			that.status = "playing";
 
@@ -419,7 +409,7 @@
 		// 当前播放
 		this.current = 0;
 		// 音频仪表效果
-		this.meter = options.meter || "wave";
+		this.meter = options.meter || "default";
 		// 播放模式(单曲循环-loopone/列表循环-loopall/随机播放-random)
 		// this.playModel = options.playModel || "loopall";
 		// 音量
@@ -456,7 +446,7 @@
 				}
 			})
 
-			that.on("start replay", function () {
+			that.on("replay", function () {
 
 				_lastStartTime = 0|_ctx.currentTime;
 				// console.log(_lastStartTime)
@@ -500,11 +490,11 @@
 				if ( that.status === "pause" || that.status === "playing" ) {
 					// waitting for onended event dispatch
 					audio.onended(function () {
-						start.call(that, item = cache[that.current = index])
+						start.call(that, item = cache[that.current = parseInt(index)])
 					});
 					return that.stop();
 
-				} else item = cache[that.current = index];
+				} else item = cache[that.current = parseInt(index)];
 
 			// 否则当status == stop时，则直接播放mplayer.playlist[currentPlay]
 			} else if ( that.status === "stop" ) {

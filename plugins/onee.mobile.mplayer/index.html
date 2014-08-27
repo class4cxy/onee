@@ -89,9 +89,6 @@
 		-webkit-transition-property:all;
 	    -webkit-transition-duration:.6s;
 	    -webkit-transition-timing-function:ease-in-out;
-		-moz-transition-property:all;
-	    -moz-transition-duration:.6s;
-	    -moz-transition-timing-function:ease-in-out;
 	}
 	.musicbox{
 		/*height: 560px;*/
@@ -207,13 +204,13 @@
 		margin: -27px 0 0 -24px;
 		background-color: #59544c;
 		box-shadow: inset 0 0 5px rgba(13,15,14,1),
-					0 0 0 25px rgba(255,171,63,.4),
-					0 0 0 32px rgba(255,171,63,.4);
+					0 0 0 22px rgba(255,171,63,.4),
+					0 0 0 30px rgba(255,171,63,.4);
 		border-radius: 100px;
 	}
 
 	.mb-meter{
-		/*opacity: .8;*/
+		opacity: .8;
 		z-index: 2;
 	}
 	.mb-music{
@@ -512,6 +509,20 @@
 		height: 50px;
 		width: 50px;
 	}
+
+	/* rewrite carousel */
+	.ui-carousel-dots{
+		bottom: 0
+	}
+	.ui-carousel-dots-i{
+		width: 10px;
+		height: 2px;
+		border-radius: 2px;
+		background-color: rgba(238, 215, 173, 1)
+	}
+	.ui-carousel-dots-curr{
+		background-color: #ffab3f
+	}
 </style>
 <body>
 	<div class="musicbox" data-player="body">
@@ -571,11 +582,15 @@
 				</p>
 			</div>
 			<style>
+			.ease.mb-ctrl-eq,
+			.ease.mb-ctrl-eq-in{
+				-webkit-transition-duration:.4s;
+			}
 			.mb-ctrl-eq{
 				position: absolute;
 				bottom: 20px;
 				left: 15px;
-				height: 20px;
+				height: 22px;
 				width: 12px;
 				border: #5d9d7b solid;
 				border-width: 0 2px
@@ -587,13 +602,63 @@
 			}
 			.mb-ctrl-eq-on{
 				height: 15px
+				/*-webkit-transform: scale3d(1,0.8,1)*/
 			}
 			.mb-ctrl-eq-on .mb-ctrl-eq-in{
-				height: 20px
+				height: 22px
+				/*-webkit-transform: scale3d(1,2.2,1)*/
+			}
+			.mb-ctrl-meter{
+				position: absolute;
+				bottom: 20px;
+				right: 15px;
+				height: 28px;
+				width: 28px;
+				background-color: rgba(0,0,0,.5)
+			}
+			.mb-ctrl-meter-in1,
+			.mb-ctrl-meter-in2,
+			.mb-ctrl-meter-in3{
+				position: absolute;
+				height: 12px;
+				width: 7px;
+				top: 50%;
+				left: 50%;
+				content: "";
+				border: #5d9d7b 1px solid
+			}
+			.mb-ctrl-meter-in1{
+				border-top: none;
+				margin-left: -4px;
+			}
+			.mb-ctrl-meter-in2{
+				border-bottom: none;
+				margin: -8px 0 0 -12px
+			}
+			.mb-ctrl-meter-in3{
+				border-bottom: none;
+				margin: -8px 0 0 4px
+			}
+			.mb-ctrl-meter-wave .mb-ctrl-meter-in1{
+				border-right: none;
+				-webkit-transform: rotate(-45deg);
+			}
+			.mb-ctrl-meter-wave .mb-ctrl-meter-in2{
+				border-right: none;
+				-webkit-transform: rotate(45deg);
+			}
+			.mb-ctrl-meter-wave .mb-ctrl-meter-in3{
+				border-right: none;
+				-webkit-transform: rotate(45deg);
 			}
 			</style>
 			<div class="ease mb-ctrl-eq" data-player="eq">
-				<p class="mb-ctrl-eq mb-ctrl-eq-in"></p>
+				<p class="ease mb-ctrl-eq mb-ctrl-eq-in"></p>
+			</div>
+			<div class="mb-ctrl-meter mb-ctrl-meter-wave" data-player="meter">
+				<p class="ease mb-ctrl-meter-in1"></p>
+				<p class="ease mb-ctrl-meter-in2"></p>
+				<p class="ease mb-ctrl-meter-in3"></p>
 			</div>
 		</div>
 		<!-- 解析音源loading -->
@@ -623,13 +688,13 @@
 		padding: 130px 0 10px
 	}
 	.mb-eq-input:hover[type=range]{
-		background-color: #2c2b2a;
+		background-color: #91d5b1;
 		box-shadow: 0 0 3px rgba(0,0,0,.6)
 	}
 	.mb-eq-input[type=range]{
 		width: 130px;
 		height: 3px;
-		background-color: #7d7d7d;
+		background-color: #5d9d7b;
 		-webkit-transform: rotate(-90deg) translate(61px,-35px);
 	}/* 
 	.article .eqctrl input[type=range]::-webkit-slider-runnable-track{
@@ -640,9 +705,9 @@
 		box-shadow: 1px 0 1px #040506
 	} */
 	.mb-eq-input[type=range]::-webkit-slider-thumb{
-		box-shadow:0 0 0 5px rgba(183, 131, 6, .4);
+		box-shadow:0 0 0 5px rgba(255, 171, 63, .4);
 		border-radius: 10px;
-		background-color: rgba(215,154,7,.7);
+		background-color: rgba(255, 171, 63, .9);
 		border: none;
 		height: 17px;
 		width: 17px;
@@ -661,7 +726,7 @@
         <span class="content"></span>
     </div>
     <!--notify-->
-    <div id="alertLoader" class="ui-dialog" data-effect="from-above" role="alert-dialog" data-backdrop="static">
+    <div id="alertLoader" class="ui-dialog" data-effect="from-below" role="alert-dialog" data-backdrop="static">
         <div class="js-dialog-content ui-alert mb-loader">
             <div class="ui-alert-body" role="note">
             	<div class="content">
@@ -718,8 +783,8 @@
 	$(".ui-carousel").carousel(1);
 
 	JPlayer.$article.css("height", window.innerHeight - JPlayer.UIuserctrl.clientHeight);
-	JPlayer.$hdisk.parent().css("height", window.innerWidth * .9375);
-	JPlayer.UIcanvas.height = window.innerWidth * .9375;
+	JPlayer.$hdisk.parent().css("height", window.innerWidth * .9375+10);
+	JPlayer.UIcanvas.height = window.innerWidth * .9375+10;
 	JPlayer.UIcanvas.width = window.innerWidth;
 	
 	$('.mb-ctrl, .js-backdrop').on('touchmove', function(e){
@@ -784,10 +849,6 @@
 	// ============== addEventListener to JPlayer's event
 	// on start a new music
 	JPlayer.on("start", function () {
-		// cd disk animation
-		JPlayer.$hdisk.removeClass("mb-disk-pause");
-		// play button status
-		JPlayer.$play.addClass("mb-ctrl-playing");
 		// lyric status
 		JPlayer.$lyric.html("").text("Loading...");
 		// play list status
@@ -800,6 +861,12 @@
 
 		JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = JPlayer.offsetTime;
 
+	})
+	.on("replay", function () {
+		// cd disk animation
+		JPlayer.$hdisk.removeClass("mb-disk-pause");
+		// play button status
+		JPlayer.$play.addClass("mb-ctrl-playing");
 	})
 	.on("pause", function () {
 
@@ -852,8 +919,11 @@
 	.on("tap", "p[data-player=play]", function () { JPlayer.play() })
 
 	.on("tap", "[data-player=eq]", function (e) {
-		$(this).addClass("mb-ctrl-eq-on");
+		JPlayer.$eq.addClass("mb-ctrl-eq-on");
 		$("#alertEq").dialog("show");
+	});
+	$("body").on("tap", "div[data-belong=alertEq]", function () {
+		JPlayer.$eq.removeClass("mb-ctrl-eq-on");
 	});
 
 	// UI animation loading
