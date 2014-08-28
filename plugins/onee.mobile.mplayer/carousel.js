@@ -146,14 +146,16 @@
             .on("touchmove", function (evt) {
 
                 _autoLoop.stop.call(that);
+                
+                var e = evt.touches[0];
+                evt.preventDefault();
+                // console.log(e.pageX - startpos)
                 if (
                     that.current <= -1 ||
                     that.current >= framesLen ||
-                    that.currentpos >= 0 ||
-                    that.currentpos <= -max
+                    that.currentpos >= 0 && e.pageX - startpos > 0 ||
+                    that.currentpos <= -max && e.pageX - startpos < 0
                 ) return false;
-                var e = evt.touches[0];
-                evt.preventDefault();
 
                 if ( that.enableCircleLoop ) {
                     that.currentpos += e.pageX - startpos;
@@ -171,11 +173,17 @@
 
             .on("touchend", function (evt) {
 
-                if ( that.current <= -1 || that.current >= framesLen ) return;
+                var e = evt.changedTouches[0];
+                if (
+                    that.current <= -1 ||
+                    that.current >= framesLen ||
+                    that.currentpos >= 0 && e.pageX - startpos > 0 ||
+                    that.currentpos <= -max && e.pageX - startpos < 0
+                ) return false;
                 // 时间间隔
                 ///var duration = +new Date + starttime;
                 // 距离
-                var distance = evt.changedTouches[0].pageX-touchstartpos;
+                var distance = e.pageX-touchstartpos;
                 // 距离绝对值
                 var absdistance = Math.abs(distance);
                 // 方向
