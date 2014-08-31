@@ -19,7 +19,7 @@
 	// 公共EQ对应表
 	var COMEQ = {}
 
-	var audio = (function (factory) {
+	global.audio = (function (factory) {
 		// body...
 
 		// Fix up for prefixing
@@ -68,9 +68,15 @@
 	        typeof onendcaller === "function" && onendcaller()
 		}
 
+		// initialize convolverNode;
+		var convolver = ctx.createConvolver();
+		convolver.connect(ctx.destination);
+
 		return {
 			ctx : ctx,
 			analyser : ctx.createAnalyser(),
+			// 卷积节点
+			convolver : convolver,
 			// processor : _processor,
 			rebuild : function  (player) {
 				// build buffer source node
@@ -313,12 +319,63 @@
 
 	}();
 
+	// 声场效果 - 通过效果模板跟主干音频进行卷积运算实现
+	var Convolver = (function () {
+
+		var tplSources = ["binaural", "cardioid", "omni", "sirr", "sndfld"];
+		var tmp = {};
+		var current;
+
+		return {
+			tpl : tplSources,
+			set : function (index, progressCallback, successCallback) {
+				if ( index && tplSources.indexOf(index) > -1 && index !== current ) {
+					if ( tmp[index] ) {
+						successCallback( tmp[index] )
+					} else {
+
+						fetch(
+							'./sources/'+ index +'/index.wav',
+							progressCallback,
+							function (buffer) {
+								successCallback(tmp[index] = buffer);
+							}
+						)
+
+					}
+
+					current = index;
+				}
+			}
+		}
+	}());
+
 	// 资源缓存器
 	// var CACHE = [];
 
+	function fetch (url, progressCallback, successCallback) {
+		if ( url && typeof url === 'string' ) {
+			var request = new XMLHttpRequest();
+			// var that = this;
+			request.open('GET', url, true);
+			request.responseType = 'arraybuffer';
+			// Decode asynchronously
+			request.onload = function() {
+				// copy buffer
+				decodeAudio(request.response, function (buffer) {
+					// that.buffer = buffer;
+					successCallback(buffer);
+					request = request.onload = null;
+				});
+			}
+			// that.trigger(that.status = "loading");
+			request.onprogress = progressCallback;
+			request.send();
+		}
+	}
 	// fetch audio file
 	// decode audio
-	function fetch ( item, callback ) {
+	/*function fetch ( item, callback ) {
 		if ( item.buffer ) {
 	
 			callback && callback(item.buffer)
@@ -338,9 +395,6 @@
 					callback && callback(item.buffer = buffer);
 					request = request.onload = null;
 				});
-				/*metaCtrl.get(url, function(meta) {
-					that.tiggle("meta", meta)
-				});*/
  			}
  			that.trigger(that.status = "loading");
  			request.onprogress = function(e) {
@@ -351,7 +405,7 @@
 			request.send();
 
 		}
-	}
+	}*/
 
 	// re connect audio context
 	// call fetch
@@ -365,8 +419,38 @@
 		audio.rebuild(that);
 		// start immediately
 		audio.source.start(0);
+		// start loading
+		that.trigger(that.status = "loading");
 		// fetch source buffer
-		fetch.call(that, item, function (buffer) {
+		fetch(
+			item.url,
+			// on progress
+			function (e) {
+				if(e.lengthComputable) {
+					that.trigger(that.status = "progress", e);
+				}
+			},
+			// on done
+			function (buffer) {
+				audio.source.buffer = that.buffer = item.buffer = buffer;
+
+				// start frequency animation
+				that.meterDrawer = meterLibrary[that.meter](that.ctx, audio.analyser);
+
+				that.setConvolver("omni");
+
+				that.trigger("start");
+				that.trigger("replay");
+
+				that.status = "playing";
+
+				// fetch meta info
+				metaCtrl.get(item.name, function(meta) {
+					that.trigger("meta", meta);
+				});
+			}
+		)
+		/*fetch.call(that, item, function (buffer) {
 
 			audio.source.buffer = that.buffer = buffer;
 			// start frequency animation
@@ -381,7 +465,7 @@
 			metaCtrl.get(item.name, function(meta) {
 				that.trigger("meta", meta);
 			});
-		});
+		});*/
 	}
 
 	function player(options) {
@@ -615,6 +699,30 @@
 				if ( (this.meter=meter) && (meter=meterLibrary[meter]) && this.status !== "stop" ) {
 					this.meterDrawer = meter(this.ctx, audio.analyser);
 				}
+			}
+		},
+		setConvolver : function (index) {
+			if ( audio.source ) {
+
+				if ( index ) {
+					var that = this;
+					Convolver.set(
+						index,
+						function (e) {
+							if(e.lengthComputable) {
+								that.trigger("progressConvolver", e);
+							}
+						},
+						function (buffer) {
+							audio.convolver.buffer = buffer;
+							audio.source.connect(audio.convolver);
+							that.trigger("successConvolver");
+						}
+					);
+				} else {
+					// audio.source.disconnect(audio.convolver)
+				}
+
 			}
 		}
 	});

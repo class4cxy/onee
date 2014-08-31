@@ -849,6 +849,8 @@
 		// play list status
 		JPlayer.$list
 			.find(".mb-music-list-item:nth-child("+ (JPlayer.current+1) +")").addClass("mb-music-list-item-curr");
+		// hide loading progress
+		$("#alertLoader").dialog("hide");
 		// progress reset
 		JPlayer.UIprogress.max = JPlayer.UIprogressbg.max = 0|JPlayer.buffer.duration;
 	})
@@ -890,14 +892,14 @@
 		$("#alertLoader").dialog("show");
 
 	})
-	.on("progress", function (e, dat) {
+	.on("progress progressConvolver", function (e, dat) {
 
 		var loaded = dat.loaded,
 			total  = dat.total;
 
-		if ( loaded === total ) {
+		/*if ( loaded === total ) {
 			$("#alertLoader").dialog("hide");
-		}
+		}*/
 
 		drawLoading(loaded, total);
 	})
@@ -944,7 +946,7 @@
 		// var PI15 = 1.5 * Math.PI;
 		var PI_2 = Math.PI/2;
 
-		var _clear_ = function _clear_ () {
+		function _clear_ () {
 
 			ctx.clearRect(0,0,radius,radius);
 				
@@ -955,10 +957,11 @@
 			ctx.arc(radius, radius, radius-4, -PI_2, 1.5 * Math.PI);
 			ctx.stroke();
 			perc.innerText = "0";
-			return _clear_
-		}();
+			// return _clear_
+		}
 
 		return function (curr, total) {
+			_clear_();
 			// console.log(curr, total)
 			var percent = curr/total;
 
@@ -968,7 +971,7 @@
 			ctx.stroke();
 			perc.innerText = Math.floor(percent*100);
 
-			if ( curr === total ) _clear_();
+			// if ( curr === total ) _clear_();
 		}
 	}();
 
