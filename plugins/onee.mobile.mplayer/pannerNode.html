@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>lab for web audio api - pannerNode</title>
+</head>
+<style></style>
+<body>
+</body>
+<script type="text/javascript">
+	var audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+
+	var audioSource = new Audio();
+	audioSource.src = "sources/yuwochangzai.mp3";
+	audioSource.play();
+
+	var mediaSource = audioCtx.createMediaElementSource(audioSource);
+
+	// var pannerNode = audioCtx.createPanner();
+	// pannerNode.distanceModel = "linear";
+	// pannerNode.setPosition(0,0,0);
+	var convolver = audioCtx.createConvolver();
+
+	// mediaSource.connect(audioCtx.destination)
+	mediaSource.connect(convolver);
+	convolver.connect(audioCtx.destination);
+</script>
+</html>
