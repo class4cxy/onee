@@ -75,8 +75,10 @@
 		return {
 			ctx : ctx,
 			analyser : ctx.createAnalyser(),
+			// 卷积节点输出控制
+			convolverGain : ctx.createGain(),
 			// 卷积节点
-			// convolver : convolver,
+			convolver : ctx.createConvolver(),
 			// processor : _processor,
 			rebuild : function  (player) {
 				// build buffer source node
@@ -104,6 +106,12 @@
 				};
 				// connect biquadFilter node
 				_bf_.call(this, "connect");
+
+				// convolver -> gain -> destination
+				// source -> convolver
+				this.convolver.connect(this.convolverGain);
+				this.convolverGain.connect(ctx.destination);
+				this.source.connect(this.convolver);
 				// 连接音频Processor节点
 		        this.analyser.connect(this.processor);
 		        // 重新连接到终端
@@ -320,7 +328,7 @@
 	}();
 
 	// 声场效果 - 通过效果模板跟主干音频进行卷积运算实现
-	var Convolver = (function () {
+	/*var Convolver = (function () {
 
 		var tplSources = {
 			"binaural" : "binaural",
@@ -354,7 +362,7 @@
 				}
 			}
 		}
-	}());
+	}());*/
 
 	// 资源缓存器
 	// var CACHE = [];
@@ -447,6 +455,15 @@
 		audio.source.start(0);
 		// start loading
 		that.trigger(that.status = "loading");
+		// fetch convolver buffer
+		!that.convolverBuffer && fetch(
+			that.convolverPath,
+			function () {},
+			function (buffer) {
+				audio.convolverGain.gain.value = that.convolverGainValue;
+				audio.convolver.buffer = that.convolverBuffer = buffer;
+			}
+		)
 		// fetch source buffer
 		item.buffer ?
 			canPlay.call(that, item)
@@ -489,6 +506,10 @@
 		this.offsetTime = 0;
 		// playlist
 		this.cache = [];
+		// convelver buffer
+		this.convolverBuffer;
+		this.convolverPath = './sources/cardioid/index.wav';
+		this.convolverGainValue = 0;
 		// convolver arithmetic
 		// this.playScenes = Convolver.tpl;
 
@@ -707,31 +728,13 @@
 					this.meterDrawer = meter(this.ctx, audio.analyser);
 				}
 			}
-		}/*,
-		setConvolver : function (index) {
-			if ( audio.source ) {
-
-				if ( index ) {
-					var that = this;
-					Convolver.set(
-						index,
-						function (e) {
-							if(e.lengthComputable) {
-								that.trigger("progressConvolver", e);
-							}
-						},
-						function (buffer) {
-							audio.convolver.buffer = buffer;
-							audio.source.connect(audio.convolver);
-							that.trigger("successConvolver");
-						}
-					);
-				} else {
-					// audio.source.disconnect(audio.convolver)
-				}
-
+		},
+		setConvolverGain : function (value) {
+			value = parseFloat(value);
+			if ( !isNaN(value) ) {
+				audio.convolverGain.gain.value = this.convolverGainValue = value;
 			}
-		}*/
+		}
 	});
 	// alert(localStorage.getItem("jplayer-user-custom")||"{}");
 	global.JPlayer = new player(JSON.parse(localStorage.getItem("jplayer-user-custom")||"{}"));

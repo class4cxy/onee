@@ -84,6 +84,10 @@
 	<!-- 均衡器控件 -->
 	<div id="alertEq" class="ui-dialog mb-eq" data-backdrop="close" data-effect="from-below" role="alert-dialog" data-backdrop="static">
         <div class="js-dialog-content ui-alert mb-eq-wrap">
+        	<div class="mb-virtual">
+        		<p class="mb-virtual-wrap">live:<input class="mb-virtual-input" data-player="convolver" type="range" min="0" max="1" value="0" step="0.01"></p>
+        		<p class="mb-virtual-wrap">live:<input class="mb-virtual-input" type="range" min="0" max="1" value="0"></p>
+        	</div>
             <div class="ui-alert-body mb-eq-body" role="note" id="eqScroll">
             	<div class="content mb-eq-list" data-player="eqlist"></div>
             </div>
@@ -136,7 +140,7 @@
 						</div>\
 						<p class="mb-music-list-item-duration"></p>\
 					</li>',
-		TPL_EQITEM = '<p class="mb-eq-item"><input data-freq="{freq}" class="mb-eq-input" type="range" min="-30" max="30" value="{gain}" onwheel="1"><span>{key}</span></p>';;
+		TPL_EQITEM = '<p class="mb-eq-item"><input data-freq="{freq}" class="mb-eq-input" type="range" min="-30" max="30" value="{gain}"><span>{key}</span></p>';;
 
 	var complieHTML = (function () {
 		var rtpl = /\{(.*?)\}/g;
@@ -215,6 +219,11 @@
     	JPlayer.eq(element.dataset.freq, element.value)
     });
 
+    JPlayer.$convolver.on("input", function (e) {
+    	var element = e.target;
+    	JPlayer.setConvolverGain(element.value)
+    });
+
     // init ui meter handle
     JPlayer.meter === "wave" && JPlayer.$meter.addClass("mb-ctrl-meter-wave");
 
@@ -281,6 +290,9 @@
 	            	JPlayer.parseLyric(meta, function (lrcs) {
 	            		if ( lrcs && lrcs.length ) {
 	            			_initLRC(cacheLRC[currentPlay] = lrcs)
+	            		} else {
+	            			// 歌词解析失败
+	            			$lyric.text("找不到相关歌词")
 	            		}
 	            	});
 	            }
