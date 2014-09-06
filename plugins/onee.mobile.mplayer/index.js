@@ -69,14 +69,14 @@
 		}
 
 		// initialize convolverNode;
-		var convolver = ctx.createConvolver();
-		convolver.connect(ctx.destination);
+		// var convolver = ctx.createConvolver();
+		// convolver.connect(ctx.destination);
 
 		return {
 			ctx : ctx,
 			analyser : ctx.createAnalyser(),
 			// 卷积节点
-			convolver : convolver,
+			// convolver : convolver,
 			// processor : _processor,
 			rebuild : function  (player) {
 				// build buffer source node
@@ -322,14 +322,20 @@
 	// 声场效果 - 通过效果模板跟主干音频进行卷积运算实现
 	var Convolver = (function () {
 
-		var tplSources = ["binaural", "cardioid", "omni", "sirr", "sndfld"];
+		var tplSources = {
+			"binaural" : "binaural",
+			"cardioid" : "cardioid",
+			"omni" : "omni",
+			"sirr" : "sirr",
+			"sndfld" : "sndfld"
+		};
 		var tmp = {};
 		var current;
 
 		return {
 			tpl : tplSources,
 			set : function (index, progressCallback, successCallback) {
-				if ( index && tplSources.indexOf(index) > -1 && index !== current ) {
+				if ( index && tplSources[index] && index !== current ) {
 					if ( tmp[index] ) {
 						successCallback( tmp[index] )
 					} else {
@@ -407,6 +413,26 @@
 		}
 	}*/
 
+	function canPlay (item) {
+		var that = this;
+
+		audio.source.buffer = that.buffer = item.buffer;
+		// start frequency animation
+		that.meterDrawer = meterLibrary[that.meter](that.ctx, audio.analyser);
+
+		// that.setConvolver("sndfld");
+
+		that.trigger("start");
+		that.trigger("replay");
+
+		that.status = "playing";
+
+		// fetch meta info
+		metaCtrl.get(item.name, function(meta) {
+			that.trigger("meta", meta);
+		});
+	}
+
 	// re connect audio context
 	// call fetch
 	// start source
@@ -422,50 +448,24 @@
 		// start loading
 		that.trigger(that.status = "loading");
 		// fetch source buffer
-		fetch(
-			item.url,
-			// on progress
-			function (e) {
-				if(e.lengthComputable) {
-					that.trigger(that.status = "progress", e);
+		item.buffer ?
+			canPlay.call(that, item)
+		:
+			fetch(
+				item.url,
+				// on progress
+				function (e) {
+					if(e.lengthComputable) {
+						that.trigger(that.status = "progress", e);
+					}
+				},
+				// on done
+				function (buffer) {
+					// cache buffer
+					item.buffer = buffer;
+					canPlay.call(that, item)
 				}
-			},
-			// on done
-			function (buffer) {
-				audio.source.buffer = that.buffer = item.buffer = buffer;
-
-				// start frequency animation
-				that.meterDrawer = meterLibrary[that.meter](that.ctx, audio.analyser);
-
-				that.setConvolver("omni");
-
-				that.trigger("start");
-				that.trigger("replay");
-
-				that.status = "playing";
-
-				// fetch meta info
-				metaCtrl.get(item.name, function(meta) {
-					that.trigger("meta", meta);
-				});
-			}
-		)
-		/*fetch.call(that, item, function (buffer) {
-
-			audio.source.buffer = that.buffer = buffer;
-			// start frequency animation
-			that.meterDrawer = meterLibrary[that.meter](that.ctx, audio.analyser);
-
-			that.trigger("start");
-			that.trigger("replay");
-
-			that.status = "playing";
-
-			// fetch meta info
-			metaCtrl.get(item.name, function(meta) {
-				that.trigger("meta", meta);
-			});
-		});*/
+			)
 	}
 
 	function player(options) {
@@ -489,9 +489,11 @@
 		this.offsetTime = 0;
 		// playlist
 		this.cache = [];
+		// convolver arithmetic
+		// this.playScenes = Convolver.tpl;
 
-		// this._startTime = 0;
-		// this._lastPauseTime = 0;
+		// 上一首
+		this.previous = 0;
 		// 当前播放
 		this.current = 0;
 		// 音频仪表效果
@@ -569,18 +571,23 @@
 		play : function (index) {
 
 			var item, that = this, cache = that.cache;
+			// initialize type
+			index = parseInt(index);
 			// 如果播放列表为空
-			if ( cache.length === 0 ) return;
+			// 当前播放
+			if ( cache.length === 0 || that.current === index ) return;
+			// 记录播放上一首
+			that.previous = that.current;
 			// index存在，则清空当前的，直接播放CACHE[index]
-			if ( index !== undefined ) {
+			if ( !isNaN(index) ) {
 				if ( that.status === "pause" || that.status === "playing" ) {
 					// waitting for onended event dispatch
 					audio.onended(function () {
-						start.call(that, item = cache[that.current = parseInt(index)])
+						start.call(that, item = cache[that.current = index])
 					});
 					return that.stop();
 
-				} else item = cache[that.current = parseInt(index)];
+				} else item = cache[that.current = index];
 
 			// 否则当status == stop时，则直接播放mplayer.playlist[currentPlay]
 			} else if ( that.status === "stop" ) {
@@ -613,7 +620,7 @@
 				return this
 			}
 
-			if ( !item ) return log("Can't find the music.");
+			if ( !item ) return this.trigger("ERROR", "Can't find the music.");
 
 			// call play function
 			start.call(that, item);
@@ -639,12 +646,12 @@
 			// 当为随机播放模式，下一首也为随机
 			if ( this.playModel === "random" ) return this.random();
 
-			// var prevIndex = this.currentPlay;
+			var current = this.current+1;
 
-			if ( this.cache.length <= ++this.current ) {
-				this.current = 0
+			if ( this.cache.length <= current ) {
+				current = 0
 			}
-			this.play(this.current)
+			this.play(current)
 
 		},
 		prev : function () {
@@ -652,13 +659,13 @@
 			// 当为随机播放模式，上一首也为随机
 			if ( this.playModel === "random" ) return this.random();
 
-			// var prevIndex = this.currentPlay;
+			var current = this.current-1;
 
-			if ( 0 > --this.current ) {
+			if ( 0 > current ) {
 				var len = this.cache.length;
-				this.current = len === 0 ? 0 : len-1;
+				current = len === 0 ? 0 : len-1;
 			}
-			this.play(this.current)
+			this.play(current)
 		},
 		random : function () {
 			// 随机且不与上一首相同
@@ -700,7 +707,7 @@
 					this.meterDrawer = meter(this.ctx, audio.analyser);
 				}
 			}
-		},
+		}/*,
 		setConvolver : function (index) {
 			if ( audio.source ) {
 
@@ -724,7 +731,7 @@
 				}
 
 			}
-		}
+		}*/
 	});
 	// alert(localStorage.getItem("jplayer-user-custom")||"{}");
 	global.JPlayer = new player(JSON.parse(localStorage.getItem("jplayer-user-custom")||"{}"));

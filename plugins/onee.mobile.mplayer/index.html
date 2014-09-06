@@ -273,7 +273,7 @@
 		background-color: #ffab3f
 	} 
 	.mb-music-list-item-hack-middle{
-		-webkit-box-flex:10;
+		-webkit-box-flex:1;
 	}
 	.mb-music-list-item:after{
 		border-bottom: 1px solid #848484;
@@ -288,7 +288,8 @@
 		color: #aeaeae
 	}
 	.mb-music-list-item-duration{
-		-webkit-box-flex:1;
+		/*-webkit-box-flex:1;*/
+		width: 50px;
 	}
 	.mb-ctrl{
 		/*border-top: 1px solid #424242;
@@ -513,6 +514,7 @@
 	/* rewrite carousel */
 	.ui-carousel-dots{
 		bottom: 0;
+		height: 2px;
 		opacity: .8
 	}
 	.ui-carousel-dots-i{
@@ -848,7 +850,7 @@
 		JPlayer.$lyric.html("").text("Loading...");
 		// play list status
 		JPlayer.$list
-			.find(".mb-music-list-item:nth-child("+ (JPlayer.current+1) +")").addClass("mb-music-list-item-curr");
+			.find("li:nth-child("+ (JPlayer.current+1) +")").addClass("mb-music-list-item-curr");
 		// hide loading progress
 		$("#alertLoader").dialog("hide");
 		// progress reset
@@ -882,7 +884,7 @@
 		// lyric status
 		JPlayer.$lyric.html("").text("歌词");
 		// play list status
-		JPlayer.$list.find(".mb-music-list-item:nth-child("+ (JPlayer.current+1) +")").removeClass("mb-music-list-item-curr");
+		JPlayer.$list.find("li:nth-child("+ (JPlayer.previous+1) +")").removeClass("mb-music-list-item-curr");
 		// progress reset
 		JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = 0;
 
@@ -892,14 +894,10 @@
 		$("#alertLoader").dialog("show");
 
 	})
-	.on("progress progressConvolver", function (e, dat) {
+	.on("progress", function (e, dat) {
 
 		var loaded = dat.loaded,
 			total  = dat.total;
-
-		/*if ( loaded === total ) {
-			$("#alertLoader").dialog("hide");
-		}*/
 
 		drawLoading(loaded, total);
 	})
