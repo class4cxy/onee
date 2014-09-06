@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>J.Player</title>
+<title>J.Player - You can play music in that way</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
     <link rel="stylesheet" href="http://jdoi.net/git/onee/style/initialize.css">
     <link rel="stylesheet" href="./carousel.css">
@@ -10,523 +10,8 @@
     <link rel="stylesheet" href="./notify.css">
     <link rel="stylesheet" href="./alert.css">
     <link rel="stylesheet" href="./backdrop.css">
+    <link rel="stylesheet" href="./index.css">
 </head>
-<style>
-	
-	/*rewrite alert.css*/
-	/* .ui-alert-load{
-		padding: 0;
-		height: 100px;
-		width: 100px;
-	} */
-	.ui-alert,
-	.ui-alert-body{
-		padding: 0;
-	}
-
-	html,body{
-		height: 100%;
-		width: 100%;
-		font-size: 15px;
-		background: #ccc url(images/bg.png) repeat;
-	}
-	*{
-		margin: 0;
-		padding: 0
-	}
-	em, i{
-		font-style: normal;
-	}
-	input[type=range]{
-		-webkit-appearance:none;
-		background: none
-	}
-	input[type=range]:focus{
-		outline: none;
-	}
-	input[type=range]::-webkit-slider-runnable-track{
-
-	}
-	input[type=range]::-moz-range-track{
-		background: none;
-		border:none;
-	}
-	input[type=range]::-webkit-slider-thumb{
-		-webkit-appearance :none;
-		cursor: pointer;
-	}
-	input[type=range]::-moz-range-thumb{
-		background: none;
-		cursor: pointer;
-		border:none;
-	}
-	progress{
-		-webkit-appearance: none;
-	}
-	progress::-webkit-progress-value {
-		background-color: #eed7ad
-	}
-	.ui-border-1px{
-	    position: relative;
-	}
-
-	.ui-border-1px:after{
-	    content: "";
-
-	    display: block;
-	    position: absolute;
-	    top: 0;
-	    left: 0;
-	    right: -100%;
-	    bottom: -100%;
-
-	    -webkit-transform-origin: 0 0;
-	    -webkit-transform: scale(0.5);
-
-	    pointer-events: none;
-	}
-	.ease{
-		-webkit-transition-property:all;
-	    -webkit-transition-duration:.6s;
-	    -webkit-transition-timing-function:ease-in-out;
-	}
-	.musicbox{
-		/*height: 560px;*/
-		width: 100%;
-		height: 100%;
-		/*margin: auto;*/
-		color: #fff;
-		position: relative;
-		overflow: hidden;
-	}
-
-	.mb-article{
-		position: relative;
-		letter-spacing: -5px;
-	}
-	.mb-article:before{
-		content: "";
-		height: 100%;
-		display: inline-block;
-		vertical-align: middle;
-		width: 0;
-		overflow: hidden;
-	}
-	.mb-logo{
-		position: absolute;
-		font-size: 14px;
-		font-weight: bold;
-		text-shadow: 0 1px 1px #fff;
-		-webkit-transform: rotate(45deg);
-		top: 20px;
-		right: -3px;
-		z-index: 3;
-		letter-spacing: 0px;
-		color: #ffab3f;
-	}
-
-	.mb-hack-vmiddle{
-		position: relative;
-		z-index: 1;
-		display: inline-block;
-		vertical-align: middle;
-		width: 100%;
-	}
-	.mb-hack-blur{
-		/*-webkit-filter: blur(5px);*/
-	}
-	.mb-disk,
-	.mb-meter{
-		position: absolute;
-		height: 100%;
-		width: 100%;
-		top: 0;
-		left: 0;
-		z-index: 1
-	}
-	.mb-disk{
-		position: relative;
-		background: url(images/disk.png) center no-repeat;
-		background-size: 100%;
-		animation: rotate 15s linear infinite;
-		-webkit-animation: rotate 15s linear infinite;
-		-moz-animation: rotate 15s linear infinite;
-		-ms-animation: rotate 15s linear infinite;
-	}
-	.mb-disk-pause{
-		animation-play-state: paused;
-		-webkit-animation-play-state: paused;
-		-moz-animation-play-state: paused;
-		-ms-animation-play-state: paused;
-	}
-	@-moz-keyframes rotate {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
-			transform: rotate(360deg);
-		}
-	}
-	@-webkit-keyframes rotate {
-		0% {
-			-webkit-transform: rotate(0deg);
-		}
-		100% {
-			-webkit-transform: rotate(360deg);
-		}
-	}
-	.mb-disk-cover{
-		width: 93.75%;
-		height: 100%;
-		position: absolute;
-		/*background: url('cover.jpg') center no-repeat;*/
-		background-size: cover;
-		border-radius: 500px;
-		top: 0;
-		left: 0;
-		/* top: 50%;
-		left: 50%; */
-		/*margin: -151px 0 0 -149px;*/
-		margin:-.5% 0 0 3.7%;
-		opacity: 0;
-		z-index: 1
-	}
-	.mb-disk-cover-show{
-		opacity: 1
-	}
-	.mb-disk-axis{
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		z-index: 5;
-		height: 50px;
-		width: 50px;
-		margin: -27px 0 0 -24px;
-		background-color: #59544c;
-		box-shadow: inset 0 0 5px rgba(13,15,14,1),
-					0 0 0 22px rgba(255,171,63,.4),
-					0 0 0 30px rgba(255,171,63,.4);
-		border-radius: 100px;
-	}
-
-	.mb-meter{
-		opacity: .8;
-		z-index: 2;
-	}
-	.mb-music{
-		position: absolute;
-		z-index: 5;
-		top: 0;
-		left: 0;
-		height: 100%;
-		width: 100%;
-		overflow: hidden;
-	}
-	.mb-music-wrap{
-		height: 100%
-	}
-	.mb-music-item{
-		width: 100%;
-		height: 100%;
-		/*background-color: rgba(0,0,0,.5);*/
-		background: url("./images/bg.png") repeat;
-		letter-spacing: 0;
-		position: relative;
-		-webkit-overflow-scrolling: touch;
-	}
-	/*.mb-music-item-bg{
-		position: absolute;
-		z-index: 1;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: url("./images/bg.png") repeat;
-	}*/
-	.mb-music-empty{
-		/*background-color: transparent;*/
-		background: none
-	}
-	.mb-music-list{
-		overflow: auto;
-	}
-	.mb-music-list-item{
-		height: 60px;
-		/*line-height: 50px;*/
-		margin-left: 15px;
-		position: relative;
-		z-index: 2;
-		display: -webkit-box;
-		-webkit-box-align: center;
-	}
-	.mb-music-list-item-curr{
-		color: #ffab3f
-	}
-	.mb-music-list-item-curr:before{
-		content: "";
-		width: 8px;
-		height: 100%;
-		position: absolute;
-		display: block;
-		top: 0;
-		left: -15px;
-		background-color: #ffab3f
-	} 
-	.mb-music-list-item-hack-middle{
-		-webkit-box-flex:1;
-	}
-	.mb-music-list-item:after{
-		border-bottom: 1px solid #848484;
-	}
-	.mb-music-list-item-active{
-		background-color: rgba(35,35,35,.8);
-		color: #007fd5;
-	}
-	.mb-music-list-item-singer{
-		display: block;
-		font-size: 12px;
-		color: #aeaeae
-	}
-	.mb-music-list-item-duration{
-		/*-webkit-box-flex:1;*/
-		width: 50px;
-	}
-	.mb-ctrl{
-		/*border-top: 1px solid #424242;
-		background: url(images/bg.png) repeat;*/
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		width: 100%;
-		/*padding: 0 2%;*/
-		text-align: center;
-		z-index: 2;
-		background: rgba(0,0,0,.2)
-	}
-	.mb-ctrl-progress{
-		position: relative;
-	}
-	.mb-ctrl-progress progress,
-	.mb-ctrl-progress input{
-		display: block;
-		width: 100%;
-		position: absolute;
-		height: 1px;
-		z-index: 1;
-	}
-	.mb-ctrl-progress progress{
-		border: none;
-		top: 0;
-		left: 0
-	}
-	.mb-ctrl-progress input{
-		position: relative;
-		z-index: 2;
-	}
-	.mb-ctrl-progress input::-webkit-slider-thumb{
-		box-shadow: 0 0 6px rgba(255,255,255,.8);
-		border-radius: 4px;
-		border: none;
-		background-color: #eed7ad;
-		height: 5px;
-		width: 5px;
-	}
-
-	/* .ctrl .progress input::-moz-range-thumb{
-		box-shadow: 0 0 8px rgba(255,255,255,.8);
-		border-radius: 4px;
-		background-color: #016eb7;
-		height: 4px;
-		width: 4px;
-	} */
-	.mb-ctrl-btn{
-		/*letter-spacing: -3px;*/
-		margin: 8px 0;
-		display: -webkit-box;
-		-webkit-box-align: center;
-		-webkit-box-pack: center;
-		/*text-align: center;*/
-	}
-	.mb-ctrl-btns{
-		/*background: url(images/ctrl-map.png) no-repeat;*/
-		/*background-size: 100%;*/
-		/*display: inline-block;*/
-		/*vertical-align: middle;*/
-	}
-	/* .mb-ctrl-play{
-		height: 70px;
-		width: 70px;
-		background-position: center -73px
-	}
-	.mb-ctrl-next{
-		height: 65px;
-		width: 65px;
-		background-position: center -208px
-	}
-	.mb-ctrl-prev{
-		height: 65px;
-		width: 65px;
-		background-position: center -137px
-	} */
-	.mb-currinfo{
-		padding: 8px 10px;
-		line-height: 18px;
-		height: 40px;
-		text-align: left;
-	}
-	.mb-currinfo-title{
-		margin-bottom: 4px
-	}
-	.mb-currinfo-album{
-		font-size: 12px
-	}
-	.mb-music-lyric{
-		overflow: auto;
-		text-align: center;
-	}
-	.mb-music-lyric-wrap{
-		min-height: 100%;
-		display: -webkit-box;
-		-webkit-box-align:center;
-		-webkit-box-pack:center;
-		-webkit-box-orient:vertical;
-		/*position: relative;*/
-	}
-	.mb-music-lyric-row{
-		line-height: 40px;
-		height: 40px;
-		font-size: 16px;
-		overflow: hidden;
-	}
-	.mb-music-lyric-row-curr{
-		font-size: 20px;
-		color: #ffab3f
-	}
-	/* .mb-tips{
-		display: -webkit-box;
-		position: fixed;
-		z-index: 10000;
-		background-color: rgba(0,0,0,.5);
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		-webkit-box-align: center;
-		-webkit-box-pack: center;
-	}
-	.mb-tips-wins{
-		background-color: #fff;
-		height: 80px;
-		width: 80px;
-		text-align: center;
-	} */
-	/* .ui-alert{
-		position: relative;
-	} */
-	.mb-loader{
-		position: relative;
-		height: 100px;
-		width: 100px
-	}
-	.mb-loader-cv{
-		-webkit-transform:scale(0.5);
-	}
-	.mb-loader-tx{
-		color: #9d9b9b;
-		font-size: 20px;
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		text-align: center;
-		line-height: 100px
-	}
-	.mb-ctrl-btns{
-		display: -webkit-box;
-		-webkit-box-align:center;
-		-webkit-box-pack: center;
-		border-radius: 50px;
-		margin: 0 8px;
-		border: 1px solid #ffab3f
-	}
-	.mb-ctrl-btns-el{
-		display: block;
-		height: 20px;
-		width: 1px;
-	}
-	.mb-ctrl-next .mb-ctrl-btns-el,
-	.mb-ctrl-prev .mb-ctrl-btns-el{
-		height: 16px;
-		width: 16px;
-	}
-	.mb-ctrl-play .mb-ctrl-btns-el1{
-		border-right: 1px solid #ffab3f;
-		margin-right: 9px;
-	}
-	.mb-ctrl-play .mb-ctrl-btns-el2{
-		border-left: 1px solid #ffab3f;
-	}
-	.mb-ctrl-next .mb-ctrl-btns-el1{
-		border: solid #ffab3f;
-		border-width: 1px 1px 0 0;
-		height: 12px;
-		width: 12px;
-		-webkit-transform: rotate(45deg);
-	}
-	.mb-ctrl-next .mb-ctrl-btns-el2{
-		margin-left: 5px;
-		border-left: 1px solid #ffab3f;
-		width: 10px
-	}
-	 .mb-ctrl-prev .mb-ctrl-btns-el1{
-		border-right: 1px solid #ffab3f;
-		margin-right: 5px;
-		width: 10px
-	} 
-	.mb-ctrl-prev .mb-ctrl-btns-el2{
-		border: solid #ffab3f;
-		border-width: 1px 0 0 1px;
-		margin-right: 5px;
-		height: 12px;
-		width: 12px;
-		-webkit-transform: rotate(-45deg);
-	}
-	.mb-ctrl-play{
-		height: 60px;
-		width: 60px;
-	}
-	.mb-ctrl-playing{
-		-webkit-transform: rotate(90deg);
-	}
-	.mb-ctrl-playing .mb-ctrl-btns-el1{
-		-webkit-transform: rotate(30deg);
-	}
-	.mb-ctrl-playing .mb-ctrl-btns-el2{
-		-webkit-transform: rotate(-30deg);
-	}
-	.mb-ctrl-next,
-	.mb-ctrl-prev{
-		height: 50px;
-		width: 50px;
-	}
-
-	/* rewrite carousel */
-	.ui-carousel-dots{
-		bottom: 0;
-		height: 2px;
-		opacity: .8
-	}
-	.ui-carousel-dots-i{
-		width: 10px;
-		height: 2px;
-		border-radius: 2px;
-		background-color: rgba(238, 215, 173, 1)
-	}
-	.ui-carousel-dots-curr{
-		background-color: #ffab3f
-	}
-</style>
 <body>
 	<div class="musicbox" data-player="body">
 		<!-- <h1 class="mb-logo">J.Player</h1> -->
@@ -584,68 +69,6 @@
 					<a class="mb-ctrl-btns-el mb-ctrl-btns-el2"></a>
 				</p>
 			</div>
-			<style>
-			.mb-ctrl-eq{
-				position: absolute;
-				bottom: 23px;
-				left: 15px;
-				height: 22px;
-				display: -webkit-box;
-				width: 30px;
-			}
-			.mb-ctrl-eq-in{
-				border-left: 1px solid #5d9d7b;
-				width: 9px;
-			}
-			.mb-ctrl-eq-in:after{
-				content: "";
-				display: block;
-				height: 2px;
-				width: 5px;
-				background-color: #ffab3f;
-				margin-left: -3px;
-				-webkit-transition-property:all;
-			    -webkit-transition-duration:.4s;
-			    -webkit-transition-timing-function:ease-in-out;
-			}
-			.mb-ctrl-eq-in1:after,
-			.mb-ctrl-eq-in3:after{
-				-webkit-transform: translate3D(0, 5px, 0);
-			}
-			.mb-ctrl-eq-in2:after{
-				-webkit-transform: translate3D(0, 15px, 0);
-			}
-			.mb-ctrl-eq-on .mb-ctrl-eq-in1:after,
-			.mb-ctrl-eq-on .mb-ctrl-eq-in3:after{
-				-webkit-transform: translate3D(0, 15px, 0);
-			}
-			.mb-ctrl-eq-on .mb-ctrl-eq-in2:after{
-				-webkit-transform: translate3D(0, 5px, 0);
-			}
-			.mb-ctrl-meter{
-				position: absolute;
-				bottom: 23px;
-				right: 25px;
-				height: 20px;
-				width: 14px;
-				border: #5d9d7b solid;
-				border-width: 0 2px
-			}
-			.mb-ctrl-meter-in{
-				left: 6px;
-				bottom: 0;
-				height: 15px;
-			}
-			.mb-ctrl-meter-wave{
-				width: 13px;
-				-webkit-transform: skew(-9deg);
-			}
-			.mb-ctrl-meter-wave .mb-ctrl-meter-in{
-				height: 20px;
-				width: 12px;
-				-webkit-transform: skew(36deg);
-			}
-			</style>
 			<div class="mb-ctrl-eq" data-player="eq">
 				<p class="mb-ctrl-eq-in mb-ctrl-eq-in1"></p>
 				<p class="mb-ctrl-eq-in mb-ctrl-eq-in2"></p>
@@ -659,54 +82,6 @@
 		<!-- <p mplayer="decoding" class="ease loading">decoding audio...</p> -->
 	</div>
 	<!-- 均衡器控件 -->
-	<style>
-	.mb-eq{
-		width: 95%;
-	}
-	.mb-eq-wrap{
-		width: 100%;
-	}
-	.mb-eq-list{
-		display: -webkit-box;
-		width: 540px;
-		overflow: hidden;
-		padding: 0 20px
-	}
-	.mb-eq-body{
-		overflow-x: auto;
-		-webkit-overflow-scrolling: touch;
-	}
-	.mb-eq-item{
-		width: 60px;
-		/*text-align: center;*/
-		padding: 130px 0 10px
-	}
-	.mb-eq-input:hover[type=range]{
-		background-color: #91d5b1;
-		box-shadow: 0 0 3px rgba(0,0,0,.6)
-	}
-	.mb-eq-input[type=range]{
-		width: 130px;
-		height: 3px;
-		background-color: #5d9d7b;
-		-webkit-transform: rotate(-90deg) translate(61px,-35px);
-	}/* 
-	.article .eqctrl input[type=range]::-webkit-slider-runnable-track{
-	}
-	.article .eqctrl input[type=range]::-moz-range-track{
-		background-color: #282828;
-		width: 2px;
-		box-shadow: 1px 0 1px #040506
-	} */
-	.mb-eq-input[type=range]::-webkit-slider-thumb{
-		box-shadow:0 0 0 5px rgba(255, 171, 63, .4);
-		border-radius: 10px;
-		background-color: rgba(255, 171, 63, .9);
-		border: none;
-		height: 17px;
-		width: 17px;
-	}
-	</style>
 	<div id="alertEq" class="ui-dialog mb-eq" data-backdrop="close" data-effect="from-below" role="alert-dialog" data-backdrop="static">
         <div class="js-dialog-content ui-alert mb-eq-wrap">
             <div class="ui-alert-body mb-eq-body" role="note" id="eqScroll">
@@ -843,6 +218,101 @@
     // init ui meter handle
     JPlayer.meter === "wave" && JPlayer.$meter.addClass("mb-ctrl-meter-wave");
 
+    // UI lyric
+	var UImeta = (function () {
+
+		var $lyric = JPlayer.$lyric;
+		var $LRCitems;
+		// 当前歌词文件，已解析
+		var tmpLRC;
+		// 歌词文件列表，已解析
+		var cacheLRC = {};
+		// 当前歌词索引
+		var pointer = 1;
+		// 中点坐标
+		var middlePos = $lyric.parent().height()/2 - 20;
+
+		function _initLRC (lrcs) {
+			// build lyric html
+            $lyric
+            	// 初始化歌词列表
+	            .css({
+                	"-webkitTransform" : "translate3d(0px, "+middlePos+"px, 0px)"
+                })
+                .html($.map(lrcs, function(item) {
+	                return '<li class="mb-music-lyric-row">'+item.tx+'</li>';
+	            }).join(''));
+            // 引用歌词节点，初始化歌词节点
+			($LRCitems = $lyric.find("li")).eq(0).addClass("mb-music-lyric-row-curr");
+			// 引用到局部变量
+			tmpLRC = lrcs.length && lrcs;
+		}
+
+		function _duration2time (duration) {
+			duration = duration.toFixed(0);
+			var m = Math.round(duration/60);
+			var s = duration%60;
+			return (m > 9 ? m : '0'+m) +':' + (s > 9 ? s : '0'+s);
+		}
+
+		return {
+			init : function (e, meta) {
+				// 初始化音乐封面
+				var coverURL = meta.pic;
+				var currentPlay = JPlayer.current;
+
+				JPlayer.$hcover
+	                .css("backgroundImage", "url("+(coverURL?coverURL.slice(0, coverURL.length-6)+'.jpg':"about:blank")+")")
+	                .addClass("mb-disk-cover-show");
+
+                // 初始化当前播放显示
+	            JPlayer.$name.text(meta.title);
+	            JPlayer.$singer_album.text(meta.artist+"《"+meta.album_name+"》");
+
+	            // 初始化播放列表
+	            var $currPlayItem = JPlayer.$list.find("li:nth-child("+ (currentPlay+1) +")");
+	            $currPlayItem.find(".mb-music-list-item-singer").text(meta.artist);
+	            $currPlayItem.find(".mb-music-list-item-duration").text(_duration2time(JPlayer.buffer.duration));
+
+	            // 获取歌词文件，并解析好
+	            if ( cacheLRC[currentPlay] ) {
+	            	_initLRC(cacheLRC[currentPlay])
+	            } else {
+	            	JPlayer.parseLyric(meta, function (lrcs) {
+	            		if ( lrcs && lrcs.length ) {
+	            			_initLRC(cacheLRC[currentPlay] = lrcs)
+	            		}
+	            	});
+	            }
+				
+			},
+			setupLRC : function () {
+				if (tmpLRC) {
+					// console.log(tmpLRC[pointer)
+					if ( JPlayer.offsetTime > tmpLRC[pointer].s ) {
+						// 移除上一行样式
+	                    $LRCitems.eq(pointer-1).removeClass("mb-music-lyric-row-curr");
+						// removeClass(LRCitems[pointer-1], "curr")
+						// 添加当前行样式
+	                    $LRCitems.eq(pointer).addClass("mb-music-lyric-row-curr");
+						// addClass(LRCitems[pointer], "curr")
+						// 设置居中
+						$lyric.css({"-webkitTransform" : 'translate3d(0px, '+ (middlePos-40*pointer++) +'px, 0px)'});
+						// 结束，暂停操作
+						pointer === tmpLRC.length && (tmpLRC=null);
+					}
+				}
+			},
+			resetLRC : function () {
+				pointer = 1;
+				// 重置歌词列表
+	            $lyric.html("").text("歌词").css({
+                	"-webkitTransform" : "translate3d(0px, 0px, 0px)"
+                });
+			}
+		}
+	}());
+
 	// ============== addEventListener to JPlayer's event
 	// on start a new music
 	JPlayer.on("start", function () {
@@ -859,8 +329,10 @@
 	.on("playing", function () {
 
 		JPlayer.UIprogress.value = JPlayer.UIprogressbg.value = JPlayer.offsetTime;
+		UImeta.setupLRC();
 
 	})
+	.on("meta", UImeta.init)
 	.on("replay", function () {
 		// cd disk animation
 		JPlayer.$hdisk.removeClass("mb-disk-pause");
@@ -882,7 +354,7 @@
 		// play button status
 		JPlayer.$play.removeClass("mb-ctrl-playing");
 		// lyric status
-		JPlayer.$lyric.html("").text("歌词");
+		UImeta.resetLRC();
 		// play list status
 		JPlayer.$list.find("li:nth-child("+ (JPlayer.previous+1) +")").removeClass("mb-music-list-item-curr");
 		// progress reset
@@ -973,75 +445,6 @@
 		}
 	}();
 
-	// UI lyric
-	(function(){
-
-		var tmpLRC;
-		// 当前歌词索引
-		var pointer = 1;
-		var $lyric = JPlayer.$lyric;
-		var middlePos = $lyric.parent().height()/2 - 20;
-		// var UIlyric = JPlayer.UIlyric;
-		// 歌词节点列表
-		var $LRCitems;
-		JPlayer.on("meta", function (e, meta) {
-			var coverURL = meta.pic;
-			JPlayer.$hcover
-                .css("backgroundImage", "url("+(coverURL?coverURL.slice(0, coverURL.length-6)+'.jpg':"about:blank")+")")
-                .addClass("mb-disk-cover-show");
-
-            JPlayer.$name.text(meta.title);
-            JPlayer.$singer_album.text(meta.artist+"《"+meta.album_name+"》");
-
-            // 
-            var $currPlayItem = JPlayer.$list.find("li").eq(JPlayer.current);
-            $currPlayItem.find(".mb-music-list-item-singer").text(meta.artist);
-            $currPlayItem.find(".mb-music-list-item-duration").text(duration2time(JPlayer.buffer.duration));
-			// 获取歌词文件，并解析好
-			JPlayer.parseLyric(meta, function (lrcs) {
-				// build lyric html
-                $lyric
-                    .html($.map(lrcs, function(item) {
-                        return '<li class="mb-music-lyric-row">'+item.tx+'</li>';
-                    }).join(''))
-                    .css({
-                    	"-webkitTransform" : "translate3d(0px, "+middlePos+"px, 0px)"
-                    });
-                // 引用歌词节点，初始化歌词节点
-				($LRCitems = $lyric.find("li")).eq(0).addClass("mb-music-lyric-row-curr");
-				// 引用到局部变量
-				tmpLRC = lrcs.length && lrcs;
-
-			});
-		});
-		function duration2time (duration) {
-			duration = duration.toFixed(0);
-			var m = Math.round(duration/60);
-			var s = duration%60;
-			return (m > 9 ? m : '0'+m) +':' + (s > 9 ? s : '0'+s);
-		}
-
-		JPlayer.on("playing", function (e, audio) {
-			if (tmpLRC) {
-				// console.log(tmpLRC[pointer)
-				if ( JPlayer.offsetTime > tmpLRC[pointer].s ) {
-					// 移除上一行样式
-                    $LRCitems.eq(pointer-1).removeClass("mb-music-lyric-row-curr");
-					// removeClass(LRCitems[pointer-1], "curr")
-					// 添加当前行样式
-                    $LRCitems.eq(pointer).addClass("mb-music-lyric-row-curr");
-					// addClass(LRCitems[pointer], "curr")
-					// 设置居中
-					$lyric.css({"-webkitTransform" : 'translate3d(0px, '+ (middlePos-40*pointer++) +'px, 0px)'});
-					// $lyric.css("top", middlePos-40*pointer++);
-                    // UIlyric.style.top = (111-40*pointer++)+'px';
-					// 结束操作
-					pointer === tmpLRC.length && (tmpLRC = null);
-				}
-			}
-		});
-
-	}());
 }())
 </script>
 </html>
