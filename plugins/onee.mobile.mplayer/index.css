@@ -517,7 +517,6 @@ progress::-webkit-progress-value {
 }
 .mb-eq-list{
 	display: -webkit-box;
-	width: 540px;
 	overflow: hidden;
 }
 .mb-eq-body{

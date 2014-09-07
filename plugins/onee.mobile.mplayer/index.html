@@ -89,8 +89,8 @@
         		<p class="mb-virtual-wrap">3D<input class="mb-virtual-input" type="range" min="0" max="1" value="0" step="0.01"></p>
         	</div>
         	<div class="mb-eq-short">
-        		<select class="mb-eq-more">
-        			<option>Default</option>
+        		<select class="mb-eq-more" data-player="eqs">
+        			<option value="default" selected>Default</option>
         		</select>
         		<p class="mb-eq-reset">Reset</p>
         	</div>
@@ -139,6 +139,7 @@
 (function () {
 
 	var map = _.map;
+	var each = _.each;
 	var TPL_ITEM = '<li data-player="playitem" class="ui-border-1px mb-music-list-item" data-index="{index}" data-name="{name}" data-url="{url}">\
 						<div class="mb-music-list-item-hack-middle">\
 						<i>{name}</i>\
@@ -189,22 +190,14 @@
             // your element have overflow
             return e.preventDefault();
         }
-    })
+    });
 
-	// build play list
-	JPlayer.$list.html(map(JPlayer.cache = [
-		{ name : "让一切随风", url : "./sources/陈慧娴 - 让一切随风.mp3", singer : "陈慧娴" },
-		{ name : "与我常在", url : "./sources/陈奕迅 - 与我常在.mp3", singer : "陈奕迅" },
-		{ name : "老爹", url : "./sources/弦子、迪克牛仔 - 老爹.mp3", singer : "弦子、迪克牛仔" }
-	], function (source, k) {
-    	return complieHTML(TPL_ITEM, source, k)
-    }).join(''));
-
-	var uiEq = {
+    var uiEq = {
 		"f31" : "31hz",
 		"f62" : "62hz",
 		"f125" : "125hz",
 		"f250" : "250hz",
+		"f500" : "500hz",
 		"f1000" : "1khz",
 		"f2000" : "2khz",
 		"f4000" : "4khz",
@@ -212,21 +205,26 @@
 		"f16000" : "16khz"
 	};
 
+	// 生成播放列表
+	JPlayer.$list.html(map(JPlayer.cache = [
+		{ name : "让一切随风", url : "./sources/陈慧娴 - 让一切随风.mp3", singer : "陈慧娴" },
+		{ name : "与我常在", url : "./sources/陈奕迅 - 与我常在.mp3", singer : "陈奕迅" },
+		{ name : "老爹", url : "./sources/弦子、迪克牛仔 - 老爹.mp3", singer : "弦子、迪克牛仔" }
+	], function (source, k) {
+    	return complieHTML(TPL_ITEM, source, k)
+    }).join(''));
+	// 生成默认均衡器列表
+    JPlayer.$eqs.html(map(JPlayer.eqindex, function(v, index) {
+    	return '<option value="'+ index +'" '+ (index==='default' ? 'selected' : '') +'>'+ index +'</option>'
+    }).join(''));
+    // 生成均衡器节点列表
     JPlayer.$eqlist.html(map(JPlayer.EQ, function (eq, k) {
     	return complieHTML(TPL_EQITEM, {
     		key : uiEq[k],
     		gain : eq,
     		freq : k
     	})
-    }).join('')).on("input", function (e) {
-    	var element = e.target;
-    	JPlayer.eq(element.dataset.freq, element.value)
-    });
-
-    JPlayer.$convolver.on("input", function (e) {
-    	var element = e.target;
-    	JPlayer.setConvolverGain(element.value)
-    });
+    }).join('')).css("width", 60*10);
 
     // init ui meter handle
     JPlayer.meter === "wave" && JPlayer.$meter.addClass("mb-ctrl-meter-wave");
@@ -388,10 +386,10 @@
 			total  = dat.total;
 
 		drawLoading(loaded, total);
-	})
+	});
 	// ================ addEventListener to UI
 	// 监听列表播放操作
-	.$body.on("click", "li[data-player=playitem]", function () {
+	$("body").on("tap", "li[data-player=playitem]", function () {
 		JPlayer.play(this.dataset.index)
 	})
 	// 监听下一首事件
@@ -415,10 +413,31 @@
 	.on("tap", "[data-player=eq]", function (e) {
 		JPlayer.$eq.addClass("mb-ctrl-eq-on");
 		$("#alertEq").dialog("show");
-	});
-	$("body").on("tap", "div[data-belong=alertEq]", function () {
+	})
+	.on("tap", "div[data-belong=alertEq]", function () {
 		JPlayer.$eq.removeClass("mb-ctrl-eq-on");
-	});
+	})
+	// 卷积节点
+	.on("input", "input[data-player=convolver]", function (e) {
+    	var element = e.target;
+    	JPlayer.setConvolverGain(element.value)
+    })
+    // 均很器
+    .on("input", "input[data-freq]", function (e) {
+    	var element = e.target;
+    	JPlayer.eq(element.dataset.freq, element.value)
+    })
+    // 重置均很器
+    .on("tap", ".mb-eq-reset", function () {
+    	JPlayer.$eqs.val("default").trigger("change");
+    })
+    // 切换均衡器
+    .on("change", ".mb-eq-more", function () {
+    	var $eqlist = JPlayer.$eqlist;
+    	JPlayer.eq(this.value, function (v, k) {
+    		$eqlist.find(".mb-eq-item:nth-child("+(k+1)+") input").val(v)
+    	})
+    });
 
 	// UI animation loading
 	var drawLoading = function () {

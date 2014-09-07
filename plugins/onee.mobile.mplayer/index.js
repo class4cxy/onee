@@ -17,7 +17,7 @@
 	var EvtSys = $(document);
 
 	// 公共EQ对应表
-	var COMEQ = {}
+	var COMEQ = {};
 
 	global.audio = (function (factory) {
 		// body...
@@ -387,40 +387,6 @@
 			request.send();
 		}
 	}
-	// fetch audio file
-	// decode audio
-	/*function fetch ( item, callback ) {
-		if ( item.buffer ) {
-	
-			callback && callback(item.buffer)
-
-		} else {
-
-			var request = new XMLHttpRequest();
-			var that = this;
-			request.open('GET', item.url, true);
-			request.responseType = 'arraybuffer';
-
-			// Decode asynchronously
-			request.onload = function() {
-				// copy buffer
-				decodeAudio(request.response, function (buffer) {
-					// that.buffer = buffer;
-					callback && callback(item.buffer = buffer);
-					request = request.onload = null;
-				});
- 			}
- 			that.trigger(that.status = "loading");
- 			request.onprogress = function(e) {
-				if(e.lengthComputable) {
-					that.trigger(that.status = "progress", e);
-				}
-			}
-			request.send();
-
-		}
-	}*/
-
 	function canPlay (item) {
 		var that = this;
 
@@ -485,6 +451,26 @@
 			)
 	}
 
+	var EQS = {
+		// 初始化
+		default: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		// 电子
+        electronic: [12, 10.5, 3, 0, -6, 6, 1.5, 3, 12, 15],
+		// 古典
+        classic: [13.5, 10.5, 9, 7.5, -6, -4.5, 0, 6, 10.5, 12],
+		// 爵士
+        jazz: [12, 9, 3, 6, -6, -6, 0, 4.5, 9, 10.5],
+		// 流行
+        pop: [-6, -3, 0, 6, 12, 12, 6, 0, -4.5, -6],
+		// 人声
+        voice: [-6, -10.5, -9, 3, 10.5, 10.5, 9, 4.5, 1.5, -6],
+		// 舞曲
+        dance: [10.5, 19.5, 15, 0, 6, 10.5, 15, 12, 10.5, 0],
+		// 摇滚
+        rock: [15, 12, 9, 4.5, -1.5, -4.5, 1.5, 7.5, 10.5, 13.5]
+	}
+	var EQSHORT = [31,62,125,250,500,1000,2000,4000,8000,16000];
+
 	function player(options) {
 
 		// var ui = this.ui = {};
@@ -525,6 +511,8 @@
 		// this.volume = options.volume || 0.8;
 		// 均衡器列表
 		var eq = this.EQ = options.EQ || {};
+		// 目前的需求仅用于UI层生成列表
+		this.eqindex = EQS;
 
 		(function () {
 
@@ -533,7 +521,7 @@
 			var _ctx = audio.ctx;
 
 			// build biquadFilter node
-			each([31,62,125,250,1000,2000,4000,8000,16000], function (freq, k) {
+			each(EQSHORT, function (freq, k) {
 				// 初始化滤波器节点
 				var index = 'f'+freq;
 				var biquadFilter = COMEQ[index] = _ctx.createBiquadFilter();
@@ -596,17 +584,20 @@
 			index = parseInt(index);
 			// 如果播放列表为空
 			// 当前播放
-			if ( cache.length === 0 || that.current === index ) return;
+			if ( cache.length === 0 ) return;
 			// 记录播放上一首
 			that.previous = that.current;
 			// index存在，则清空当前的，直接播放CACHE[index]
 			if ( !isNaN(index) ) {
 				if ( that.status === "pause" || that.status === "playing" ) {
-					// waitting for onended event dispatch
-					audio.onended(function () {
-						start.call(that, item = cache[that.current = index])
-					});
-					return that.stop();
+					if ( that.current !== index ) {
+						// waitting for onended event dispatch
+						audio.onended(function () {
+							start.call(that, item = cache[that.current = index])
+						});
+						return that.stop();
+					// 处于播发状态且播放同一首
+					} else return;
 
 				} else item = cache[that.current = index];
 
@@ -713,9 +704,22 @@
 			this.play(this.currentPlay)
 		},
 		eq : function (freq, value) {
-			var biquadFilter = COMEQ[freq];
-			if ( biquadFilter ) {
-				this.EQ[freq] = biquadFilter.gain.value = value;
+
+			var route = COMEQ[freq] || EQS[freq];
+			var that = this;
+
+			if ( typeof route === 'object' && route.length ) {
+
+				value = typeof value === 'function' ? value : function(){}
+
+				each(route, function (v, k) {
+					var index = 'f'+EQSHORT[k];
+					that.EQ[index] = COMEQ[index].gain.value = v;
+					value(v, k)
+				})
+
+			} else {
+				that.EQ[freq] = route.gain.value = value;
 			}
 		},
 		setMeter : function (meter) {
