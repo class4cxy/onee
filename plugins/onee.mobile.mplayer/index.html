@@ -85,8 +85,14 @@
 	<div id="alertEq" class="ui-dialog mb-eq" data-backdrop="close" data-effect="from-below" role="alert-dialog" data-backdrop="static">
         <div class="js-dialog-content ui-alert mb-eq-wrap">
         	<div class="mb-virtual">
-        		<p class="mb-virtual-wrap">live:<input class="mb-virtual-input" data-player="convolver" type="range" min="0" max="1" value="0" step="0.01"></p>
-        		<p class="mb-virtual-wrap">live:<input class="mb-virtual-input" type="range" min="0" max="1" value="0"></p>
+        		<p class="mb-virtual-wrap">LIVE<input class="mb-virtual-input" data-player="convolver" type="range" min="0" max="1" value="0" step="0.01"></p>
+        		<p class="mb-virtual-wrap">3D<input class="mb-virtual-input" type="range" min="0" max="1" value="0" step="0.01"></p>
+        	</div>
+        	<div class="mb-eq-short">
+        		<select class="mb-eq-more">
+        			<option>Default</option>
+        		</select>
+        		<p class="mb-eq-reset">Reset</p>
         	</div>
             <div class="ui-alert-body mb-eq-body" role="note" id="eqScroll">
             	<div class="content mb-eq-list" data-player="eqlist"></div>
@@ -187,11 +193,9 @@
 
 	// build play list
 	JPlayer.$list.html(map(JPlayer.cache = [
-		{ name : "福尔摩斯", url : "./sources/fuermosi.mp3", singer : "萧敬腾" },
-		{ name : "与我常在", url : "./sources/yuwochangzai.mp3", singer : "陈奕迅" },
-		{ name : "可以了", url : "./sources/keyile.mp3", singer : "陈奕迅" },
-		{ name : "3 Things", url : "./sources/3Things.mp3", singer : "Jason Mraz" },
-		{ name : "北海", url : "./sources/beihai.mp3", singer : "永动机" }
+		{ name : "让一切随风", url : "./sources/陈慧娴 - 让一切随风.mp3", singer : "陈慧娴" },
+		{ name : "与我常在", url : "./sources/陈奕迅 - 与我常在.mp3", singer : "陈奕迅" },
+		{ name : "老爹", url : "./sources/弦子、迪克牛仔 - 老爹.mp3", singer : "弦子、迪克牛仔" }
 	], function (source, k) {
     	return complieHTML(TPL_ITEM, source, k)
     }).join(''));
