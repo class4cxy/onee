@@ -563,25 +563,36 @@ progress::-webkit-progress-value {
 	-webkit-transform: none;
 }
 .mb-eq-short{
-	display: -webkit-box;
-	padding: 15px 15px 0 15px;
+	/*display: -webkit-box;*/
+	/*white-space: 0px;*/
+	letter-spacing: -4px;
+	/*margin: 0 15px;*/
+	padding-top: 15px;
+	/*text-align: left;*/
 }
-.mb-eq-more{
+/*.mb-eq-more{
 	margin-right: 10px;
 	display: block;
-}
-.mb-eq-more,
-.mb-eq-reset{
-	-webkit-box-flex:1;
+}*/
+.mb-eq-type{
+	/*-webkit-box-flex: 1;*/
+	/*float: left;*/
+	display: inline-block;
+	letter-spacing: 0;
+	width: 22%;
+	margin: 0 0 5px 1%;
 	/*width: 50%;*/
 	/*width: 100px;*/
 	/*margin: 0 5px;*/
-	padding: 7px 0;
+	padding: 6px 0;
 	text-align: center;
 	border: 2px solid #5d9d7b;
 	border-radius: 5px;
 	color: #ffab3f;
 }
-.mb-eq-reset:active{
+.mb-eq-type:nth-child(4n+1){
+	margin-left: 0;
+}
+.mb-eq-type.curr{
 	background-color: #5d9d7b
 }

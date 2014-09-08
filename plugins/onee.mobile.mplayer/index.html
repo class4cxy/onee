@@ -88,11 +88,19 @@
         		<p class="mb-virtual-wrap">LIVE<input class="mb-virtual-input" data-player="convolver" type="range" min="0" max="1" value="0" step="0.01"></p>
         		<p class="mb-virtual-wrap">3D<input class="mb-virtual-input" type="range" min="0" max="1" value="0" step="0.01"></p>
         	</div>
-        	<div class="mb-eq-short">
-        		<select class="mb-eq-more" data-player="eqs">
+        	<div class="mb-eq-short" data-player="eqs">
+        		<!-- <p class="mb-eq-type">text</p>
+        		<p class="mb-eq-type">text</p>
+        		<p class="mb-eq-type">text</p>
+        		<p class="mb-eq-type">text</p>
+        		<p class="mb-eq-type">text</p>
+        		<p class="mb-eq-type">text</p>
+        		<p class="mb-eq-type">text</p>
+        		<p class="mb-eq-type">text</p> -->
+        		<!-- <select class="mb-eq-more" data-player="eqs">
         			<option value="default" selected>Default</option>
         		</select>
-        		<p class="mb-eq-reset">Reset</p>
+        		<p class="mb-eq-reset">Reset</p> -->
         	</div>
             <div class="ui-alert-body mb-eq-body" role="note" id="eqScroll">
             	<div class="content mb-eq-list" data-player="eqlist"></div>
@@ -147,7 +155,7 @@
 						</div>\
 						<p class="mb-music-list-item-duration"></p>\
 					</li>',
-		TPL_EQITEM = '<p class="mb-eq-item"><input data-freq="{freq}" class="mb-eq-input" type="range" min="-30" max="30" value="{gain}"><span>{key}</span></p>';;
+		TPL_EQITEM = '<p class="mb-eq-item"><input data-freq="{freq}" class="mb-eq-input" type="range" min="-10" max="10" value="{gain}"><span>{key}</span></p>';;
 
 	var complieHTML = (function () {
 		var rtpl = /\{(.*?)\}/g;
@@ -215,7 +223,7 @@
     }).join(''));
 	// 生成默认均衡器列表
     JPlayer.$eqs.html(map(JPlayer.eqindex, function(v, index) {
-    	return '<option value="'+ index +'" '+ (index==='default' ? 'selected' : '') +'>'+ index +'</option>'
+    	return '<p class="mb-eq-type" data-index="'+ index +'">'+ index +'</p>';
     }).join(''));
     // 生成均衡器节点列表
     JPlayer.$eqlist.html(map(JPlayer.EQ, function (eq, k) {
@@ -427,14 +435,12 @@
     	var element = e.target;
     	JPlayer.eq(element.dataset.freq, element.value)
     })
-    // 重置均很器
-    .on("tap", ".mb-eq-reset", function () {
-    	JPlayer.$eqs.val("default").trigger("change");
-    })
     // 切换均衡器
-    .on("change", ".mb-eq-more", function () {
+    .on("tap", ".mb-eq-type", function () {
     	var $eqlist = JPlayer.$eqlist;
-    	JPlayer.eq(this.value, function (v, k) {
+    	JPlayer.$eqs.find(".mb-eq-type").removeClass("curr");
+    	$(this).addClass("curr");
+    	JPlayer.eq(this.dataset.index, function (v, k) {
     		$eqlist.find(".mb-eq-item:nth-child("+(k+1)+") input").val(v)
     	})
     });
