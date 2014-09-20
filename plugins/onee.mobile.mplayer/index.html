@@ -86,22 +86,9 @@
         <div class="js-dialog-content ui-alert mb-eq-wrap">
         	<div class="mb-virtual">
         		<p class="mb-virtual-wrap">LIVE<input class="mb-virtual-input" data-player="convolver" type="range" min="0" max="1" value="0" step="0.01"></p>
-        		<p class="mb-virtual-wrap">3D<input class="mb-virtual-input" type="range" min="0" max="1" value="0" step="0.01"></p>
+        		<p class="mb-virtual-wrap">DELAY<input class="mb-virtual-input" type="range" data-player="delay" min="0" max="0.05" value="0" step="0.001"></p>
         	</div>
-        	<div class="mb-eq-short" data-player="eqs">
-        		<!-- <p class="mb-eq-type">text</p>
-        		<p class="mb-eq-type">text</p>
-        		<p class="mb-eq-type">text</p>
-        		<p class="mb-eq-type">text</p>
-        		<p class="mb-eq-type">text</p>
-        		<p class="mb-eq-type">text</p>
-        		<p class="mb-eq-type">text</p>
-        		<p class="mb-eq-type">text</p> -->
-        		<!-- <select class="mb-eq-more" data-player="eqs">
-        			<option value="default" selected>Default</option>
-        		</select>
-        		<p class="mb-eq-reset">Reset</p> -->
-        	</div>
+        	<div class="mb-eq-short" data-player="eqs"></div>
             <div class="ui-alert-body mb-eq-body" role="note" id="eqScroll">
             	<div class="content mb-eq-list" data-player="eqlist"></div>
             </div>
@@ -430,6 +417,11 @@
     	var element = e.target;
     	JPlayer.setConvolverGain(element.value)
     })
+    // 延时节点
+	.on("input", "input[data-player=delay]", function (e) {
+    	var element = e.target;
+    	JPlayer.setDelayTime(element.value)
+    })
     // 均很器
     .on("input", "input[data-freq]", function (e) {
     	var element = e.target;
@@ -482,7 +474,6 @@
 			ctx.stroke();
 			perc.innerText = Math.floor(percent*100);
 
-			// if ( curr === total ) _clear_();
 		}
 	}();
 

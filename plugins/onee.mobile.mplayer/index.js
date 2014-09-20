@@ -59,8 +59,10 @@
 			_bf_.call(this, "disconnect");
 			// 重新连接音频PProcessor节点
 	        this.analyser.disconnect(this.processor);
+	        // 
+	        this.processor.disconnect(this.splitter);
 	        // 重新连接到终端
-	        this.processor.disconnect(ctx.destination);
+	        this.merger.disconnect(ctx.destination);
 	        // reset audio source node
 	        this.source = null;
 	        // handle callback
@@ -77,6 +79,14 @@
 			analyser : ctx.createAnalyser(),
 			// 卷积节点输出控制
 			convolverGain : ctx.createGain(),
+			// 延时节点
+			delay : ctx.createDelay(),
+			// 非延时临时节点
+			// noDelay : ctx.createDelay(),
+			// 音道分离节点
+			splitter : ctx.createChannelSplitter(2),
+			// 音道合并节点
+			merger : ctx.createChannelMerger(2),
 			// 卷积节点
 			convolver : ctx.createConvolver(),
 			// processor : _processor,
@@ -114,8 +124,16 @@
 				this.source.connect(this.convolver);
 				// 连接音频Processor节点
 		        this.analyser.connect(this.processor);
+		        // 分离
+		        this.processor.connect(this.splitter);
+		        // 连接延时声道
+		        this.splitter.connect(this.delay,   0);
+		        // this.splitter.connect(this.noDelay, 1);
+		        // 合并
+		        this.delay.connect(this.merger, 0, 0);
+		        this.splitter.connect(this.merger, 0, 1);
 		        // 重新连接到终端
-		        this.processor.connect(ctx.destination);
+		        this.merger.connect(ctx.destination);
 
 			},
 			onaudioprocess : function(callback) {
@@ -183,16 +201,8 @@
 	//}
 	var meterLibrary = {
 		frequency : function (ctx, analyser) {
-			var 
-				// that           = this,
-				cwidth            = ctx.canvas.width,
-				cheight           = ctx.canvas.height,
-				// meterNum          = cwidth,
-				//width of the meters in the spectrum;
-				// meterWidth        = 6,
-				// capHeight         = 2,
-				// capStyle          = '#ffab3f',
-				// capYPositionArray = [],
+			var cwidth  = ctx.canvas.width,
+				cheight = ctx.canvas.height,
 				autoAnimationHandle;
 
 	        // set style of bar
@@ -216,22 +226,6 @@
 	            var step = Math.round(array.length / cwidth); //sample limited data from the total array
 	            ctx.clearRect(0, 0, cwidth, -cheight);
 	            for (var i = 0; i < cwidth; i++) {
-	                // var value = array[i];
-	                // var rwidth = i*step;
-	                // var value = array[rwidth];
-	                /*if (capYPositionArray.length < meterNum) {
-	                    capYPositionArray.push(value);
-	                }*/
-	                // log(value)
-					// ctx.fillStyle = capStyle;
-					// console.log(value)
-					//draw the cap, with transition effect
-					/*if (value < capYPositionArray[i]) {
-					    ctx.fillRect(i, -capYPositionArray[i]--, meterWidth, capHeight);
-					} else {
-					    ctx.fillRect(i, -value, meterWidth, capHeight);
-					    capYPositionArray[i] = value;
-					};*/
 	                ctx.fillStyle = gradient; //set the filllStyle to gradient for a better look
 	                // ctx.fillRect(i, -value+capHeight, meterWidth, cheight); //the meter
 	                ctx.fillRect(i, -array[i*step], 1, cheight); //the meter
@@ -496,6 +490,8 @@
 		this.convolverBuffer;
 		this.convolverPath = './sources/cardioid/index.wav';
 		this.convolverGainValue = 0;
+		// 延时
+		this.delayTime = 0;
 		// convolver arithmetic
 		// this.playScenes = Convolver.tpl;
 
@@ -737,6 +733,12 @@
 			value = parseFloat(value);
 			if ( !isNaN(value) ) {
 				audio.convolverGain.gain.value = this.convolverGainValue = value;
+			}
+		},
+		setDelayTime : function (value) {
+			value = parseFloat(value);
+			if ( !isNaN(value) ) {
+				audio.delay.delayTime.value = this.delayTime = value;
 			}
 		}
 	});
