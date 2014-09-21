@@ -45,14 +45,16 @@
 .ui-alert-button.active {
     background: #e1e1e1;
 }
-
+.ui-alert-button:after {
+    border-top: solid 1px #b5b5b5;
+}
 .ui-alert-button:first-child:after{
     border-right: 1px solid #aeaeb0;
 }
 
-.ui-alert-button[cmd="enter"]{
+/*.ui-alert-button[cmd="enter"]{
     font-weight: bold;
-}
+}*/
 
 .hide-cancel .ui-alert-button[cmd="cancel"]{
     display: none;

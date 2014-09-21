@@ -151,7 +151,26 @@
 	if ( !audio ) return console.log('Web Audio API is not supported in this browser');
 	
 	// 解析音频文件
-	var decodeAudio = (function () {
+	function decodeAudio (audioData, callback) {
+		if ( audioData ) {
+
+			audio.ctx.decodeAudioData(
+
+				audioData,
+				// on success
+				function (buffer) {
+					// end decode
+					callback && callback(buffer);
+				},
+				// on fail
+				function(e) {
+                	console.log('Fail to decode the file!');
+                	console.log(e)
+            	}
+        	)
+		}
+	}
+	/*var decodeAudio = (function () {
 
 		var isDecoding = !!0;
 
@@ -178,7 +197,7 @@
             	)
 			}
 		}
-	})();
+	})();*/
 	function compliePlaylistNode (index, dat) {
 		return TPL_ITEM.replace(rtpl, function (a, b) {
     		if (b === "index") return index;
@@ -382,6 +401,7 @@
 		}
 	}
 	function canPlay (item) {
+		// console.log(item)
 		var that = this;
 
 		audio.source.buffer = that.buffer = item.buffer;
@@ -482,6 +502,8 @@
 		this.ctx = this.UIcanvas.getContext('2d');
 
 		this.status = "stop";
+		// 网络情况，true可以播放，false不允许播放
+		this.network = !!0;
 		// 已播放时间-针对每一首音乐
 		this.offsetTime = 0;
 		// playlist
@@ -574,6 +596,8 @@
 			return this
 		},
 		play : function (index) {
+
+			if ( !this.network ) return this.trigger("error", "notwifi");
 
 			var item, that = this, cache = that.cache;
 			// initialize type

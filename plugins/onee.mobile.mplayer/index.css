@@ -1,13 +1,10 @@
-﻿.ui-alert,
-.ui-alert-body{
-	padding: 0;
-}
-
-html,body{
+﻿html,body{
 	height: 100%;
 	width: 100%;
 	font-size: 15px;
 	background: #ccc url(images/bg.png) repeat;
+	-webkit-user-select: none;
+	-webkit-user-drag: none;
 }
 *{
 	margin: 0;
@@ -44,6 +41,26 @@ progress{
 }
 progress::-webkit-progress-value {
 	background-color: #eed7ad
+}
+.ui-notify{
+	text-align: left;
+	line-height: 18px;
+	text-indent: 2em;
+	padding: 10px;
+}
+/*.ui-notify span{
+	text-indent: 2em;
+}*/
+.ui-alert-close{
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	height: 20px;
+	width: 20px;
+	border: 1px solid #666;
+	line-height: 20px;
+	text-align: center;
+	border-radius: 10px
 }
 .ui-border-1px{
     position: relative;
@@ -347,7 +364,11 @@ progress::-webkit-progress-value {
 .mb-loader{
 	position: relative;
 	height: 100px;
-	width: 100px
+	width: 100px;
+	padding: 0
+}
+.mb-loader .ui-alert-body{
+	padding: 0
 }
 .mb-loader-cv{
 	-webkit-transform:scale(0.5);
@@ -434,8 +455,8 @@ progress::-webkit-progress-value {
 
 /* rewrite carousel */
 .ui-carousel-dots{
-	bottom: 0;
-	height: 2px;
+	bottom: 0px;
+	/*height: 7px;*/
 	opacity: .8
 }
 .ui-carousel-dots-i{
@@ -520,6 +541,7 @@ progress::-webkit-progress-value {
 	overflow: hidden;
 }
 .mb-eq-body{
+	padding: 0 19px;
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
 }
@@ -550,7 +572,7 @@ progress::-webkit-progress-value {
 	width: 17px;
 }
 .mb-virtual{
-	padding: 15px;
+	padding: 0 15px;
 	border-bottom: 1px dashed #ffab3f
 }
 .mb-virtual-wrap{
