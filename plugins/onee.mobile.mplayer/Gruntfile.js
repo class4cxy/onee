@@ -16,7 +16,8 @@
       main: {
         files: [
           {expend: true, src: "./index.html", dest: "./online/"},
-          {expend: true, src: "./images/*.{jpg,gif,png}", dest: "./online/"}
+          {expend: true, src: "./images/*.{jpg,gif,png}", dest: "./online/"},
+          {expend: true, src: "./sources/*.{wav,mp3}", dest: "./online/"}
         ]
       }
     },

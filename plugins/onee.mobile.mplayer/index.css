@@ -1,4 +1,4 @@
-﻿html,body{
+html,body{
 	height: 100%;
 	width: 100%;
 	font-size: 15px;
@@ -456,7 +456,7 @@ progress::-webkit-progress-value {
 /* rewrite carousel */
 .ui-carousel-dots{
 	bottom: 0px;
-	/*height: 7px;*/
+	/*height: 7pxgrun;*/
 	opacity: .8
 }
 .ui-carousel-dots-i{

@@ -510,7 +510,7 @@
 		this.cache = [];
 		// convelver buffer
 		this.convolverBuffer;
-		this.convolverPath = './sources/cardioid/index.wav';
+		this.convolverPath = './sources/convolver.wav';
 		this.convolverGainValue = 0;
 		// 延时
 		this.delayTime = 0;
