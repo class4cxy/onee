@@ -4,30 +4,74 @@
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     clean : {
-      src : ['src/disk']
+      src : ['./online']
     },
-    concat : {
-      disk : {
-        src : ['src/*.js'],
-        dest : 'src/online/seed.js'
+    useminPrepare: {
+        options: {
+            dest: './online'
+        },
+        html: ['index.html']
+    },
+    copy: {
+      main: {
+        files: [
+          {expend: true, src: "./index.html", dest: "./online/"},
+          {expend: true, src: "./images/*.{jpg,gif,png}", dest: "./online/"}
+        ]
       }
     },
-    uglify: {
-      options: {
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> by jdo. */\n'
-      },
-      build: {
-        src: 'src/online/seed.js',
-        dest: 'src/online/seed.min.js'
+    filerev: {
+        options: {
+            encoding: 'utf8',
+            algorithm: 'md5',
+            length: 4
+        },
+        dist: {
+            src: [
+                './online/*.js',
+                './online/*.css',
+                './online/images/*.{jpg,jpeg,png,gif}'
+            ]
+        }
+    },
+    usemin: {
+      html: './online/*.html',
+      css: './online/*.css'
+    },
+    htmlmin: {
+      dist: {
+        options: {
+          removeComments: true,
+          collapseWhitespace: true
+        },
+        files: {
+          'online/index.html': 'online/index.html'
+        }
       }
     }
+
   });
 
   // Load the plugin that provides the "uglify" task.
+  grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-usemin');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-filerev');
+  grunt.loadNpmTasks('grunt-contrib-htmlmin');
 
   // Default task(s).
-  grunt.registerTask('default', ['concat', 'uglify']);
-
+  grunt.registerTask('default', [
+      'clean',
+      'useminPrepare',
+      'concat:generated',
+      'cssmin:generated',
+      'uglify:generated',
+      'copy',
+      'filerev',
+      'usemin',
+      'htmlmin'
+    ]);
 };
