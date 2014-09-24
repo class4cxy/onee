@@ -76,10 +76,9 @@
 	};
 
 	// 生成播放列表
-	JPlayer.$list.html(map(JPlayer.cache = [
-		{ name : "与我常在", url : "./sources/m1.mp3", singer : "陈奕迅" },
-		{ name : "后会无期", url : "./sources/m2.mp3", singer : "邓紫棋" }
-	], function (source, k) {
+	JPlayer.$list.html(map(JPlayer.cache = map($(".mb-sources-item"), function ($item, k) {
+		return {name : $item.dataset.title, url : $item.href, singer : $item.dataset.author}
+	}), function (source, k) {
     	return complieHTML(TPL_ITEM, source, k)
     }).join(''));
 	// 生成默认均衡器列表

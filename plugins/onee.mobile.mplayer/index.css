@@ -618,3 +618,6 @@ progress::-webkit-progress-value {
 .mb-eq-type.curr{
 	background-color: #5d9d7b
 }
+.mb-sources-item{
+	display: none;
+}

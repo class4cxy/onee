@@ -31,6 +31,7 @@
             src: [
                 './online/*.js',
                 './online/*.css',
+                './online/sources/*.mp3',
                 './online/images/*.{jpg,jpeg,png,gif}'
             ]
         }
